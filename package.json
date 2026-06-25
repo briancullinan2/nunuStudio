@@ -10,10 +10,11 @@
 		"doc": "docs"
 	},
 	"scripts": {
-		"test": "node --test tests/unit/MathUtils.test.mjs tests/integration/integration.test.mjs tests/waterfall/waterfall.test.mjs",
-		"test:unit": "node --test tests/unit/MathUtils.test.mjs",
+		"test": "node --test tests/unit/MathUtils.test.mjs tests/unit/UnitConverter.test.mjs tests/integration/integration.test.mjs tests/waterfall/waterfall.test.mjs",
+		"test:unit": "node --test tests/unit/MathUtils.test.mjs tests/unit/UnitConverter.test.mjs",
 		"test:integration": "node --test tests/integration/integration.test.mjs",
 		"test:waterfall": "node --test tests/waterfall/waterfall.test.mjs",
+		"upgrade-test": "node scripts/upgrade-and-test.mjs",
 		"start-page": "cd ./source/page && npm run start",
 		"start": "webpack-dev-server --open --hot --config webpack.dev.js",
 		"start-https": "webpack-dev-server --open --hot --inline --host 0.0.0.0 --https --config webpack.dev.js",

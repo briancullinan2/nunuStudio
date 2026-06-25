@@ -1,0 +1,89 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+	<meta charset="UTF-8">
+	<title>Nunu Core API Integration Test</title>
+	<!-- Load the compiled nunuStudio UMD bundle from the built assets -->
+	<script src="../../docs/editor/files/runtime/nunu.min.js"></script>
+	<link rel="icon" type="image/x-icon" href="../../favicon.ico">
+</head>
+
+<body>
+	<script>
+		window.testResult = { success: false, errors: [] };
+
+		window.addEventListener('error', (event) => {
+			window.testResult.errors.push(event.message || event.error.toString());
+		});
+
+		try {
+			// Resolve the top level namespace module module context
+			const NunuNamespace = (typeof Nunu !== 'undefined') ? Nunu : (window.Nunu || window.NunuStudio);
+
+			if (!NunuNamespace) {
+				throw new Error('Nunu core namespace could not be resolved from the global context.');
+			}
+
+			// Extract the core constructors out of the namespace map
+			const NunuClass = NunuNamespace.Nunu;
+			const ProgramClass = NunuNamespace.Program;
+			const AppClass = NunuNamespace.App;
+
+			if (!NunuClass) {
+				throw new Error('Core Nunu runtime constructor is missing from the module namespace.');
+			}
+
+			// 1. Validate static constants and helpers if they are bound directly onto Nunu core
+			const nameValue = NunuClass.NAME || NunuNamespace.NAME;
+			const webglAvailable = typeof NunuClass.webGLAvailable === 'function' ? NunuClass.webGLAvailable() : null;
+
+			// 2. Test instantiation of structural runtime components
+			const programInstance = ProgramClass ? new ProgramClass() : null;
+			const appInstance = AppClass ? new AppClass() : null;
+
+
+			const sourceNs = { a: 1, b: 2, c: 'hello' };
+			const targetNs = {};
+			Nunu.Nunu.copyNamespace(sourceNs, targetNs);
+			if (targetNs.a !== 1 || targetNs.b !== 2 || targetNs.c !== 'hello') {
+				throw new Error('copyNamespace() failed to copy properties to target namespace.');
+			}
+
+			// 3. Collect verified module elements for validation
+			const verifiedClasses = {
+				hasNunu: typeof NunuClass === 'function',
+				hasProgram: typeof ProgramClass === 'function',
+				hasApp: typeof AppClass === 'function',
+				hasEventManager: typeof NunuNamespace.EventManager === 'function',
+				hasFileSystem: typeof NunuNamespace.FileSystem === 'function'
+			};
+
+			const queryParams = Nunu.Nunu.getQueryParameters();
+			const totalExportCount = Object.keys(NunuNamespace).length;
+
+			window.testResult = {
+				platform: Nunu.Nunu.getPlatform(),
+				success: verifiedClasses.hasNunu && verifiedClasses.hasProgram,
+				name: nameValue,
+				webglAvailable: webglAvailable,
+				webaudioAvailable: Nunu.Nunu.webAudioAvailable(),
+				totalExports: totalExportCount,
+				verifiedClasses: verifiedClasses,
+				programCreated: programInstance !== null,
+				appCreated: appInstance !== null,
+				errors: window.testResult.errors,
+				queryParams: queryParams,
+				copiedNamespace: targetNs,
+			};
+		} catch (error) {
+			window.testResult = {
+				success: false,
+				error: error.message || error.toString(),
+				errors: window.testResult.errors
+			};
+		}
+	</script>
+</body>
+
+</html>

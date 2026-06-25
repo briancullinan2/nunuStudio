@@ -9,6 +9,7 @@ import { createStaticServer } from './helpers/server.mjs';
 import { delay } from './helpers/interactions.mjs';
 import { runMenuTest } from './menu.test.mjs';
 import { runTabsTest } from './tabs.test.mjs';
+import { runSettingsTest } from './settings.test.mjs';
 import { runAboutTest } from './about.test.mjs';
 
 const __filename = fileURLToPath(import.meta.url);
@@ -52,7 +53,6 @@ describe('nunuStudio Editor Waterfall E2E Tests', () => {
 			// 4. Wait for the actual canvas or primary layout elements to attach to the body
 			console.log('Waiting for the UI layout to initialize...');
 			await page.waitForFunction(() => {
-				// nunuStudio creates elements directly inside document.body or canvas elements
 				return document.querySelectorAll('canvas').length > 0 || document.querySelectorAll('div').length > 5;
 			}, { timeout: 15000 });
 			console.log('UI elements detected.');
@@ -67,11 +67,15 @@ describe('nunuStudio Editor Waterfall E2E Tests', () => {
 			await runMenuTest(page);
 			await delay(1000);
 
-			// Test 2: Clicking and switching between tab panels (e.g., the Console tab)
+			// Test 2: Clicking and switching between tab panels (Console tab)
 			await runTabsTest(page);
 			await delay(1000);
 
-			// Test 3: Clicking the About menu, verifying the About tab is opened and selected,
+			// Test 3: Opening settings tab via File -> Settings
+			await runSettingsTest(page);
+			await delay(1000);
+
+			// Test 4: Clicking the About menu, verifying the About tab is opened and selected,
 			// and confirming the displayed text content.
 			await runAboutTest(page);
 			await delay(3000); // Leave browser visible briefly to let user witness completion
