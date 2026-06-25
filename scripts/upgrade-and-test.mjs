@@ -9,7 +9,6 @@ const __dirname = path.dirname(__filename);
 const packageJsonPath = path.resolve(__dirname, '../package.json');
 const backupPath = path.resolve(__dirname, '../package.json.bak');
 
-// Helper to run a shell command and return its success/failure
 function runCommand(cmd) {
 	console.log(`Executing: ${cmd}`);
 	try {
@@ -21,7 +20,6 @@ function runCommand(cmd) {
 	}
 }
 
-// Parse semver into numeric components
 export function parseSemver(v) {
 	const clean = v.replace(/[^0-9.]/g, '');
 	const parts = clean.split('.').map(Number);
@@ -32,13 +30,11 @@ export function parseSemver(v) {
 	};
 }
 
-// Perform minor version upgrade (0.1 point release)
 export function incrementMinor(v) {
 	const semver = parseSemver(v);
 	return `${semver.major}.${semver.minor + 1}.0`;
 }
 
-// Perform major version upgrade (full version release)
 export function incrementMajor(v) {
 	const semver = parseSemver(v);
 	return `${semver.major + 1}.0.0`;
@@ -47,108 +43,111 @@ export function incrementMajor(v) {
 function restoreBackup() {
 	if (fs.existsSync(backupPath)) {
 		fs.copyFileSync(backupPath, packageJsonPath);
-		fs.unlinkSync(backupPath);
-		console.log('Restored original package.json from backup.');
+		console.log('Restored original package.json from backup state.');
 	}
+}
+
+async function testUpgrade(packageName, targetVersion, isDevDep) {
+	const pkg = JSON.parse(fs.readFileSync(packageJsonPath, 'utf8'));
+
+	if (isDevDep) {
+		pkg.devDependencies[packageName] = targetVersion;
+	} else {
+		pkg.dependencies[packageName] = targetVersion;
+	}
+
+	fs.writeFileSync(packageJsonPath, JSON.stringify(pkg, null, 2), 'utf8');
+
+	const success = runCommand('npm install') &&
+		runCommand('npm run build-editor') &&
+		runCommand('npm test');
+	return success;
 }
 
 async function main() {
-	// Determine target package to test upgrade on. Default to 'three' if none provided.
-	const targetPackage = process.argv[2] || 'three';
-	console.log(`Starting upgrade-and-test suite for package: "${targetPackage}"`);
+	console.log('Starting global dependency waterfall upgrade script...');
 
-	// 1. Create backup of package.json
+	// 1. Create a pristine workspace backup
 	fs.copyFileSync(packageJsonPath, backupPath);
-	console.log('Created package.json backup.');
+	console.log('Created global backup file.');
 
-	try {
-		const pkg = JSON.parse(fs.readFileSync(packageJsonPath, 'utf8'));
-		let currentVersion = null;
-		let isDevDep = false;
+	const initialPkg = JSON.parse(fs.readFileSync(packageJsonPath, 'utf8'));
+	const report = [];
 
-		if (pkg.dependencies && pkg.dependencies[targetPackage]) {
-			currentVersion = pkg.dependencies[targetPackage];
-		} else if (pkg.devDependencies && pkg.devDependencies[targetPackage]) {
-			currentVersion = pkg.devDependencies[targetPackage];
-			isDevDep = true;
-		}
-
-		if (!currentVersion) {
-			console.error(`Error: Package "${targetPackage}" not found in dependencies or devDependencies.`);
-			restoreBackup();
-			process.exit(1);
-		}
-
-		console.log(`Current version of "${targetPackage}": ${currentVersion}`);
-
-		// 2. Determine point release version (+0.1 minor version)
-		const pointReleaseVersion = incrementMinor(currentVersion);
-		console.log(`Upgrading to next point release: ${pointReleaseVersion}`);
-
-		// Update package.json
-		if (isDevDep) {
-			pkg.devDependencies[targetPackage] = pointReleaseVersion;
-		} else {
-			pkg.dependencies[targetPackage] = pointReleaseVersion;
-		}
-		fs.writeFileSync(packageJsonPath, JSON.stringify(pkg, null, 2), 'utf8');
-
-		console.log(`--- Testing Point Release Upgrade to ${pointReleaseVersion} ---`);
-		
-		// Run npm install, build, and test
-		let pointReleaseSuccess = runCommand('npm install') && 
-		                        runCommand('npm run build-editor') && 
-		                        runCommand('npm test');
-
-		if (pointReleaseSuccess) {
-			console.log(`\n🎉 SUCCESS: Successfully upgraded "${targetPackage}" to point release ${pointReleaseVersion}! All builds and tests passed.`);
-			fs.unlinkSync(backupPath); // Delete backup, keep upgrades
-			process.exit(0);
-		}
-
-		console.warn(`\n⚠️ Point release upgrade to ${pointReleaseVersion} failed or hit version ceiling. Attempting full major version upgrade...`);
-		
-		// Restore to backup first to read the original version
-		fs.copyFileSync(backupPath, packageJsonPath);
-		const pkgFresh = JSON.parse(fs.readFileSync(packageJsonPath, 'utf8'));
-
-		// 3. Determine full version upgrade (+1.0.0 major version)
-		const majorReleaseVersion = incrementMajor(currentVersion);
-		console.log(`Upgrading to next full major version: ${majorReleaseVersion}`);
-
-		if (isDevDep) {
-			pkgFresh.devDependencies[targetPackage] = majorReleaseVersion;
-		} else {
-			pkgFresh.dependencies[targetPackage] = majorReleaseVersion;
-		}
-		fs.writeFileSync(packageJsonPath, JSON.stringify(pkgFresh, null, 2), 'utf8');
-
-		console.log(`--- Testing Full Major Release Upgrade to ${majorReleaseVersion} ---`);
-
-		let majorReleaseSuccess = runCommand('npm install') && 
-		                         runCommand('npm run build-editor') && 
-		                         runCommand('npm test');
-
-		if (majorReleaseSuccess) {
-			console.log(`\n🎉 SUCCESS: Successfully upgraded "${targetPackage}" to full major release ${majorReleaseVersion}! All builds and tests passed.`);
-			fs.unlinkSync(backupPath); // Delete backup, keep upgrades
-			process.exit(0);
-		}
-
-		// If both failed, restore backup and exit with error
-		console.error(`\n❌ FAILURE: Both point release (${pointReleaseVersion}) and major release (${majorReleaseVersion}) upgrades for "${targetPackage}" failed builds or tests.`);
-		restoreBackup();
-		
-		// Run npm install one last time to restore node_modules to backup state
-		runCommand('npm install');
-		process.exit(1);
-
-	} catch (error) {
-		console.error('An unexpected error occurred during upgrade-and-test:', error);
-		restoreBackup();
-		runCommand('npm install');
-		process.exit(1);
+	// Gather all target packages to process
+	const targets = [];
+	if (initialPkg.dependencies) {
+		Object.keys(initialPkg.dependencies).forEach(name => {
+			targets.push({ name, isDevDep: false, currentVersion: initialPkg.dependencies[name] });
+		});
 	}
+	if (initialPkg.devDependencies) {
+		Object.keys(initialPkg.devDependencies).forEach(name => {
+			targets.push({ name, isDevDep: true, currentVersion: initialPkg.devDependencies[name] });
+		});
+	}
+
+	// 2. Iterate sequentially through every dependency matching workspace rules
+	for (const target of targets) {
+		console.log(`\n====================================================================`);
+		console.log(`PROCESSING COMPONENT: ${target.name} (${target.isDevDep ? 'devDependency' : 'dependency'})`);
+		console.log(`====================================================================`);
+		console.log(`Current established version: ${target.currentVersion}`);
+
+		const pointVersion = incrementMinor(target.currentVersion);
+		console.log(`Attempting Option A: Point Release Minor Upgrade -> ${pointVersion}`);
+
+		// Try Minor Point Upgrade
+		let success = await testUpgrade(target.name, pointVersion, target.isDevDep);
+		if (success) {
+			console.log(`🎉 Option A Succeeded! Keeping point release for ${target.name}.`);
+			report.push({ name: target.name, outcome: 'UPGRADED (MINOR)', version: pointVersion });
+			// Overwrite the baseline backup to lock in this successful upgrade for subsequent iterations
+			fs.copyFileSync(packageJsonPath, backupPath);
+			continue;
+		}
+
+		// Revert workspace back to previous stable point before trying major fallback
+		console.warn(`⚠️ Option A failed. Reverting and trying Option B...`);
+		restoreBackup();
+
+		const majorVersion = incrementMajor(target.currentVersion);
+		console.log(`Attempting Option B: Major Breaking Upgrade Upgrade -> ${majorVersion}`);
+
+		// Try Major Breaking Upgrade
+		success = await testUpgrade(target.name, majorVersion, target.isDevDep);
+		if (success) {
+			console.log(`🎉 Option B Succeeded! Keeping major version upgrade for ${target.name}.`);
+			report.push({ name: target.name, outcome: 'UPGRADED (MAJOR)', version: majorVersion });
+			fs.copyFileSync(packageJsonPath, backupPath);
+			continue;
+		}
+
+		// Both options failed, drop package back to pristine state and move to next item
+		console.error(`❌ Both upgrade paths failed for ${target.name}. Locking at ${target.currentVersion}.`);
+		report.push({ name: target.name, outcome: 'FAILED (HELD)', version: target.currentVersion });
+		restoreBackup();
+	}
+
+	// 3. Clean up backup file context and output final summary metrics
+	if (fs.existsSync(backupPath)) {
+		fs.unlinkSync(backupPath);
+	}
+
+	console.log(`\n====================================================================`);
+	console.log(`## FINAL UPGRADE PIPELINE STATUS REPORT`);
+	console.log(`====================================================================`);
+	console.table(report);
+
+	// Final clean installation loop to ensure tree dependencies reconcile cleanly
+	console.log('\nExecuting final dependency layout synchronization...');
+	runCommand('npm install');
+	console.log('Suite processing finalized.');
 }
 
-main();
+main().catch(err => {
+	console.error('Fatal execution error within waterfall upgrade script wrapper:', err);
+	restoreBackup();
+	runCommand('npm install');
+	process.exit(1);
+});
