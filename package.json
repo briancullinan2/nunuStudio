@@ -10,6 +10,10 @@
 		"doc": "docs"
 	},
 	"scripts": {
+		"test": "node --test tests/unit/MathUtils.test.js tests/integration/integration.test.js tests/waterfall/waterfall.test.mjs",
+		"test:unit": "node --test tests/unit/MathUtils.test.mjs",
+		"test:integration": "node --test tests/integration/integration.test.mjs",
+		"test:waterfall": "node --test tests/waterfall/waterfall.test.mjs",
 		"start-page": "cd ./source/page && npm run start",
 		"start": "webpack-dev-server --open --hot --config webpack.dev.js",
 		"start-https": "webpack-dev-server --open --hot --inline --host 0.0.0.0 --https --config webpack.dev.js",
@@ -88,9 +92,11 @@
 		"http-server": "14.1.1",
 		"jsdoc": "3.6.6",
 		"nwjs-builder-phoenix": "1.15.0",
+		"puppeteer": "^25.2.1",
 		"raw-loader": "4.0.2",
 		"style-loader": "3.3.2",
 		"uglifyjs-webpack-plugin": "2.2.0",
+		"vitest": "^4.1.9",
 		"webpack": "5.76.2",
 		"webpack-cleanup-plugin": "0.5.1",
 		"webpack-cli": "5.0.1",
