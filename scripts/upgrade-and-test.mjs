@@ -22,7 +22,7 @@ function runCommand(cmd) {
 }
 
 // Parse semver into numeric components
-function parseSemver(v) {
+export function parseSemver(v) {
 	const clean = v.replace(/[^0-9.]/g, '');
 	const parts = clean.split('.').map(Number);
 	return {
@@ -33,13 +33,13 @@ function parseSemver(v) {
 }
 
 // Perform minor version upgrade (0.1 point release)
-function incrementMinor(v) {
+export function incrementMinor(v) {
 	const semver = parseSemver(v);
 	return `${semver.major}.${semver.minor + 1}.0`;
 }
 
 // Perform major version upgrade (full version release)
-function incrementMajor(v) {
+export function incrementMajor(v) {
 	const semver = parseSemver(v);
 	return `${semver.major + 1}.0.0`;
 }

@@ -142,6 +142,47 @@ describe('Three.js and Nunu Core Integration Tests', () => {
 		}
 	});
 
+	it('should actually boot the studio (editor) and verify UI initialization', async () => {
+		const browser = await puppeteer.launch({
+			headless: false,
+			slowMo: 50,
+			args: [
+				'--start-maximized',
+				'--no-sandbox',
+				'--disable-setuid-sandbox'
+			]
+		});
+
+		try {
+			const page = await browser.newPage();
+			await page.setViewport({ width: 1280, height: 720 });
+
+			const errors = [];
+			page.on('pageerror', err => {
+				errors.push(err.message || err.toString());
+			});
+
+			const testUrl = `${server.url}/docs/editor/index.html`;
+			await page.goto(testUrl, { waitUntil: 'load' });
+
+			// Wait for the UI elements to initialize and appear
+			await page.waitForFunction(() => {
+				return document.querySelectorAll('canvas').length > 0 || document.querySelectorAll('div').length > 5;
+			}, { timeout: 15000 });
+
+			const bodyText = await page.evaluate(() => document.body.innerText);
+			assert.ok(
+				bodyText.includes('File') || bodyText.includes('Edit') || bodyText.includes('Project'),
+				'The booted studio should display standard menu items like File, Edit, and Project'
+			);
+
+			assert.deepStrictEqual(errors, [], 'No page errors should be thrown during editor boot');
+			console.log('Studio (Editor) booted successfully with JS, UI initialized.');
+		} finally {
+			await browser.close();
+		}
+	});
+
 	// Tear down server at the end of tests
 	it('should stop the local HTTP server', async () => {
 		if (server) {

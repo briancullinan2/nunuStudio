@@ -1,4 +1,4 @@
-import { describe, it } from 'node:test';
+import { describe, it, before, after } from 'node:test';
 import assert from 'node:assert';
 import puppeteer from 'puppeteer';
 import path from 'path';
@@ -11,19 +11,27 @@ import { runMenuTest } from './menu.test.mjs';
 import { runTabsTest } from './tabs.test.mjs';
 import { runSettingsTest } from './settings.test.mjs';
 import { runAboutTest } from './about.test.mjs';
+import { runShapesTest } from './shapes.test.mjs';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
 describe('nunuStudio Editor Waterfall E2E Tests', () => {
-	it('should load the editor and execute all chained UI interactions', async () => {
-		// 1. Start the static server serving docs/editor
-		const editorDir = path.resolve(__dirname, '../../docs/editor');
-		const server = await createStaticServer(editorDir);
-		console.log(`Waterfall test server running at: ${server.url}`);
+	let server;
+	let browser;
+	let page;
 
-		// 2. Launch Puppeteer in headful mode as requested
-		const browser = await puppeteer.launch({
+	// ============================================================================
+	// ## SETUP: ENVIRONMENT INITIALIZATION
+	// ============================================================================
+	before(async () => {
+		// Start the static server serving docs/editor
+		const editorDir = path.resolve(__dirname, '../../docs/editor');
+		server = await createStaticServer(editorDir);
+		console.log(`\n[Setup] Waterfall test server running at: ${server.url}`);
+
+		// Launch Puppeteer in headful mode
+		browser = await puppeteer.launch({
 			headless: false,
 			slowMo: 50,
 			args: [
@@ -33,62 +41,60 @@ describe('nunuStudio Editor Waterfall E2E Tests', () => {
 			]
 		});
 
-		try {
-			const page = await browser.newPage();
-			
-			// Set a standard viewport size
-			await page.setViewport({ width: 1280, height: 720 });
+		page = await browser.newPage();
+		await page.setViewport({ width: 1280, height: 720 });
 
-			// Route all console messages and page errors from browser to test logs
-			page.on('console', msg => {
-				console.log(`[Browser Console ${msg.type()}]:`, msg.text());
-			});
-			page.on('pageerror', err => {
-				console.error('[Browser Page Error]:', err.stack || err.message);
-			});
+		// Route browser logs to test console
+		page.on('console', msg => console.log(`[Browser Console ${msg.type()}]:`, msg.text()));
+		page.on('pageerror', err => console.error('[Browser Page Error]:', err.stack || err.message));
+	});
 
-			// 3. Navigate to the editor
-			await page.goto(server.url, { waitUntil: 'load' });
+	// ============================================================================
+	// ## TEARDOWN: RESOURCE CLEANUP
+	// ============================================================================
+	after(async () => {
+		console.log('\n[Teardown] Closing browser and static server...');
+		if (browser) await browser.close();
+		if (server) await server.close();
+	});
 
-			// 4. Wait for the actual canvas or primary layout elements to attach to the body
-			console.log('Waiting for the UI layout to initialize...');
-			await page.waitForFunction(() => {
-				return document.querySelectorAll('canvas').length > 0 || document.querySelectorAll('div').length > 5;
-			}, { timeout: 15000 });
-			console.log('UI elements detected.');
+	// ============================================================================
+	// ## INDIVIDUAL TEST CASES (THE PRETTY TITLES)
+	// ============================================================================
 
-			// Wait a brief moment to allow any post-render layouts to finalize
-			await delay(2000);
+	it('01. Should load the editor and initialize the DOM layout successfully', async () => {
+		await page.goto(server.url, { waitUntil: 'load' });
 
-			// 5. Execute our chained tests sequentially
-			console.log('--- BEGIN CHAINED WATERFALL TESTS ---');
-			
-			// Test 1: Hovering over the top-level menus and expanding dropdown options
-			await runMenuTest(page);
-			await delay(1000);
+		console.log('Waiting for the UI layout to initialize...');
+		await page.waitForFunction(() => {
+			return document.querySelectorAll('canvas').length > 0 || document.querySelectorAll('div').length > 5;
+		}, { timeout: 15000 });
 
-			// Test 2: Clicking and switching between tab panels (Console tab)
-			await runTabsTest(page);
-			await delay(1000);
+		await delay(2000); // Allow post-render layouts to settle
+	});
 
-			// Test 3: Opening settings tab via File -> Settings
-			await runSettingsTest(page);
-			await delay(1000);
+	it('02. Should handle top-level context menu hover and expansions', async () => {
+		await runMenuTest(page);
+		await delay(1000);
+	});
 
-			// Test 4: Clicking the About menu, verifying the About tab is opened and selected,
-			// and confirming the displayed text content.
-			await runAboutTest(page);
-			await delay(3000); // Leave browser visible briefly to let user witness completion
+	it('03. Should switch between distinct layout panels and active tabs', async () => {
+		await runTabsTest(page);
+		await delay(1000);
+	});
 
-			console.log('--- ALL CHAINED WATERFALL TESTS COMPLETED SUCCESSFULLY ---');
+	it('04. Should open the global application settings dashboard panel', async () => {
+		await runSettingsTest(page);
+		await delay(1000);
+	});
 
-		} catch (error) {
-			console.error('Waterfall E2E test suite failed with error:', error);
-			throw error;
-		} finally {
-			// 6. Clean up browser and server
-			await browser.close();
-			await server.close();
-		}
+	it('05. Should open and validate the application About text components', async () => {
+		await runAboutTest(page);
+		await delay(1000);
+	});
+
+	it('06. Should successfully spawn and attach a 3D Cube primitive shape', async () => {
+		await runShapesTest(page);
+		await delay(3000); // Leave visible briefly on completion
 	});
 });
