@@ -1,142 +1,90 @@
 import { describe, it } from 'node:test';
 import assert from 'node:assert';
 import puppeteer from 'puppeteer';
-import http from 'http';
-import fs from 'fs';
 import path from 'path';
 import { fileURLToPath } from 'url';
+
+// Import our modular helpers and tests for chaining
+import { createStaticServer } from './helpers/server.mjs';
+import { delay } from './helpers/interactions.mjs';
+import { runMenuTest } from './menu.test.mjs';
+import { runTabsTest } from './tabs.test.mjs';
+import { runAboutTest } from './about.test.mjs';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
-const delay = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
-
-function createStaticServer(dir, port = 0) {
-    const server = http.createServer((req, res) => {
-        let reqUrl = req.url.split('?')[0];
-        if (reqUrl === '/') reqUrl = '/index.html';
-
-        const filePath = path.join(dir, reqUrl);
-        const ext = path.extname(filePath);
-        const contentTypes = {
-            '.html': 'text/html',
-            '.js': 'application/javascript',
-            '.css': 'text/css',
-            '.png': 'image/png',
-            '.jpg': 'image/jpeg',
-            '.json': 'application/json',
-            '.ico': 'image/x-icon',
-            '.wasm': 'application/wasm'
-        };
-
-        const contentType = contentTypes[ext] || 'application/octet-stream';
-
-        fs.readFile(filePath, (err, content) => {
-            if (err) {
-                res.writeHead(404, { 'Content-Type': 'text/plain' });
-                res.end('404 Not Found');
-            } else {
-                res.writeHead(200, { 'Content-Type': contentType });
-                res.end(content);
-            }
-        });
-    });
-
-    return new Promise((resolve) => {
-        server.listen(port, '127.0.0.1', () => {
-            const address = server.address();
-            resolve({
-                port: address.port,
-                url: `http://127.0.0.1:${address.port}`,
-                close: () => new Promise((r) => server.close(r))
-            });
-        });
-    });
-}
-
 describe('nunuStudio Editor Waterfall E2E Tests', () => {
-    it('should load the editor and click the About button to open the About tab', async () => {
-        const editorDir = path.resolve(__dirname, '../../docs/editor');
-        const server = await createStaticServer(editorDir);
-        console.log(`Waterfall test server running at: ${server.url}`);
+	it('should load the editor and execute all chained UI interactions', async () => {
+		// 1. Start the static server serving docs/editor
+		const editorDir = path.resolve(__dirname, '../../docs/editor');
+		const server = await createStaticServer(editorDir);
+		console.log(`Waterfall test server running at: ${server.url}`);
 
-        const browser = await puppeteer.launch({
-            headless: false,
-            slowMo: 50,
-            args: [
-                '--no-sandbox',
-                '--disable-setuid-sandbox',
-                '--use-gl=angle'
-            ]
-        });
-        const page = await browser.newPage();
-        await page.setViewport({ width: 1280, height: 720 });
+		// 2. Launch Puppeteer in headful mode as requested
+		const browser = await puppeteer.launch({
+			headless: false,
+			slowMo: 50,
+			args: [
+				'--start-maximized',
+				'--no-sandbox',
+				'--disable-setuid-sandbox'
+			]
+		});
 
-        page.on('console', msg => {
-            console.log(`[Browser Console ${msg.type()}]:`, msg.text());
-        });
-        page.on('pageerror', err => {
-            console.error('[Browser Page Error]:', err.stack || err.message);
-        });
+		try {
+			const page = await browser.newPage();
+			
+			// Set a standard viewport size
+			await page.setViewport({ width: 1280, height: 720 });
 
-        try {
-            await page.goto(server.url, { waitUntil: 'load' });
+			// Route all console messages and page errors from browser to test logs
+			page.on('console', msg => {
+				console.log(`[Browser Console ${msg.type()}]:`, msg.text());
+			});
+			page.on('pageerror', err => {
+				console.error('[Browser Page Error]:', err.stack || err.message);
+			});
 
-            // 4. Wait for the actual canvas or primary layout elements to attach to the body
-            console.log('Waiting for the UI layout to initialize...');
-            await page.waitForFunction(() => {
-                // nunuStudio creates elements directly inside document.body or canvas elements
-                return document.querySelectorAll('canvas').length > 0 || document.querySelectorAll('div').length > 5;
-            }, { timeout: 15000 });
-            console.log('UI elements detected.');
+			// 3. Navigate to the editor
+			await page.goto(server.url, { waitUntil: 'load' });
 
-            // 5. Look for the 'Help' or 'About' trigger in the top menu layout text
-            console.log('Searching for the "About" trigger in the UI...');
-            const aboutButton = await page.waitForFunction(() => {
-                const elements = Array.from(document.querySelectorAll('div, span, button, a'));
-                return elements.find(el => el.textContent.trim() === 'About' || el.textContent.trim() === 'Help');
-            }, { timeout: 5000 });
+			// 4. Wait for the actual canvas or primary layout elements to attach to the body
+			console.log('Waiting for the UI layout to initialize...');
+			await page.waitForFunction(() => {
+				// nunuStudio creates elements directly inside document.body or canvas elements
+				return document.querySelectorAll('canvas').length > 0 || document.querySelectorAll('div').length > 5;
+			}, { timeout: 15000 });
+			console.log('UI elements detected.');
 
-            assert.ok(aboutButton, 'Could not find any "About" or "Help" menu option via the DOM text mapping.');
-            
-            console.log('Clicking the option...');
-            await aboutButton.click();
+			// Wait a brief moment to allow any post-render layouts to finalize
+			await delay(2000);
 
-            // Give any popup menus or modal creation a moment to update the document tree
-            await delay(1000);
+			// 5. Execute our chained tests sequentially
+			console.log('--- BEGIN CHAINED WATERFALL TESTS ---');
+			
+			// Test 1: Hovering over the top-level menus and expanding dropdown options
+			await runMenuTest(page);
+			await delay(1000);
 
-            // 6. If "Help" was clicked, it may expand a sub-menu containing "About"
-            const clickSubMenu = await page.evaluate(() => {
-                const elements = Array.from(document.querySelectorAll('div, span, button, a'));
-                const subItem = elements.find(el => el.textContent.trim() === 'About');
-                if (subItem) {
-                    subItem.click();
-                    return true;
-                }
-                return false;
-            });
+			// Test 2: Clicking and switching between tab panels (e.g., the Console tab)
+			await runTabsTest(page);
+			await delay(1000);
 
-            if (clickSubMenu) {
-                console.log('Clicked "About" inside a sub-menu container.');
-            }
+			// Test 3: Clicking the About menu, verifying the About tab is opened and selected,
+			// and confirming the displayed text content.
+			await runAboutTest(page);
+			await delay(3000); // Leave browser visible briefly to let user witness completion
 
-            // 7. Verify the DOM updated to indicate the About panel/tab is up
-            console.log('Verifying content update...');
-            await page.waitForFunction(() => {
-                const textDump = document.body.innerText;
-                // Validate against known authorship string details inside nunuStudio's environment
-                return textDump.includes('nunuStudio') || textDump.includes('Tentone') || textDump.includes('About');
-            }, { timeout: 5000 });
+			console.log('--- ALL CHAINED WATERFALL TESTS COMPLETED SUCCESSFULLY ---');
 
-            console.log('Success: About component matched inside the page context!');
-            await delay(5000);
-
-        } catch (error) {
-            console.error('Test execution failed with error:', error);
-            throw error;
-        } finally {
-            await browser.close();
-            await server.close();
-        }
-    });
+		} catch (error) {
+			console.error('Waterfall E2E test suite failed with error:', error);
+			throw error;
+		} finally {
+			// 6. Clean up browser and server
+			await browser.close();
+			await server.close();
+		}
+	});
 });

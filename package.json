@@ -10,7 +10,7 @@
 		"doc": "docs"
 	},
 	"scripts": {
-		"test": "node --test tests/unit/MathUtils.test.js tests/integration/integration.test.js tests/waterfall/waterfall.test.mjs",
+		"test": "node --test tests/unit/MathUtils.test.mjs tests/integration/integration.test.mjs tests/waterfall/waterfall.test.mjs",
 		"test:unit": "node --test tests/unit/MathUtils.test.mjs",
 		"test:integration": "node --test tests/integration/integration.test.mjs",
 		"test:waterfall": "node --test tests/waterfall/waterfall.test.mjs",

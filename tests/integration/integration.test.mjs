@@ -4,13 +4,16 @@ import puppeteer from 'puppeteer';
 import path from 'path';
 import { fileURLToPath } from 'url';
 
+import { createStaticServer } from '../waterfall/helpers/server.mjs';
+
+
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
 // Define the missing delay function
 const delay = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
 
-describe('Three.js Integration Test', () => {
+describe('Three.js Integration Tests', () => {
 	it('should render a green cube onto a GL canvas', async () => {
 		const browser = await puppeteer.launch({
 			headless: false,
@@ -18,8 +21,8 @@ describe('Three.js Integration Test', () => {
 			args: [
 				'--start-maximized',
 				'--no-sandbox',
-				'--disable-setuid-sandbox'
-				// Removed swiftshader flags so your actual GPU can render to the visible window
+				'--disable-setuid-sandbox',
+				'--allow-file-access-from-files'
 			]
 		});
 
@@ -39,15 +42,15 @@ describe('Three.js Integration Test', () => {
 			// Get the test result
 			const result = await page.evaluate(() => window.testResult);
 
-			// Let you see the browser for 5 seconds before it closes
-			await delay(5000);
+			// Let you see the browser for 3 seconds before it closes
+			await delay(3000);
 
 			// Assertions
 			assert.deepStrictEqual(result.errors, []);
 			assert.strictEqual(result.success, true);
 			assert.ok(result.pixelData[1] > 0); // Green channel must be non-zero
 
-			console.log('Integration Test WebGL Specs:', {
+			console.log('Cube Integration Test WebGL Specs:', {
 				glVersion: result.glVersion,
 				glVendor: result.glVendor,
 				glRenderer: result.glRenderer,
@@ -55,8 +58,62 @@ describe('Three.js Integration Test', () => {
 			});
 
 		} finally {
-			// This block ALWAYS runs, ensuring the window closes even if the test fails
 			await browser.close();
+		}
+	});
+
+
+
+	it('should inject texture loader and render a loaded texture onto a GL canvas', async () => {
+		// 1. Spin up the static server on the folder containing your test files
+		// (Assuming test-loader.html and its textures live in this integration directory)
+		const server = await createStaticServer(__dirname);
+		console.log(`Texture test server running at: ${server.url}`);
+
+		const browser = await puppeteer.launch({
+			headless: false,
+			slowMo: 50,
+			args: [
+				'--start-maximized',
+				'--no-sandbox',
+				'--disable-setuid-sandbox'
+			]
+		});
+
+		try {
+			const page = await browser.newPage();
+
+			// 2. Navigate via HTTP instead of file://
+			const testUrl = `${server.url}/test-loader.html`;
+			await page.goto(testUrl, { waitUntil: 'load' });
+
+			// Wait for the loader test result to be set
+			await page.waitForFunction(() => window.testResult !== undefined, { timeout: 10000 });
+
+			// Get the test result
+			const result = await page.evaluate(() => window.testResult);
+
+			// Let you see the browser for 3 seconds before it closes
+			await delay(3000);
+
+			// Assertions
+			assert.deepStrictEqual(result.errors, []);
+			assert.strictEqual(result.success, true);
+			assert.ok(result.textureWidth > 0);
+			assert.ok(result.textureHeight > 0);
+			assert.ok(result.pixelData[0] > 0 || result.pixelData[1] > 0 || result.pixelData[2] > 0);
+
+			console.log('Texture Loader Integration Test WebGL Specs:', {
+				glVersion: result.glVersion,
+				glRenderer: result.glRenderer,
+				loadedTextureDimensions: `${result.textureWidth}x${result.textureHeight}`,
+				pixelCenterColor: result.pixelData
+			});
+
+		} finally {
+			// Clean up both the browser and our temporary server instance
+			await browser.close();
+			await server.close();
 		}
 	});
 });
