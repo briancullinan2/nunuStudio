@@ -100,7 +100,7 @@ function resolveNextTargetVersions(currentVersion, registryData) {
 		}
 	}
 
-	return { pointVersion, majorVersion: nextMajorVersion };
+	return { cleanCurrent: versions[currentIndex], pointVersion, majorVersion: nextMajorVersion, versions: versions };
 }
 
 // ============================================================================
@@ -166,12 +166,13 @@ async function main() {
 			continue;
 		}
 
-		const { pointVersion, majorVersion } = resolveNextTargetVersions(target.currentVersion, registryData);
+		const { cleanCurrent, pointVersion, majorVersion } = resolveNextTargetVersions(target.currentVersion, registryData);
 
 		console.log(`[REGISTRY SELECTION] ${target.name}: Current: ${target.currentVersion} -> Selected Minor: ${pointVersion} | Next Major: ${majorVersion} (Absolute Latest: ${registryData.latest})`);
 
 		targets.push({
 			...target,
+			cleanCurrent,
 			pointVersion,
 			majorVersion,
 			absoluteLatest: registryData.latest
@@ -183,13 +184,11 @@ async function main() {
 	for (const target of targets) {
 		if (target.isDevDep) {
 			if (finalPkg.devDependencies) {
-				finalPkg.devDependencies[target.name] = target.pointVersion;
-				target.currentVersion = target.pointVersion;
+				finalPkg.devDependencies[target.name] = target.cleanCurrent;
 			}
 		} else {
 			if (finalPkg.dependencies) {
-				finalPkg.dependencies[target.name] = target.pointVersion;
-				target.currentVersion = target.pointVersion;
+				finalPkg.dependencies[target.name] = target.cleanCurrent;
 			}
 		}
 	}
@@ -198,86 +197,199 @@ async function main() {
 	console.log('\nSaved all calculated clean target versions directly to package.json up front.');
 
 
+	const success = runCommand(`npm install`) &&
+		runCommand('npm run build-editor') &&
+		runCommand('npm test');
+
+	if (!success) {
+		console.error(`❌ Could not find working configuration. Not reverting to backup, intervention required.`);
+		return;
+	} else {
+		createWorkspaceBackup();
+	}
+
+
+
 	// ------------------------------------------------------------------------
 	// ### PHASE 2: INTEGRATION AND TESTING
 	// ------------------------------------------------------------------------
 	console.log('\n--- PHASE 2: RUNNING EMIT AND TESTING SEQUENCES ---');
+
+
 	const report = [];
 
-	// Test Minor Point Releases sequentially to keep state execution pristine
 	for (const target of targets) {
-		console.log(`\n====================================================================`);
-		console.log(`UPGRADING: ${target.name} (${target.isDevDep ? 'devDependency' : 'dependency'})`);
-		console.log(`====================================================================`);
-		console.log(`Baseline Version: ${target.currentVersion}`);
-		console.log(`Testing Real Minor Step: ${target.pointVersion}`);
-
-		const baselineClean = target.currentVersion.replace(/[^0-9.]/g, '');
-		if (target.pointVersion === baselineClean) {
-			console.log(`Package already at latest available version pool. Skipping.`);
-			report.push({ name: target.name, outcome: 'HELD (ALREADY LATEST)', version: target.currentVersion });
-			continue;
+		try {
+			const result = evaluatePackageUpgrades(target, packageJsonPath, backupPath);
+			report.push({ name: target.name, outcome: result.outcome, version: result.version });
+		} catch (targetError) {
+			console.error(`Fatal exception tracking pipeline iteration for ${target.name}:`, targetError.message);
+			report.push({ name: target.name, outcome: 'CRASHED (HELD)', version: target.currentVersion });
+			try {
+				fs.copyFileSync(backupPath, packageJsonPath);
+			} catch (restoreErr) {
+				console.error(`Critical failure executing generic fallback recovery:`, restoreErr.message);
+			}
 		}
-
-		// Stage Option A (Minor) from current stable backup anchor
-		if (target.isDevDep) finalPkg.devDependencies[target.name] = target.pointVersion;
-		else finalPkg.dependencies[target.name] = target.pointVersion;
-		fs.writeFileSync(packageJsonPath, JSON.stringify(finalPkg, null, 2), 'utf8');
-
-		let success = runCommand(`npm install ${target.name}@${target.pointVersion}`) &&
-			runCommand('npm run build-editor') &&
-			runCommand('npm test');
-
-		if (success) {
-			console.log(`🎉 Option A Succeeded for ${target.name}.`);
-			report.push({ name: target.name, outcome: 'UPGRADED (MINOR)', version: target.pointVersion });
-			fs.copyFileSync(packageJsonPath, backupPath); // Lock down stable reference state change
-			continue;
-		}
-
-		console.warn(`⚠️ Option A failed. Reverting reference and trying Option B...`);
-		restoreBackup();
-
-		if (target.majorVersion === target.pointVersion) {
-			console.error(`❌ Target major version identical to failed minor variant step. Skipping.`);
-			report.push({ name: target.name, outcome: 'FAILED (HELD)', version: target.currentVersion });
-			continue;
-		}
-
-		// Stage Option B (Major)
-		console.log(`Testing Option B: -> ${target.majorVersion}`);
-		const pkgLoop = JSON.parse(fs.readFileSync(backupPath, 'utf8'));
-		if (target.isDevDep) pkgLoop.devDependencies[target.name] = target.majorVersion;
-		else pkgLoop.dependencies[target.name] = target.majorVersion;
-		fs.writeFileSync(packageJsonPath, JSON.stringify(pkgLoop, null, 2), 'utf8');
-
-		success = runCommand(`npm install ${target.name}@${target.majorVersion}`) &&
-			runCommand('npm run build-editor') &&
-			runCommand('npm test');
-
-		if (success) {
-			console.log(`🎉 Option B Succeeded for ${target.name}.`);
-			report.push({ name: target.name, outcome: 'UPGRADED (MAJOR)', version: target.majorVersion });
-			fs.copyFileSync(packageJsonPath, backupPath);
-			continue;
-		}
-
-		console.error(`❌ Upgrade paths rejected for ${target.name}. Reverting down to baseline.`);
-		report.push({ name: target.name, outcome: 'FAILED (HELD)', version: target.currentVersion });
-		restoreBackup();
 	}
 
-	cleanBackupFile();
+	try {
+		cleanBackupFile();
+	} catch (cleanupError) {
+		console.error(`Non-blocking cleanup exception encountered during post-pipeline handling:`, cleanupError.message);
+	}
 
 	console.log(`\n====================================================================`);
 	console.log(`## FINAL UPGRADE PIPELINE STATUS REPORT`);
-	console.log(`====================================================================`);
+	`====================================================================`;
 	console.table(report);
 
 	console.log('\nSyncing directory dependencies to verified lock configuration...');
-	runCommand('npm install');
+	try {
+		runCommand('npm install');
+	} catch (finalInstallError) {
+		console.error(`Final system sync returned operational warning or failure:`, finalInstallError.message);
+	}
 	console.log('Upfront batch optimization sequence finalized.');
+
+
 }
+
+
+function readJsonFile(filePath) {
+	try {
+		return JSON.parse(fs.readFileSync(filePath, 'utf8'));
+	} catch (error) {
+		console.error(`Error reading file at ${filePath}:`, error.message);
+		return null;
+	}
+}
+
+function writeJsonFile(filePath, data) {
+	try {
+		fs.writeFileSync(filePath, JSON.stringify(data, null, 2), 'utf8');
+		return true;
+	} catch (error) {
+		console.error(`Error writing file to ${filePath}:`, error.message);
+		return false;
+	}
+}
+
+function verifyVersionSuccess(targetName, version) {
+	try {
+		const installSuccess = runCommand(`npm install ${targetName}@${version}`);
+		if (!installSuccess) return false;
+
+		const buildSuccess = runCommand('npm run build-editor');
+		if (!buildSuccess) return false;
+
+		const testSuccess = runCommand('npm test');
+		return testSuccess;
+	} catch (error) {
+		console.error(`Execution crash during verification of ${targetName}@${version}:`, error.message);
+		return false;
+	}
+}
+
+function applyVersionToPackage(filePath, targetName, version, isDevDep) {
+	const pkg = readJsonFile(filePath);
+	if (!pkg) return false;
+
+	if (isDevDep) {
+		if (!pkg.devDependencies) pkg.devDependencies = {};
+		pkg.devDependencies[targetName] = version;
+	} else {
+		if (!pkg.dependencies) pkg.dependencies = {};
+		pkg.dependencies[targetName] = version;
+	}
+	return writeJsonFile(filePath, pkg);
+}
+
+function evaluatePackageUpgrades(target, packageJsonPath, backupPath) {
+	console.log(`\n====================================================================`);
+	console.log(`UPGRADING: ${target.name} (${target.isDevDep ? 'devDependency' : 'dependency'})`);
+	console.log(`====================================================================`);
+	console.log(`Baseline Version: ${target.currentVersion}`);
+
+	const versionPool = Array.isArray(target.versions) ? target.versions : [];
+	const candidateVersions = [];
+
+	if (target.pointVersion) candidateVersions.push(target.pointVersion);
+	if (target.majorVersion && !candidateVersions.includes(target.majorVersion)) {
+		candidateVersions.push(target.majorVersion);
+	}
+
+	if (versionPool.length > 0) {
+		let lastIndex = -1;
+		if (target.majorVersion) {
+			lastIndex = versionPool.indexOf(target.majorVersion);
+		}
+		if (lastIndex === -1 && target.pointVersion) {
+			lastIndex = versionPool.indexOf(target.pointVersion);
+		}
+
+		let addedCount = 0;
+		const startIndex = lastIndex !== -1 ? lastIndex + 1 : 0;
+		for (let i = startIndex; i < versionPool.length && addedCount < 3; i++) {
+			const poolVer = versionPool[i];
+			if (!candidateVersions.includes(poolVer)) {
+				candidateVersions.push(poolVer);
+				addedCount++;
+			}
+		}
+	}
+
+	if (!candidateVersions.includes('latest')) {
+		candidateVersions.push('latest');
+	}
+
+	const uniqueCandidates = [...new Set(candidateVersions)];
+	let highestWorkingVersion = null;
+
+	for (const version of uniqueCandidates) {
+		console.log(`Testing candidate version: ${version}`);
+		try {
+			if (!applyVersionToPackage(packageJsonPath, target.name, version, target.isDevDep)) {
+				console.warn(`Failed to write candidate configuration for ${version}. Skipping.`);
+				continue;
+			}
+
+			if (verifyVersionSuccess(target.name, version)) {
+				console.log(`Candidate ${version} passed verification step.`);
+				highestWorkingVersion = version;
+				try {
+					fs.copyFileSync(packageJsonPath, backupPath);
+				} catch (backupErr) {
+					console.error(`Failed to update stable reference backup configuration:`, backupErr.message);
+				}
+			} else {
+				console.warn(`Candidate ${version} verification sequence failed.`);
+				try {
+					fs.copyFileSync(backupPath, packageJsonPath);
+				} catch (restoreErr) {
+					console.error(`Failed to restore baseline structural configuration:`, restoreErr.message);
+				}
+			}
+		} catch (iterationError) {
+			console.error(`Unexpected system fault processing candidate ${version}:`, iterationError.message);
+			try {
+				fs.copyFileSync(backupPath, packageJsonPath);
+			} catch (restoreErr) {
+				console.error(`Failed to restore baseline structural configuration after fault:`, restoreErr.message);
+			}
+		}
+	}
+
+	if (highestWorkingVersion) {
+		return { outcome: 'UPGRADED', version: highestWorkingVersion };
+	} else {
+		return { outcome: 'HELD (FALLBACK)', version: target.currentVersion };
+	}
+}
+
+
+
+
 
 main().catch(err => {
 	console.error('Fatal execution crash within upgrade pipeline wrapper:', err);
