@@ -347,7 +347,15 @@ function evaluatePackageUpgrades(target, packageJsonPath, backupPath) {
 	let highestWorkingVersion = null;
 
 	for (const version of uniqueCandidates) {
-		console.log(`Testing candidate version: ${version}`);
+		if (version === target.currentVersion) {
+			console.log(`Already current version: ${version}, skipping.`);
+			continue;
+		} else if (target.currentVersion === target.absoluteLatest) {
+			console.log(`Already latest version: ${version}, skipping.`);
+			break;
+		} else {
+			console.log(`Testing candidate version: ${version}`);
+		}
 		try {
 			if (!applyVersionToPackage(packageJsonPath, target.name, version, target.isDevDep)) {
 				console.warn(`Failed to write candidate configuration for ${version}. Skipping.`);
