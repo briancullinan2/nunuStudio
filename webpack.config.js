@@ -14,7 +14,7 @@ module.exports = [
 	{
 		context: source,
 		entry: source + "/editor/Main.js",
-		target: "web",
+		target: ["web", "es2020"],
 		devtool: false,
 		performance: {
 			hints: false,
@@ -27,8 +27,8 @@ module.exports = [
 				},
 				{
 					// Forces Webpack to preserve internal module properties during optimization passes
-					test: /node_modules\/three/,
-					sideEffects: true
+					//test: /node_modules\/three/,
+					//sideEffects: true
 				},
 				{
 					test: /.*brython.*/,
@@ -50,7 +50,16 @@ module.exports = [
 		output: {
 			hashFunction: "sha256",
 			filename: "bundle.js",
-			path: output
+			path: output,
+			environment: {
+				arrowFunction: true,
+				const: true,
+				destructuring: true,
+				factoryFunction: true,
+				forOf: true,
+				module: true,
+				className: true // Keeps native class definitions intact across chunk boundaries
+			}
 		},
 		plugins: [
 			new CopyPlugin({
@@ -146,7 +155,16 @@ module.exports = [
 			filename: "nunu.min.js",
 			path: output + "/files/runtime",
 			library: "Nunu",
-			libraryTarget: "umd"
+			libraryTarget: "umd",
+			environment: {
+				arrowFunction: true,
+				const: true,
+				destructuring: true,
+				factoryFunction: true,
+				forOf: true,
+				module: true,
+				className: true // Keeps native class definitions intact across chunk boundaries
+			}
 		}
 	})
 ];

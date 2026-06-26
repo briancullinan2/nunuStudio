@@ -5,7 +5,6 @@ const { merge } = require("webpack-merge");
 const common = require("./webpack.config.js");
 
 const git = new GitRevisionPlugin();
-const output = Path.resolve(__dirname, "docs/editor");
 
 module.exports = [
 	merge(common[0], {
@@ -18,7 +17,7 @@ module.exports = [
 			hints: false,
 		},
 		devServer: {
-			static: output, // Directly targets your established workspace output directory safely
+			static: common[0].output.path,
 			compress: false,
 			historyApiFallback: true,
 			hot: true,

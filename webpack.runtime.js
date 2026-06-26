@@ -7,7 +7,7 @@ const output = Path.resolve(__dirname, "dist");
 const config = {
 	context: source,
 	entry: source + "/core/Main.js",
-	target: "web",
+	target: ["web", "es2020"],
 	devtool: false,
 	mode: "production",
 	optimization: { minimize: true },
@@ -18,7 +18,7 @@ const config = {
 		new Webpack.ProvidePlugin({
 			THREE: "three",
 			"window.THREE": "three"
-		}),
+		})
 	],
 	module: {
 		rules: [
@@ -52,7 +52,16 @@ module.exports = [
 			filename: "nunu.min.js",
 			path: output,
 			library: "Nunu",
-			libraryTarget: "umd"
+			libraryTarget: "umd",
+			environment: {
+				arrowFunction: true,
+				const: true,
+				destructuring: true,
+				factoryFunction: true,
+				forOf: true,
+				module: true,
+				className: true // Keeps native class definitions intact across chunk boundaries
+			}
 		}
 	}, config),
 	Object.assign({
@@ -60,7 +69,16 @@ module.exports = [
 			hashFunction: "sha256",
 			filename: "nunu.module.min.js",
 			path: output,
-			libraryTarget: "umd"
+			libraryTarget: "umd",
+			environment: {
+				arrowFunction: true,
+				const: true,
+				destructuring: true,
+				factoryFunction: true,
+				forOf: true,
+				module: true,
+				className: true // Keeps native class definitions intact across chunk boundaries
+			}
 		}
 	}, config)
 ];

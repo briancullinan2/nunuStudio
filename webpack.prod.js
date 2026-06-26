@@ -14,7 +14,7 @@ module.exports = [
 		mode: "production",
 		optimization: {
 			minimize: true,
-			usedExports: true,
+			/*usedExports: true,
 			concatenateModules: false,
 			minimizer: [
 				new TerserPlugin({
@@ -30,7 +30,7 @@ module.exports = [
 					},
 					extractComments: false
 				})
-			]
+			]*/
 		},
 		performance: {
 			hints: false,
@@ -47,7 +47,16 @@ module.exports = [
 		output: {
 			hashFunction: "sha256",
 			filename: "bundle.js",
-			path: output
+			path: output,
+			environment: {
+				arrowFunction: true,
+				const: true,
+				destructuring: true,
+				factoryFunction: true,
+				forOf: true,
+				module: true,
+				className: true // Keeps native class definitions intact across chunk boundaries
+			}
 		}
 	}),
 	common[1]
