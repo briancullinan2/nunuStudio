@@ -52,16 +52,7 @@ module.exports = [
 			filename: "nunu.min.js",
 			path: output,
 			library: "Nunu",
-			libraryTarget: "umd",
-			environment: {
-				arrowFunction: true,
-				const: true,
-				destructuring: true,
-				factoryFunction: true,
-				forOf: true,
-				module: true,
-				className: true // Keeps native class definitions intact across chunk boundaries
-			}
+			libraryTarget: "umd"
 		}
 	}, config),
 	Object.assign({
@@ -69,16 +60,7 @@ module.exports = [
 			hashFunction: "sha256",
 			filename: "nunu.module.min.js",
 			path: output,
-			libraryTarget: "umd",
-			environment: {
-				arrowFunction: true,
-				const: true,
-				destructuring: true,
-				factoryFunction: true,
-				forOf: true,
-				module: true,
-				className: true // Keeps native class definitions intact across chunk boundaries
-			}
+			libraryTarget: "umd"
 		}
 	}, config)
 ];

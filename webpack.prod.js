@@ -47,16 +47,7 @@ module.exports = [
 		output: {
 			hashFunction: "sha256",
 			filename: "bundle.js",
-			path: output,
-			environment: {
-				arrowFunction: true,
-				const: true,
-				destructuring: true,
-				factoryFunction: true,
-				forOf: true,
-				module: true,
-				className: true // Keeps native class definitions intact across chunk boundaries
-			}
+			path: output
 		}
 	}),
 	common[1]

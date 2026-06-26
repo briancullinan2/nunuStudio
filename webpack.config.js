@@ -55,10 +55,8 @@ module.exports = [
 				arrowFunction: true,
 				const: true,
 				destructuring: true,
-				factoryFunction: true,
 				forOf: true,
 				module: true,
-				className: true // Keeps native class definitions intact across chunk boundaries
 			}
 		},
 		plugins: [
@@ -155,16 +153,7 @@ module.exports = [
 			filename: "nunu.min.js",
 			path: output + "/files/runtime",
 			library: "Nunu",
-			libraryTarget: "umd",
-			environment: {
-				arrowFunction: true,
-				const: true,
-				destructuring: true,
-				factoryFunction: true,
-				forOf: true,
-				module: true,
-				className: true // Keeps native class definitions intact across chunk boundaries
-			}
+			libraryTarget: "umd"
 		}
 	})
 ];
