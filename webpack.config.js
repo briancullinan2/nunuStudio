@@ -3,7 +3,7 @@ const Webpack = require("webpack");
 const HtmlWebpackPlugin = require("html-webpack-plugin");
 const MergeIntoSingleFilePlugin = require("webpack-merge-and-include-globally");
 const CopyPlugin = require("copy-webpack-plugin");
-const {merge} = require("webpack-merge");
+const { merge } = require("webpack-merge");
 const runtime = require("./webpack.runtime.js");
 
 const source = Path.resolve(__dirname, "source");
@@ -26,18 +26,23 @@ module.exports = [
 					use: "raw-loader"
 				},
 				{
+					// Forces Webpack to preserve internal module properties during optimization passes
+					test: /node_modules\/three/,
+					sideEffects: true
+				},
+				{
 					test: /.*brython.*/,
 					loader: "@shoutem/webpack-prepend-append",
 					options: JSON.stringify({
 						prepend: `(function (root, factory) {
-						if (typeof define === 'function' && define.amd) { define([], factory); }  // AMD loader
-						else if (typeof module === 'object' && module.exports) { module.exports = factory(); }  // CommonJS loader
-						else { root.brython = factory(); }  // Script tag
-						}(typeof self !== 'undefined' ? self : this, function () {
-						var process = {release: {name: ''}};`,
+                        if (typeof define === 'function' && define.amd) { define([], factory); }  // AMD loader
+                        else if (typeof module === 'object' && module.exports) { module.exports = factory(); }  // CommonJS loader
+                        else { root.brython = factory(); }  // Script tag
+                        }(typeof self !== 'undefined' ? self : this, function () {
+                        var process = {release: {name: ''}};`,
 						append: `window.__BRYTHON__ = __BRYTHON__;
-						return __BRYTHON__;
-						}));`
+                        return __BRYTHON__;
+                        }));`
 					})
 				}
 			]
@@ -56,9 +61,9 @@ module.exports = [
 						force: true
 					}
 				],
-				options: {concurrency: 100}
+				options: { concurrency: 100 }
 			}),
-			new HtmlWebpackPlugin({template: source + "/editor/index.html", filename: "index.html"}),
+			new HtmlWebpackPlugin({ template: source + "/editor/index.html", filename: "index.html" }),
 			new Webpack.ProgressPlugin(),
 			new Webpack.ProvidePlugin({
 				THREE: "three",

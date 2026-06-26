@@ -10,7 +10,7 @@ const config = {
 	target: "web",
 	devtool: false,
 	mode: "production",
-	optimization: {minimize: true},
+	optimization: { minimize: true },
 	performance: {
 		hints: false,
 	},
@@ -18,7 +18,7 @@ const config = {
 		new Webpack.ProvidePlugin({
 			THREE: "three",
 			"window.THREE": "three"
-		})
+		}),
 	],
 	module: {
 		rules: [

@@ -1,18 +1,37 @@
 const Path = require("path");
-const {merge} = require("webpack-merge");
+const { merge } = require("webpack-merge");
 const Webpack = require("webpack");
-const {GitRevisionPlugin} = require("git-revision-webpack-plugin");
+const { GitRevisionPlugin } = require("git-revision-webpack-plugin");
+const TerserPlugin = require("terser-webpack-plugin");
 const common = require("./webpack.config.js");
 
 const git = new GitRevisionPlugin();
-
 const output = Path.resolve(__dirname, "docs/editor");
 
 module.exports = [
 	merge(common[0], {
 		devtool: false,
 		mode: "production",
-		optimization: {minimize: true},
+		optimization: {
+			minimize: true,
+			usedExports: true,
+			concatenateModules: false,
+			minimizer: [
+				new TerserPlugin({
+					terserOptions: {
+						compress: {
+							passes: 2,
+							dead_code: true
+						},
+						mangle: true,
+						output: {
+							comments: false
+						}
+					},
+					extractComments: false
+				})
+			]
+		},
 		performance: {
 			hints: false,
 		},

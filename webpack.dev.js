@@ -1,21 +1,24 @@
+const Path = require("path");
 const Webpack = require("webpack");
-const {GitRevisionPlugin} = require("git-revision-webpack-plugin");
-const {merge} = require("webpack-merge");
+const { GitRevisionPlugin } = require("git-revision-webpack-plugin");
+const { merge } = require("webpack-merge");
+const common = require("./webpack.config.js");
 
 const git = new GitRevisionPlugin();
-
-const common = require("./webpack.config.js");
+const output = Path.resolve(__dirname, "docs/editor");
 
 module.exports = [
 	merge(common[0], {
 		mode: "development",
-		optimization: {minimize: false},
+		optimization: {
+			minimize: false
+		},
 		devtool: 'inline-source-map',
 		performance: {
 			hints: false,
 		},
 		devServer: {
-			static: common[0].output.path,
+			static: output, // Directly targets your established workspace output directory safely
 			compress: false,
 			historyApiFallback: true,
 			hot: true,
