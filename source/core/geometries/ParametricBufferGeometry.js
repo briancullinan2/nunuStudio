@@ -1,4 +1,4 @@
-import {ParametricBufferGeometry as TParametricBufferGeometry, Vector3} from "three";
+import { ParametricGeometry as TParametricBufferGeometry, Vector3 } from "three/examples/jsm/geometries/ParametricGeometry.js";
 
 /**
  * Parametric bufffer geometry are constructed from javascript code describing a parametric surface.
@@ -13,8 +13,7 @@ import {ParametricBufferGeometry as TParametricBufferGeometry, Vector3} from "th
  * @param {number} slices The count of slices to use for the parametric function.
  * @param {number} stacks The count of stacks to use for the parametric function.
  */
-function ParametricBufferGeometry(code, slices, stacks)
-{
+function ParametricBufferGeometry(code, slices, stacks) {
 	var generator = this.compile(code);
 
 	TParametricBufferGeometry.call(this, generator, slices, stacks);
@@ -36,21 +35,17 @@ ParametricBufferGeometry.prototype = Object.create(TParametricBufferGeometry.pro
  * @method compile
  * @return {Function} Compiled function to calculate the position of the vertex from (U, V) coordinates.
  */
-ParametricBufferGeometry.prototype.compile = function(code)
-{
-	try
-	{
+ParametricBufferGeometry.prototype.compile = function (code) {
+	try {
 		return new Function("u, v, target", "target = target || new Vector3();\n" + code);
 	}
-	catch (e)
-	{
+	catch (e) {
 		console.error("nunuStudio: Error occured while compiling ParametricBufferGeometry code.", e);
 	}
 
-	return function(u, v, target)
-	{
+	return function (u, v, target) {
 		return target || new Vector3();
 	};
 };
 
-export {ParametricBufferGeometry};
+export { ParametricBufferGeometry };

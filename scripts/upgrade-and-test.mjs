@@ -369,7 +369,7 @@ async function main() {
 	}
 
 	console.log(`\n====================================================================`);
-	console.log(`## FINAL UPGRADE PIPELINE STATUS REPORT`);
+	console.log(`## UPGRADE PIPELINE STATUS REPORT`);
 	console.log(`====================================================================`);
 	console.table(report);
 

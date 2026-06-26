@@ -1,46 +1,39 @@
-import {Geometry, Matrix4, Mesh, Face3, Vector2, Face4, Vector3} from "three";
-import {BSPNode} from "./BSPNode.js";
-import {BSPPolygon} from "./BSPPolygon.js";
-import {BSPVertex} from "./BSPVertex.js";
+import { BufferGeometry, Matrix4, Mesh, Face3, Vector2, Face4, Vector3 } from "three";
+import { BSPNode } from "./BSPNode.js";
+import { BSPPolygon } from "./BSPPolygon.js";
+import { BSPVertex } from "./BSPVertex.js";
 
-function BSP(geometry)
-{
+function BSP(geometry) {
 	// Convert Geometry to BSP
 	var length;
 	var face, vertex, faceVertexUvs, uvs;
 	var polygon;
 	var polygons = [];
 
-	if (geometry instanceof Geometry)
-	{
+	if (geometry instanceof Geometry) {
 		this.matrix = new Matrix4();
 	}
-	else if (geometry instanceof Mesh)
-	{
+	else if (geometry instanceof Mesh) {
 		// #todo: add hierarchy support
 		geometry.updateMatrix();
 		this.matrix = geometry.matrix.clone();
 		geometry = geometry.geometry;
 	}
-	else if (geometry instanceof BSPNode)
-	{
+	else if (geometry instanceof BSPNode) {
 		this.tree = geometry;
 		this.matrix = new Matrix4();
 		return this;
 	}
-	else
-	{
+	else {
 		throw new Error("nunuStudio: Given geometry is unsupported");
 	}
 
-	for (var i = 0, length = geometry.faces.length; i < length; i++)
-	{
+	for (var i = 0, length = geometry.faces.length; i < length; i++) {
 		face = geometry.faces[i];
 		faceVertexUvs = geometry.faceVertexUvs[0][i];
 		polygon = new BSPPolygon();
 
-		if (face instanceof Face3)
-		{
+		if (face instanceof Face3) {
 			vertex = geometry.vertices[face.a];
 			uvs = faceVertexUvs ? new Vector2(faceVertexUvs[0].x, faceVertexUvs[0].y) : null;
 			vertex = new BSPVertex(vertex.x, vertex.y, vertex.z, face.vertexNormals[0], uvs);
@@ -59,8 +52,7 @@ function BSP(geometry)
 			vertex.applyMatrix4(this.matrix);
 			polygon.vertices.push(vertex);
 		}
-		else if (typeof Face4)
-		{
+		else if (typeof Face4) {
 			vertex = geometry.vertices[face.a];
 			uvs = faceVertexUvs ? new Vector2(faceVertexUvs[0].x, faceVertexUvs[0].y) : null;
 			vertex = new BSPVertex(vertex.x, vertex.y, vertex.z, face.vertexNormals[0], uvs);
@@ -85,8 +77,7 @@ function BSP(geometry)
 			vertex.applyMatrix4(this.matrix);
 			polygon.vertices.push(vertex);
 		}
-		else
-		{
+		else {
 			throw new Error("Invalid face type at index " + i);
 		}
 
@@ -97,8 +88,7 @@ function BSP(geometry)
 	this.tree = new BSPNode(polygons);
 };
 
-BSP.prototype.subtract = function(otherTree)
-{
+BSP.prototype.subtract = function (otherTree) {
 	var a = this.tree.clone();
 	var b = otherTree.tree.clone();
 
@@ -115,8 +105,7 @@ BSP.prototype.subtract = function(otherTree)
 	return a;
 };
 
-BSP.prototype.union = function(otherTree)
-{
+BSP.prototype.union = function (otherTree) {
 	var a = this.tree.clone();
 	var b = otherTree.tree.clone();
 
@@ -131,8 +120,7 @@ BSP.prototype.union = function(otherTree)
 	return a;
 };
 
-BSP.prototype.intersect = function(otherTree)
-{
+BSP.prototype.intersect = function (otherTree) {
 	var a = this.tree.clone();
 	var b = otherTree.tree.clone();
 
@@ -148,8 +136,7 @@ BSP.prototype.intersect = function(otherTree)
 	return a;
 };
 
-BSP.prototype.toGeometry = function()
-{
+BSP.prototype.toGeometry = function () {
 	var matrix = new Matrix4().getInverse(this.matrix);
 	var geometry = new Geometry();
 	var polygons = this.tree.allPolygons();
@@ -160,13 +147,11 @@ BSP.prototype.toGeometry = function()
 	var vertex, face;
 	var verticeUvs;
 
-	for (var i = 0; i < polygonCount; i++)
-	{
+	for (var i = 0; i < polygonCount; i++) {
 		polygon = polygons[i];
 		polygonVerticeCount = polygon.vertices.length;
 
-		for (var j = 2; j < polygonVerticeCount; j++)
-		{
+		for (var j = 2; j < polygonVerticeCount; j++) {
 			verticeUvs = [];
 
 			vertex = polygon.vertices[0];
@@ -174,12 +159,10 @@ BSP.prototype.toGeometry = function()
 			vertex = new Vector3(vertex.x, vertex.y, vertex.z);
 			vertex.applyMatrix4(matrix);
 
-			if (typeof verticeDict[vertex.x + "," + vertex.y + "," + vertex.z] !== "undefined")
-			{
+			if (typeof verticeDict[vertex.x + "," + vertex.y + "," + vertex.z] !== "undefined") {
 				vertexIdxA = verticeDict[vertex.x + "," + vertex.y + "," + vertex.z];
 			}
-			else
-			{
+			else {
 				geometry.vertices.push(vertex);
 				vertexIdxA = verticeDict[vertex.x + "," + vertex.y + "," + vertex.z] = geometry.vertices.length - 1;
 			}
@@ -190,12 +173,10 @@ BSP.prototype.toGeometry = function()
 
 			vertex = new Vector3(vertex.x, vertex.y, vertex.z);
 			vertex.applyMatrix4(matrix);
-			if (typeof verticeDict[vertex.x + "," + vertex.y + "," + vertex.z] !== "undefined")
-			{
+			if (typeof verticeDict[vertex.x + "," + vertex.y + "," + vertex.z] !== "undefined") {
 				vertexIdxB = verticeDict[vertex.x + "," + vertex.y + "," + vertex.z];
 			}
-			else
-			{
+			else {
 				geometry.vertices.push(vertex);
 				vertexIdxB = verticeDict[vertex.x + "," + vertex.y + "," + vertex.z] = geometry.vertices.length - 1;
 			}
@@ -204,12 +185,10 @@ BSP.prototype.toGeometry = function()
 			verticeUvs.push(new Vector2(vertex.uv.x, vertex.uv.y));
 			vertex = new Vector3(vertex.x, vertex.y, vertex.z);
 			vertex.applyMatrix4(matrix);
-			if (typeof verticeDict[vertex.x + "," + vertex.y + "," + vertex.z] !== "undefined")
-			{
+			if (typeof verticeDict[vertex.x + "," + vertex.y + "," + vertex.z] !== "undefined") {
 				vertexIdxC = verticeDict[vertex.x + "," + vertex.y + "," + vertex.z];
 			}
-			else
-			{
+			else {
 				geometry.vertices.push(vertex);
 				vertexIdxC = verticeDict[vertex.x + "," + vertex.y + "," + vertex.z] = geometry.vertices.length - 1;
 			}
@@ -224,8 +203,7 @@ BSP.prototype.toGeometry = function()
 	return geometry;
 };
 
-BSP.prototype.toMesh = function(material)
-{
+BSP.prototype.toMesh = function (material) {
 	var geometry = this.toGeometry();
 	var mesh = new Mesh(geometry, material);
 
@@ -235,4 +213,4 @@ BSP.prototype.toMesh = function(material)
 	return mesh;
 };
 
-export {BSP};
+export { BSP };

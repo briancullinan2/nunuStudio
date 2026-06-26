@@ -1,4 +1,4 @@
-import {Math, Object3D, Bone, Matrix4} from "three";
+import {MathUtils, Object3D, Bone, Matrix4} from "three";
 import {DataTexture} from "../../texture/DataTexture.js";
 import {ResourceContainer} from "../../resources/ResourceContainer.js";
 
@@ -17,7 +17,7 @@ THREE.Skeleton.prototype.toJSON = function()
 	// Generate a new UUID of there is none.
 	if (this.uuid === undefined)
 	{
-		this.uuid = Math.generateUUID();
+		this.uuid = MathUtils.generateUUID();
 	}
 
 	data.uuid = this.uuid;

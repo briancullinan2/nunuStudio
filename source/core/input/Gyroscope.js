@@ -1,4 +1,4 @@
-import {Math as TMath, Euler, Quaternion, Vector3} from "three";
+import {MathUtils as TMath, Euler, Quaternion, Vector3} from "three";
 import {EventManager} from "../utils/EventManager.js";
 
 /**

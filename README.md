@@ -28,71 +28,66 @@
 
 
 This awesome auto package upgrader and a couple of automated tests/*.
+### UPGRADE PIPELINE STATUS REPORT
 
-====================================================================
-## FINAL UPGRADE PIPELINE STATUS REPORT
-====================================================================
-┌─────────┬──────────────────────────────────────┬───────────────────┬────────────┐
-│ (index) │ name                                 │ outcome           │ version    │
-├─────────┼──────────────────────────────────────┼───────────────────┼────────────┤
-│ 0       │ '@as-com/pson'                       │ 'HELD (FALLBACK)' │ '3.0.1'    │
-│ 1       │ '@esotericsoftware/spine-core'       │ 'UPGRADED'        │ 'latest'   │
-│ 2       │ '@esotericsoftware/spine-threejs'    │ 'UPGRADED'        │ 'latest'   │
-│ 3       │ '@tweenjs/tween.js'                  │ 'UPGRADED'        │ 'latest'   │
-│ 4       │ 'brython'                            │ 'UPGRADED'        │ 'latest'   │
-│ 5       │ 'cannon-es'                          │ 'UPGRADED'        │ 'latest'   │
-│ 6       │ 'codemirror'                         │ 'UPGRADED'        │ '6.65.7'   │
-│ 7       │ 'draco3d'                            │ 'UPGRADED'        │ 'latest'   │
-│ 8       │ 'draco3dgltf'                        │ 'UPGRADED'        │ 'latest'   │
-│ 9       │ 'escher.js'                          │ 'UPGRADED'        │ 'latest'   │
-│ 10      │ 'glsl-editor'                        │ 'HELD (FALLBACK)' │ '1.0.0'    │
-│ 11      │ 'iterator-result'                    │ 'HELD (FALLBACK)' │ '1.0.0'    │
-│ 12      │ 'jshint'                             │ 'UPGRADED'        │ 'latest'   │
-│ 13      │ 'jszip'                              │ 'UPGRADED'        │ 'latest'   │
-│ 14      │ 'math-ds'                            │ 'HELD (FALLBACK)' │ '1.2.1'    │
-│ 15      │ 'sparse-octree'                      │ 'UPGRADED'        │ 'latest'   │
-│ 16      │ 'tern'                               │ 'HELD (FALLBACK)' │ '0.24.3'   │
-│ 17      │ 'three'                              │ 'HELD (FALLBACK)' │ '^0.119.1' │
-│ 18      │ 'three-bmfont-text'                  │ 'HELD (FALLBACK)' │ '3.0.1'    │
-│ 19      │ 'three-to-cannon'                    │ 'UPGRADED'        │ 'latest'   │
-│ 20      │ 'troika-three-text'                  │ 'UPGRADED'        │ 'latest'   │
-│ 21      │ '@babel/core'                        │ 'UPGRADED'        │ 'latest'   │
-│ 22      │ '@babel/plugin-transform-classes'    │ 'UPGRADED'        │ 'latest'   │
-│ 23      │ '@babel/preset-env'                  │ 'UPGRADED'        │ 'latest'   │
-│ 24      │ '@babel/runtime'                     │ 'HELD (FALLBACK)' │ '^7.29.7'  │
-│ 25      │ '@shoutem/webpack-prepend-append'    │ 'HELD (FALLBACK)' │ '1.0.1'    │
-│ 26      │ '@types/node'                        │ 'UPGRADED'        │ 'latest'   │
-│ 27      │ '@types/webpack'                     │ 'UPGRADED'        │ 'latest'   │
-│ 28      │ 'acorn'                              │ 'UPGRADED'        │ 'latest'   │
-│ 29      │ 'ajv'                                │ 'UPGRADED'        │ 'latest'   │
-│ 30      │ 'babel-loader'                       │ 'UPGRADED'        │ 'latest'   │
-│ 31      │ 'babel-polyfill'                     │ 'HELD (FALLBACK)' │ '6.26.0'   │
-│ 32      │ 'copy-webpack-plugin'                │ 'UPGRADED'        │ 'latest'   │
-│ 33      │ 'cordova'                            │ 'UPGRADED'        │ 'latest'   │
-│ 34      │ 'css-loader'                         │ 'UPGRADED'        │ 'latest'   │
-│ 35      │ 'eslint'                             │ 'UPGRADED'        │ 'latest'   │
-│ 36      │ 'eslint-plugin-import'               │ 'UPGRADED'        │ 'latest'   │
-│ 37      │ 'eslint-plugin-jsdoc'                │ 'UPGRADED'        │ 'latest'   │
-│ 38      │ 'git-revision-webpack-plugin'        │ 'HELD (FALLBACK)' │ '5.0.0'    │
-│ 39      │ 'html-webpack-plugin'                │ 'UPGRADED'        │ 'latest'   │
-│ 40      │ 'http-server'                        │ 'HELD (FALLBACK)' │ '14.1.1'   │
-│ 41      │ 'jsdoc'                              │ 'UPGRADED'        │ 'latest'   │
-│ 42      │ 'nwjs-builder-phoenix'               │ 'HELD (FALLBACK)' │ '1.15.0'   │
-│ 43      │ 'puppeteer'                          │ 'HELD (FALLBACK)' │ '25.2.1'   │
-│ 44      │ 'raw-loader'                         │ 'HELD (FALLBACK)' │ '4.0.2'    │
-│ 45      │ 'style-loader'                       │ 'UPGRADED'        │ 'latest'   │
-│ 46      │ 'uglifyjs-webpack-plugin'            │ 'HELD (FALLBACK)' │ '2.2.0'    │
-│ 47      │ 'vitest'                             │ 'HELD (FALLBACK)' │ '4.1.9'    │
-│ 48      │ 'webpack'                            │ 'UPGRADED'        │ 'latest'   │
-│ 49      │ 'webpack-cleanup-plugin'             │ 'HELD (FALLBACK)' │ '0.5.1'    │
-│ 50      │ 'webpack-cli'                        │ 'UPGRADED'        │ 'latest'   │
-│ 51      │ 'webpack-dev-server'                 │ 'UPGRADED'        │ 'latest'   │
-│ 52      │ 'webpack-merge'                      │ 'UPGRADED'        │ 'latest'   │
-│ 53      │ 'webpack-merge-and-include-globally' │ 'HELD (FALLBACK)' │ '2.3.4'    │
-│ 54      │ 'webpack-node-externals'             │ 'HELD (FALLBACK)' │ '3.0.0'    │
-│ 55      │ 'yuidocjs'                           │ 'HELD (FALLBACK)' │ '0.10.2'   │
-└─────────┴──────────────────────────────────────┴───────────────────┴────────────┘
-
+| (index) | name | outcome | version |
+| --- | --- | --- | --- |
+| 0 | '@as-com/pson' | 'HELD (FALLBACK)' | '3.0.1' |
+| 1 | '@esotericsoftware/spine-core' | 'UPGRADED' | 'latest' |
+| 2 | '@esotericsoftware/spine-threejs' | 'UPGRADED' | 'latest' |
+| 3 | '@tweenjs/tween.js' | 'UPGRADED' | 'latest' |
+| 4 | 'brython' | 'UPGRADED' | 'latest' |
+| 5 | 'cannon-es' | 'UPGRADED' | 'latest' |
+| 6 | 'codemirror' | 'UPGRADED' | '6.65.7' |
+| 7 | 'draco3d' | 'UPGRADED' | 'latest' |
+| 8 | 'draco3dgltf' | 'UPGRADED' | 'latest' |
+| 9 | 'escher.js' | 'UPGRADED' | 'latest' |
+| 10 | 'glsl-editor' | 'HELD (FALLBACK)' | '1.0.0' |
+| 11 | 'iterator-result' | 'HELD (FALLBACK)' | '1.0.0' |
+| 12 | 'jshint' | 'UPGRADED' | 'latest' |
+| 13 | 'jszip' | 'UPGRADED' | 'latest' |
+| 14 | 'math-ds' | 'HELD (FALLBACK)' | '1.2.1' |
+| 15 | 'sparse-octree' | 'UPGRADED' | 'latest' |
+| 16 | 'tern' | 'HELD (FALLBACK)' | '0.24.3' |
+| 17 | 'three' | 'HELD (FALLBACK)' | '^0.119.1' |
+| 18 | 'three-bmfont-text' | 'HELD (FALLBACK)' | '3.0.1' |
+| 19 | 'three-to-cannon' | 'UPGRADED' | 'latest' |
+| 20 | 'troika-three-text' | 'UPGRADED' | 'latest' |
+| 21 | '@babel/core' | 'UPGRADED' | 'latest' |
+| 22 | '@babel/plugin-transform-classes' | 'UPGRADED' | 'latest' |
+| 23 | '@babel/preset-env' | 'UPGRADED' | 'latest' |
+| 24 | '@babel/runtime' | 'HELD (FALLBACK)' | '^7.29.7' |
+| 25 | '@shoutem/webpack-prepend-append' | 'HELD (FALLBACK)' | '1.0.1' |
+| 26 | '@types/node' | 'UPGRADED' | 'latest' |
+| 27 | '@types/webpack' | 'UPGRADED' | 'latest' |
+| 28 | 'acorn' | 'UPGRADED' | 'latest' |
+| 29 | 'ajv' | 'UPGRADED' | 'latest' |
+| 30 | 'babel-loader' | 'UPGRADED' | 'latest' |
+| 31 | 'babel-polyfill' | 'HELD (FALLBACK)' | '6.26.0' |
+| 32 | 'copy-webpack-plugin' | 'UPGRADED' | 'latest' |
+| 33 | 'cordova' | 'UPGRADED' | 'latest' |
+| 34 | 'css-loader' | 'UPGRADED' | 'latest' |
+| 35 | 'eslint' | 'UPGRADED' | 'latest' |
+| 36 | 'eslint-plugin-import' | 'UPGRADED' | 'latest' |
+| 37 | 'eslint-plugin-jsdoc' | 'UPGRADED' | 'latest' |
+| 38 | 'git-revision-webpack-plugin' | 'HELD (FALLBACK)' | '5.0.0' |
+| 39 | 'html-webpack-plugin' | 'UPGRADED' | 'latest' |
+| 40 | 'http-server' | 'HELD (FALLBACK)' | '14.1.1' |
+| 41 | 'jsdoc' | 'UPGRADED' | 'latest' |
+| 42 | 'nwjs-builder-phoenix' | 'HELD (FALLBACK)' | '1.15.0' |
+| 43 | 'puppeteer' | 'HELD (FALLBACK)' | '25.2.1' |
+| 44 | 'raw-loader' | 'HELD (FALLBACK)' | '4.0.2' |
+| 45 | 'style-loader' | 'UPGRADED' | 'latest' |
+| 46 | 'uglifyjs-webpack-plugin' | 'HELD (FALLBACK)' | '2.2.0' |
+| 47 | 'vitest' | 'HELD (FALLBACK)' | '4.1.9' |
+| 48 | 'webpack' | 'UPGRADED' | 'latest' |
+| 49 | 'webpack-cleanup-plugin' | 'HELD (FALLBACK)' | '0.5.1' |
+| 50 | 'webpack-cli' | 'UPGRADED' | 'latest' |
+| 51 | 'webpack-dev-server' | 'UPGRADED' | 'latest' |
+| 52 | 'webpack-merge' | 'UPGRADED' | 'latest' |
+| 53 | 'webpack-merge-and-include-globally' | 'HELD (FALLBACK)' | '2.3.4' |
+| 54 | 'webpack-node-externals' | 'HELD (FALLBACK)' | '3.0.0' |
+| 55 | 'yuidocjs' | 'HELD (FALLBACK)' | '0.10.2' |
 
 
 

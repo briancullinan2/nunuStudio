@@ -1,8 +1,8 @@
-import {UniformsUtils, ShaderMaterial, NoBlending, WebGLRenderTarget, LinearMipMapLinearFilter, LinearFilter, RGBAFormat, MeshBasicMaterial} from "three";
-import {CopyShader} from "three/examples/jsm/shaders/CopyShader";
-import {LuminosityShader} from "three/examples/jsm/shaders/LuminosityShader";
-import {ToneMapShader} from "three/examples/jsm/shaders/ToneMapShader";
-import {Pass} from "../Pass.js";
+import { UniformsUtils, ShaderMaterial, NoBlending, WebGLRenderTarget, LinearMipMapLinearFilter, LinearFilter, RGBAFormat, MeshBasicMaterial } from "three";
+import { CopyShader } from "three/examples/jsm/shaders/CopyShader";
+import { LuminosityShader } from "three/examples/jsm/shaders/LuminosityShader";
+import { ACESFilmicToneMappingShader } from "three/examples/jsm/shaders/ACESFilmicToneMappingShader";
+import { Pass } from "../Pass.js";
 
 /**
  * Generate a texture that represents the luminosity of the current scene, adapted over time to simulate the optic nerve responding to the amount of light it is receiving.
@@ -16,11 +16,10 @@ import {Pass} from "../Pass.js";
  * @module Postprocessing
  * @author miibond
  */
-function AdaptiveToneMappingPass(adaptive, resolution)
-{
+function AdaptiveToneMappingPass(adaptive, resolution) {
 	Pass.call(this);
 	var self = this;
-	
+
 	this.type = "AdaptiveToneMapping";
 	this.needsInit = true;
 
@@ -51,8 +50,7 @@ function AdaptiveToneMappingPass(adaptive, resolution)
 
 	this.createShader();
 
-	if (ToneMapShader === undefined)
-	{
+	if (ToneMapShader === undefined) {
 		console.error("nunuStudio: AdaptiveToneMappingPass relies on ToneMapShader");
 	}
 
@@ -68,17 +66,17 @@ function AdaptiveToneMappingPass(adaptive, resolution)
 
 	Object.defineProperties(this,
 		{
-		/**
-		 * Minimum luminance.
-		 *
-		 * @property minLuminance
-		 * @type {number}
-		 */
+			/**
+			 * Minimum luminance.
+			 *
+			 * @property minLuminance
+			 * @type {number}
+			 */
 			minLuminance:
-		{
-			get: function() {return self.adaptLuminanceShader.uniforms["minLuminance"].value;},
-			set: function(value) {self.adaptLuminanceShader.uniforms["minLuminance"].value = value;}
-		},
+			{
+				get: function () { return self.adaptLuminanceShader.uniforms["minLuminance"].value; },
+				set: function (value) { self.adaptLuminanceShader.uniforms["minLuminance"].value = value; }
+			},
 
 			/**
 			 * Rate of luminance variation (adaptation rate).
@@ -87,10 +85,10 @@ function AdaptiveToneMappingPass(adaptive, resolution)
 			 * @type {number}
 			 */
 			tau:
-		{
-			get: function() {return self.adaptLuminanceShader.uniforms["tau"].value;},
-			set: function(value) {self.adaptLuminanceShader.uniforms["tau"].value = value;}
-		},
+			{
+				get: function () { return self.adaptLuminanceShader.uniforms["tau"].value; },
+				set: function (value) { self.adaptLuminanceShader.uniforms["tau"].value = value; }
+			},
 
 			/**
 			 * Rate of luminance variation (adaptation rate).
@@ -99,26 +97,23 @@ function AdaptiveToneMappingPass(adaptive, resolution)
 			 * @type {number}
 			 */
 			adaptive:
-		{
-			get: function() {return self._adaptive;},
-			set: function(adaptive)
 			{
-				if (adaptive)
-				{
-					this._adaptive = true;
-					this.materialToneMap.defines["ADAPTED_LUMINANCE"] = "";
-					this.materialToneMap.uniforms.luminanceMap.value = this.luminanceRT.texture;
-				}
-				else
-				{
-					this._adaptive = false;
-					delete this.materialToneMap.defines["ADAPTED_LUMINANCE"];
-					this.materialToneMap.uniforms.luminanceMap.value = null;
-				}
+				get: function () { return self._adaptive; },
+				set: function (adaptive) {
+					if (adaptive) {
+						this._adaptive = true;
+						this.materialToneMap.defines["ADAPTED_LUMINANCE"] = "";
+						this.materialToneMap.uniforms.luminanceMap.value = this.luminanceRT.texture;
+					}
+					else {
+						this._adaptive = false;
+						delete this.materialToneMap.defines["ADAPTED_LUMINANCE"];
+						this.materialToneMap.uniforms.luminanceMap.value = null;
+					}
 
-				this.materialToneMap.needsUpdate = true;
+					this.materialToneMap.needsUpdate = true;
+				}
 			}
-		}
 		});
 };
 
@@ -126,10 +121,8 @@ AdaptiveToneMappingPass.prototype = Object.create(Pass.prototype);
 
 AdaptiveToneMappingPass.prototype.constructor = AdaptiveToneMappingPass;
 
-AdaptiveToneMappingPass.prototype.render = function(renderer, writeBuffer, readBuffer, delta, maskActive)
-{
-	if (this.needsInit)
-	{
+AdaptiveToneMappingPass.prototype.render = function (renderer, writeBuffer, readBuffer, delta, maskActive) {
+	if (this.needsInit) {
 		this.reset();
 
 		this.luminanceRT.texture.type = readBuffer.texture.type;
@@ -138,8 +131,7 @@ AdaptiveToneMappingPass.prototype.render = function(renderer, writeBuffer, readB
 		this.needsInit = false;
 	}
 
-	if (this._adaptive)
-	{
+	if (this._adaptive) {
 		// Render the luminance of the current scene into a render target with mipmapping enabled
 		this.quad.material = this.materialLuminance;
 		this.materialLuminance.uniforms.tDiffuse.value = readBuffer.texture;
@@ -164,15 +156,13 @@ AdaptiveToneMappingPass.prototype.render = function(renderer, writeBuffer, readB
 	this.quad.material = this.materialToneMap;
 	this.materialToneMap.uniforms.tDiffuse.value = readBuffer.texture;
 
-	if (this.clear)
-	{
+	if (this.clear) {
 		renderer.autoClear = true;
 		renderer.autoClearColor = true;
 		renderer.autoClearDepth = true;
 		renderer.autoClearStencil = true;
 	}
-	else
-	{
+	else {
 		renderer.autoClear = false;
 	}
 
@@ -180,22 +170,21 @@ AdaptiveToneMappingPass.prototype.render = function(renderer, writeBuffer, readB
 	renderer.render(this.scene, this.camera);
 };
 
-AdaptiveToneMappingPass.prototype.createShader = function()
-{
+AdaptiveToneMappingPass.prototype.createShader = function () {
 	this.adaptLuminanceShader =
 	{
 		defines:
-		{MIP_LEVEL_1X1: (Math.log(this.resolution) / Math.log(2.0)).toFixed(1)},
+			{ MIP_LEVEL_1X1: (Math.log(this.resolution) / Math.log(2.0)).toFixed(1) },
 		uniforms:
 		{
-			lastLum: {value: null},
-			currentLum: {value: null},
-			minLuminance: {value: 0.01},
-			delta: {value: 0.016},
-			tau: {value: 1.0}
+			lastLum: { value: null },
+			currentLum: { value: null },
+			minLuminance: { value: 0.01 },
+			delta: { value: 0.016 },
+			tau: { value: 1.0 }
 		},
 		vertexShader:
-		"varying vec2 vUv;\n\
+			"varying vec2 vUv;\n\
 		void main(){\n\
 		\n\
 			vUv = uv;\n\
@@ -203,7 +192,7 @@ AdaptiveToneMappingPass.prototype.createShader = function()
 		\n\
 		}",
 		fragmentShader:
-		"varying vec2 vUv;\n\
+			"varying vec2 vUv;\n\
 		\n\
 		uniform sampler2D lastLum;\n\
 		uniform sampler2D currentLum;\n\
@@ -238,19 +227,15 @@ AdaptiveToneMappingPass.prototype.createShader = function()
 		});
 };
 
-AdaptiveToneMappingPass.prototype.reset = function()
-{
+AdaptiveToneMappingPass.prototype.reset = function () {
 	// Render targets
-	if (this.luminanceRT)
-	{
+	if (this.luminanceRT) {
 		this.luminanceRT.dispose();
 	}
-	if (this.currentLuminanceRT)
-	{
+	if (this.currentLuminanceRT) {
 		this.currentLuminanceRT.dispose();
 	}
-	if (this.previousLuminanceRT)
-	{
+	if (this.previousLuminanceRT) {
 		this.previousLuminanceRT.dispose();
 	}
 
@@ -268,53 +253,43 @@ AdaptiveToneMappingPass.prototype.reset = function()
 			format: RGBAFormat
 		});
 
-	if (this._adaptive)
-	{
+	if (this._adaptive) {
 		this.materialToneMap.defines["ADAPTED_LUMINANCE"] = "";
 		this.materialToneMap.uniforms.luminanceMap.value = this.luminanceRT.texture;
 	}
 
 	// Put something in the adaptive luminance texture so that the scene can render initially
-	this.quad.material = new MeshBasicMaterial({color: 0x777777});
+	this.quad.material = new MeshBasicMaterial({ color: 0x777777 });
 	this.materialLuminance.needsUpdate = true;
 	this.materialAdaptiveLum.needsUpdate = true;
 	this.materialToneMap.needsUpdate = true;
 };
 
-AdaptiveToneMappingPass.prototype.dispose = function()
-{
-	if (this.luminanceRT)
-	{
+AdaptiveToneMappingPass.prototype.dispose = function () {
+	if (this.luminanceRT) {
 		this.luminanceRT.dispose();
 	}
-	if (this.previousLuminanceRT)
-	{
+	if (this.previousLuminanceRT) {
 		this.previousLuminanceRT.dispose();
 	}
-	if (this.currentLuminanceRT)
-	{
+	if (this.currentLuminanceRT) {
 		this.currentLuminanceRT.dispose();
 	}
-	if (this.materialLuminance)
-	{
+	if (this.materialLuminance) {
 		this.materialLuminance.dispose();
 	}
-	if (this.materialAdaptiveLum)
-	{
+	if (this.materialAdaptiveLum) {
 		this.materialAdaptiveLum.dispose();
 	}
-	if (this.materialCopy)
-	{
+	if (this.materialCopy) {
 		this.materialCopy.dispose();
 	}
-	if (this.materialToneMap)
-	{
+	if (this.materialToneMap) {
 		this.materialToneMap.dispose();
 	}
 };
 
-AdaptiveToneMappingPass.prototype.toJSON = function(meta)
-{
+AdaptiveToneMappingPass.prototype.toJSON = function (meta) {
 	var data = Pass.prototype.toJSON.call(this, meta);
 
 	data.minLuminance = this.minLuminance;
@@ -323,4 +298,4 @@ AdaptiveToneMappingPass.prototype.toJSON = function(meta)
 
 	return data;
 };
-export {AdaptiveToneMappingPass};
+export { AdaptiveToneMappingPass };

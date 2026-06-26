@@ -1,4 +1,4 @@
-import {Math} from "three";
+import { MathUtils } from "three";
 
 /**
  * A worker task is processed by a worker pool.
@@ -7,15 +7,14 @@ import {Math} from "three";
  * @param {Object} data Data to be sent to the worker.
  * @param {Function} callback Function called when the task finishes.
  */
-function WorkerTask(data, callback)
-{
+function WorkerTask(data, callback) {
 	/**
 	 * Worker task identifier.
 	 *
 	 * @attribute uuid
 	 * @type {String}
 	 */
-	this.uuid = Math.generateUUID();
+	this.uuid = MathUtils.generateUUID();
 
 	/**
 	 * Data to be sent to the worker.
@@ -34,4 +33,4 @@ function WorkerTask(data, callback)
 	this.callback = callback;
 }
 
-export {WorkerTask};
+export { WorkerTask };

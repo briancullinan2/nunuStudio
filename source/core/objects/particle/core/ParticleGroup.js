@@ -1,4 +1,4 @@
-import {Texture, Vector2, Math as TMath, AdditiveBlending, Vector4, ShaderMaterial, BufferGeometry, Points, Vector3} from "three";
+import {Texture, Vector2, MathUtils as TMath, AdditiveBlending, Vector4, ShaderMaterial, BufferGeometry, Points, Vector3} from "three";
 import {ParticleShaders} from "../shaders/ParticleShaders.js";
 import {ParticleEmitter} from "../ParticleEmitter.js";
 import {ShaderAttribute} from "../helpers/ShaderAttribute.js";

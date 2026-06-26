@@ -1,7 +1,7 @@
-import {MeshBasicMaterial} from "three";
-import {TextMesh} from "../../../core/objects/text/TextMesh.js";
-import {OrthographicCamera} from "../../../core/objects/cameras/OrthographicCamera.js";
-import {PreviewRenderer} from "./PreviewRenderer.js";
+import { MeshBasicMaterial } from "three";
+import { TextMesh } from "../../../core/objects/text/TextMesh.js";
+import { OrthographicCamera } from "../../../core/objects/cameras/OrthographicCamera.js";
+import { PreviewRenderer } from "./PreviewRenderer.js";
 
 /** 
  * The font renderer is used to generate preview thumbnails for fonts.
@@ -9,48 +9,46 @@ import {PreviewRenderer} from "./PreviewRenderer.js";
  * @class FontRenderer
  * @extends {PreviewRenderer}
  */
-function FontRenderer()
-{
-	PreviewRenderer.call(this);
+class FontRenderer extends PreviewRenderer {
+	constructor() {
+		super();
 
-	// Camera
-	this.camera = new OrthographicCamera(3, 1);
+		// Camera
+		this.camera = new OrthographicCamera(3, 1);
 
-	// Text
-	this.text = new TextMesh("Abc", new MeshBasicMaterial({color: 0xFFFFFF}), null);
-	this.text.position.z = -3;
-	this.scene.add(this.text);
-}
-
-FontRenderer.prototype = Object.create(PreviewRenderer.prototype);
-
-FontRenderer.render = function(font, onRender)
-{
-	if (FontRenderer.instance === undefined)
-	{
-		FontRenderer.instance = new FontRenderer();
+		// Text
+		this.text = new TextMesh("Abc", new MeshBasicMaterial({ color: 0xFFFFFF }), null);
+		this.text.position.z = -3;
+		this.scene.add(this.text);
 	}
 
-	FontRenderer.instance.render(font, onRender);
-};
+	render(font, onRender) {
+		this.text.setFont(font);
 
-FontRenderer.prototype.render = function(font, onRender)
-{
-	this.text.setFont(font);
+		this.text.geometry.computeBoundingBox();
 
-	this.text.geometry.computeBoundingBox();
-	
-	var box = this.text.geometry.boundingBox;
-	this.text.position.x = -(box.max.x - box.min.x) / 2;
-	this.text.position.y = -(box.max.y - box.min.y) / 2;
+		var box = this.text.geometry.boundingBox;
+		this.text.position.x = -(box.max.x - box.min.x) / 2;
+		this.text.position.y = -(box.max.y - box.min.y) / 2;
 
-	this.camera.size = box.max.x - box.min.x;
-	this.camera.updateProjectionMatrix();
-	
-	this.renderer.render(this.scene, this.camera);
+		this.camera.size = box.max.x - box.min.x;
+		this.camera.updateProjectionMatrix();
 
-	// Callback
-	onRender(this.canvas.toDataURL());
-};
+		this.renderer.render(this.scene, this.camera);
 
-export {FontRenderer};
+		// Callback
+		onRender(this.canvas.toDataURL());
+	}
+
+	static render = function (font, onRender) {
+		if (FontRenderer.instance === undefined) {
+		}
+
+		FontRenderer.instance.render(font, onRender);
+	};
+
+}
+
+FontRenderer.instance = new FontRenderer();
+
+export { FontRenderer };
