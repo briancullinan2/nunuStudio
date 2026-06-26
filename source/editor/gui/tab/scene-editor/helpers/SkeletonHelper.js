@@ -1,4 +1,4 @@
-import { BufferGeometry, Color, Float32BufferAttribute, LineSegments, LineBasicMaterial, VertexColors, Matrix4, Vector3 } from "three";
+import { BufferGeometry, Color, Float32BufferAttribute, LineSegments, LineBasicMaterial, Matrix4, Vector3 } from "three";
 
 class SkeletonHelper extends LineSegments {
 	constructor(object) {
@@ -29,7 +29,7 @@ class SkeletonHelper extends LineSegments {
 
 		super(geometry, new LineBasicMaterial(
 			{
-				vertexColors: VertexColors,
+				vertexColors: true,
 				depthTest: false,
 				depthWrite: false,
 				transparent: false

@@ -67,6 +67,7 @@
     "tern": "0.24.3",
     "three": "^0.163.0",
     "three-bmfont-text": "3.0.1",
+    "three-subdivision-modifier": "^1.0.5",
     "three-to-cannon": "^5.0.2",
     "troika-three-text": "^0.52.4"
   },

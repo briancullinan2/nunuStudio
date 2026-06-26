@@ -1,5 +1,5 @@
 import { LinearFilter, CubeReflectionMapping, WebGLRenderer, Object3D, Mesh, SkinnedMesh, AnimationClip, MeshBasicMaterial, MeshPhongMaterial, ShapeGeometry, Matrix4, SRGBColorSpace } from "three";
-import { BasisTextureLoader } from "three/examples/jsm/loaders/BasisTextureLoader";
+import { BasisTextureLoader } from "three/examples/jsm/loaders/KTX2Loader";
 import { AMFLoader } from "three/examples/jsm/loaders/AMFLoader";
 import { DDSLoader } from "three/examples/jsm/loaders/DDSLoader";
 import { PVRLoader } from "three/examples/jsm/loaders/PVRLoader";

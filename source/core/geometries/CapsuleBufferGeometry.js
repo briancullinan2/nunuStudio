@@ -1,276 +1,188 @@
-import {BufferGeometry, BufferAttribute, Vector3, Vector2} from "three";
+import { BufferGeometry, Matrix4, Mesh, Vector2, Vector3, Float32BufferAttribute } from "three";
+import { BSPNode } from "./BSPNode.js";
+import { BSPPolygon } from "./BSPPolygon.js";
+import { BSPVertex } from "./BSPVertex.js";
 
-/**
- * Capsule like geometry shape consisting of a cylinder with hemispherical ends.
- *
- * The geometry is fully configurable booth in size and details, and can also be used to generate sections of capsule.
- *
- * @class CapsuleBufferGeometry
- * @constructor
- */
-class CapsuleBufferGeometry extends BufferGeometry
-{
-	constructor(radiusTop, radiusBottom, height, radialSegments, heightSegments, capsTopSegments, capsBottomSegments, thetaStart, thetaLength) 
-	{
-		super();
+function BSP(geometry) {
+	var polygon;
+	var polygons = [];
 
-		this.type = "CapsuleBufferGeometry";
+	if (geometry instanceof BufferGeometry) {
+		this.matrix = new Matrix4();
+	}
+	else if (geometry instanceof Mesh) {
+		geometry.updateMatrix();
+		this.matrix = geometry.matrix.clone();
+		geometry = geometry.geometry;
+	}
+	else if (geometry instanceof BSPNode) {
+		this.tree = geometry;
+		this.matrix = new Matrix4();
+		return this;
+	}
+	else {
+		throw new Error("nunuStudio: Given geometry is unsupported");
+	}
 
-		this.parameters = {
-			radiusTop: radiusTop,
-			radiusBottom: radiusBottom,
-			height: height,
-			radialSegments: radialSegments,
-			heightSegments: heightSegments,
-			capsTopSegments: capsTopSegments,
-			capsBottomSegments: capsBottomSegments,
-			thetaStart: thetaStart,
-			thetaLength: thetaLength
-		};
+	// Pull attributes out of modern BufferGeometry
+	const posAttr = geometry.getAttribute("position");
+	const normalAttr = geometry.getAttribute("normal");
+	const uvAttr = geometry.getAttribute("uv");
+	const indexAttr = geometry.getIndex();
 
-		var scope = this;
+	const getVertex = (idx) => {
+		const vx = posAttr.getX(idx);
+		const vy = posAttr.getY(idx);
+		const vz = posAttr.getZ(idx);
 
-		radiusTop = radiusTop !== undefined ? radiusTop : 1;
-		radiusBottom = radiusBottom !== undefined ? radiusBottom : 1;
-		height = height !== undefined ? height : 2;
-
-		radialSegments = Math.floor(radialSegments) || 8;
-		heightSegments = Math.floor(heightSegments) || 1;
-		capsTopSegments = Math.floor(capsTopSegments) || 2;
-		capsBottomSegments = Math.floor(capsBottomSegments) || 2;
-
-		thetaStart = thetaStart !== undefined ? thetaStart : 0.0;
-		thetaLength = thetaLength !== undefined ? thetaLength : 2.0 * Math.PI;
-
-		// Alpha is the angle such that Math.PI/2 - alpha is the cone part angle.
-		var alpha = Math.acos((radiusBottom-radiusTop)/height);
-		var eqRadii = radiusTop-radiusBottom === 0;
-
-		var vertexCount = calculateVertexCount();
-		var indexCount = calculateIndexCount();
-
-		// buffers
-		var indices = new BufferAttribute(new (indexCount > 65535 ? Uint32Array : Uint16Array)(indexCount), 1);
-		var vertices = new BufferAttribute(new Float32Array(vertexCount * 3), 3);
-		var normals = new BufferAttribute(new Float32Array(vertexCount * 3), 3);
-		var uvs = new BufferAttribute(new Float32Array(vertexCount * 2), 2);
-
-		// Helper variables
-		var index = 0,
-			indexOffset = 0,
-			indexArray = [],
-			halfHeight = height / 2;
-
-		// Generate geometry
-		generateTorso();
-
-		// Build geometry
-		this.setIndex(indices);
-		this.setAttribute("position", vertices);
-		this.setAttribute("normal", normals);
-		this.setAttribute("uv", uvs);
-
-		// Helper functions
-		function calculateVertexCount()
-		{
-			var count = (radialSegments + 1) * (heightSegments + 1 + capsBottomSegments + capsTopSegments);
-			return count;
+		let normal = null;
+		if (normalAttr) {
+			normal = new Vector3(normalAttr.getX(idx), normalAttr.getY(idx), normalAttr.getZ(idx));
 		}
 
-		function calculateIndexCount()
-		{
-			var count = radialSegments * (heightSegments + capsBottomSegments + capsTopSegments) * 2 * 3;
-			return count;
+		let uv = null;
+		if (uvAttr) {
+			uv = new Vector2(uvAttr.getX(idx), uvAttr.getY(idx));
 		}
 
-		function generateTorso()
-		{
-			var x, y;
-			var normal = new Vector3();
-			var vertex = new Vector3();
+		const bspVert = new BSPVertex(vx, vy, vz, normal, uv);
+		bspVert.applyMatrix4(this.matrix);
+		return bspVert;
+	};
 
-			var cosAlpha = Math.cos(alpha);
-			var sinAlpha = Math.sin(alpha);
+	if (indexAttr) {
+		// Indexed BufferGeometry
+		for (let i = 0; i < indexAttr.count; i += 3) {
+			polygon = new BSPPolygon();
+			polygon.vertices.push(getVertex(indexAttr.getX(i)));
+			polygon.vertices.push(getVertex(indexAttr.getX(i + 1)));
+			polygon.vertices.push(getVertex(indexAttr.getX(i + 2)));
+			polygon.calculateProperties();
+			polygons.push(polygon);
+		}
+	} else if (posAttr) {
+		// Non-indexed BufferGeometry
+		for (let i = 0; i < posAttr.count; i += 3) {
+			polygon = new BSPPolygon();
+			polygon.vertices.push(getVertex(i));
+			polygon.vertices.push(getVertex(i + 1));
+			polygon.vertices.push(getVertex(i + 2));
+			polygon.calculateProperties();
+			polygons.push(polygon);
+		}
+	}
 
-			var coneLength = new Vector2(radiusTop * sinAlpha, halfHeight + radiusTop * cosAlpha).sub(new Vector2(radiusBottom * sinAlpha, -halfHeight + radiusBottom * cosAlpha)).length();
+	this.tree = new BSPNode(polygons);
+}
 
-			// Total length forv texture coord
-			var vl = radiusTop*alpha + coneLength + radiusBottom*(Math.PI/2-alpha);
+BSP.prototype.subtract = function (otherTree) {
+	var a = this.tree.clone();
+	var b = otherTree.tree.clone();
 
-			var groupCount = 0;
+	a.invert();
+	a.clipTo(b);
+	b.clipTo(a);
+	b.invert();
+	b.clipTo(a);
+	b.invert();
+	a.build(b.allPolygons());
+	a.invert();
+	a = new BSP(a);
+	a.matrix = this.matrix;
+	return a;
+};
 
-			// generate vertices, normals and uvs
-			var v = 0;
-			for (y = 0; y <= capsTopSegments; y++)
-			{
-				var indexRow = [];
+BSP.prototype.union = function (otherTree) {
+	var a = this.tree.clone();
+	var b = otherTree.tree.clone();
 
-				var a = Math.PI/2 - alpha*(y / capsTopSegments);
+	a.clipTo(b);
+	b.clipTo(a);
+	b.invert();
+	b.clipTo(a);
+	b.invert();
+	a.build(b.allPolygons());
+	a = new BSP(a);
+	a.matrix = this.matrix;
+	return a;
+};
 
-				v += radiusTop*alpha/capsTopSegments;
+BSP.prototype.intersect = function (otherTree) {
+	var a = this.tree.clone();
+	var b = otherTree.tree.clone();
 
-				var cosA = Math.cos(a);
-				var sinA = Math.sin(a);
+	a.invert();
+	b.clipTo(a);
+	b.invert();
+	a.clipTo(b);
+	b.clipTo(a);
+	a.build(b.allPolygons());
+	a.invert();
+	a = new BSP(a);
+	a.matrix = this.matrix;
+	return a;
+};
 
-				// calculate the radius of the current row
-				var radius = cosA*radiusTop;
+BSP.prototype.toGeometry = function () {
+	// getInverse was removed in r123; use invert() instead
+	var matrix = new Matrix4().copy(this.matrix).invert();
+	var geometry = new BufferGeometry();
+	var polygons = this.tree.allPolygons();
+	var polygonCount = polygons.length;
 
-				for (x = 0; x <= radialSegments; x++)
-				{
-					var u = x / radialSegments;
+	var positions = [];
+	var normals = [];
+	var uvs = [];
 
-					var theta = u * thetaLength + thetaStart;
+	for (var i = 0; i < polygonCount; i++) {
+		var polygon = polygons[i];
+		var polygonVerticeCount = polygon.vertices.length;
 
-					var sinTheta = Math.sin(theta);
-					var cosTheta = Math.cos(theta);
+		// Fan-triangulate multi-vertex polygons down to regular triangle streams
+		for (var j = 2; j < polygonVerticeCount; j++) {
+			var verts = [
+				polygon.vertices[0],
+				polygon.vertices[j - 1],
+				polygon.vertices[j]
+			];
 
-					// Vertex
-					vertex.x = radius * sinTheta;
-					vertex.y = halfHeight + sinA*radiusTop;
-					vertex.z = radius * cosTheta;
-					vertices.setXYZ(index, vertex.x, vertex.y, vertex.z);
+			for (var k = 0; k < 3; k++) {
+				var v = verts[k];
+				var pos = new Vector3(v.x, v.y, v.z).applyMatrix4(matrix);
+				positions.push(pos.x, pos.y, pos.z);
 
-					// Normal
-					normal.set(cosA*sinTheta, sinA, cosA*cosTheta);
-					normals.setXYZ(index, normal.x, normal.y, normal.z);
-
-					// uv
-					uvs.setXY(index, u, 1 - v/vl);
-
-					// Save index of vertex in respective row
-					indexRow.push(index);
-
-					// Increase index
-					index++;
-
+				if (polygon.normal) {
+					normals.push(polygon.normal.x, polygon.normal.y, polygon.normal.z);
+				} else {
+					normals.push(0, 1, 0);
 				}
 
-				// Now save vertices of the row in our index array
-				indexArray.push(indexRow);
-
-			}
-
-			var coneHeight = height + cosAlpha*radiusTop - cosAlpha * radiusBottom;
-			var slope = sinAlpha * (radiusBottom - radiusTop) / coneHeight;
-			for (y = 1; y <= heightSegments; y++) 
-			{
-
-				var indexRow = [];
-
-				v += coneLength/heightSegments;
-
-				// calculate the radius of the current row
-				var radius = sinAlpha * (y * (radiusBottom - radiusTop) / heightSegments + radiusTop);
-
-				for (x = 0; x <= radialSegments; x++) 
-				{
-
-					var u = x / radialSegments;
-
-					var theta = u * thetaLength + thetaStart;
-
-					var sinTheta = Math.sin(theta);
-					var cosTheta = Math.cos(theta);
-
-					// Vertex
-					vertex.x = radius * sinTheta;
-					vertex.y = halfHeight + cosAlpha*radiusTop - y * coneHeight / heightSegments;
-					vertex.z = radius * cosTheta;
-					vertices.setXYZ(index, vertex.x, vertex.y, vertex.z);
-
-					// Normal
-					normal.set(sinTheta, slope, cosTheta).normalize();
-					normals.setXYZ(index, normal.x, normal.y, normal.z);
-
-					// uv
-					uvs.setXY(index, u, 1 - v/vl);
-
-					// Save index of vertex in respective row
-					indexRow.push(index);
-
-					// Increase index
-					index++;
-
-				}
-
-				// Now save vertices of the row in our index array
-				indexArray.push(indexRow);
-
-			}
-
-			for (y = 1; y <= capsBottomSegments; y++) 
-			{
-
-				var indexRow = [];
-
-				var a = Math.PI/2 - alpha - (Math.PI - alpha)*(y / capsBottomSegments);
-
-				v += radiusBottom*alpha/capsBottomSegments;
-
-				var cosA = Math.cos(a);
-				var sinA = Math.sin(a);
-
-				// calculate the radius of the current row
-				var radius = cosA*radiusBottom;
-
-				for (x = 0; x <= radialSegments; x++)
-				{
-					var u = x / radialSegments;
-
-					var theta = u * thetaLength + thetaStart;
-
-					var sinTheta = Math.sin(theta);
-					var cosTheta = Math.cos(theta);
-
-					// Vertex
-					vertex.x = radius * sinTheta;
-					vertex.y = -halfHeight + sinA*radiusBottom;;
-					vertex.z = radius * cosTheta;
-					vertices.setXYZ(index, vertex.x, vertex.y, vertex.z);
-
-					// Normal
-					normal.set(cosA*sinTheta, sinA, cosA*cosTheta);
-					normals.setXYZ(index, normal.x, normal.y, normal.z);
-
-					// uv
-					uvs.setXY(index, u, 1 - v/vl);
-
-					// Save index of vertex in respective row
-					indexRow.push(index);
-
-					// Increase index
-					index++;
-				}
-
-				// Now save vertices of the row in our index array
-				indexArray.push(indexRow);
-			}
-
-			// Generate indices
-			for (x = 0; x < radialSegments; x++)
-			{
-				for (y = 0; y < capsTopSegments + heightSegments + capsBottomSegments; y++)
-				{
-
-					// We use the index array to access the correct indices
-					var i1 = indexArray[y][x];
-					var i2 = indexArray[y + 1][x];
-					var i3 = indexArray[y + 1][x + 1];
-					var i4 = indexArray[y][x + 1];
-
-					// Face one
-					indices.setX(indexOffset, i1); indexOffset++;
-					indices.setX(indexOffset, i2); indexOffset++;
-					indices.setX(indexOffset, i4); indexOffset++;
-
-					// Face two
-					indices.setX(indexOffset, i2); indexOffset++;
-					indices.setX(indexOffset, i3); indexOffset++;
-					indices.setX(indexOffset, i4); indexOffset++;
+				if (v.uv) {
+					uvs.push(v.uv.x, v.uv.y);
+				} else {
+					uvs.push(0, 0);
 				}
 			}
 		}
 	}
-}
 
-export {CapsuleBufferGeometry};
+	geometry.setAttribute("position", new Float32BufferAttribute(positions, 3));
+	geometry.setAttribute("normal", new Float32BufferAttribute(normals, 3));
+	if (uvs.length > 0) {
+		geometry.setAttribute("uv", new Float32BufferAttribute(uvs, 2));
+	}
+
+	return geometry;
+};
+
+BSP.prototype.toMesh = function (material) {
+	var geometry = this.toGeometry();
+	var mesh = new Mesh(geometry, material);
+
+	mesh.position.setFromMatrixPosition(this.matrix);
+	mesh.rotation.setFromRotationMatrix(this.matrix);
+
+	return mesh;
+};
+
+export { BSP };
