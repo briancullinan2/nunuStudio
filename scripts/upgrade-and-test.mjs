@@ -182,9 +182,15 @@ async function main() {
 
 	for (const target of targets) {
 		if (target.isDevDep) {
-			if (finalPkg.devDependencies) finalPkg.devDependencies[target.name] = target.pointVersion;
+			if (finalPkg.devDependencies) {
+				finalPkg.devDependencies[target.name] = target.pointVersion;
+				target.currentVersion = target.pointVersion;
+			}
 		} else {
-			if (finalPkg.dependencies) finalPkg.dependencies[target.name] = target.pointVersion;
+			if (finalPkg.dependencies) {
+				finalPkg.dependencies[target.name] = target.pointVersion;
+				target.currentVersion = target.pointVersion;
+			}
 		}
 	}
 
