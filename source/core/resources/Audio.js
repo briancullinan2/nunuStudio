@@ -1,7 +1,7 @@
-import {Base64Utils} from "../utils/binary/Base64Utils.js";
-import {ArraybufferUtils} from "../utils/binary/ArraybufferUtils.js";
-import {FileSystem} from "../FileSystem.js";
-import {Resource} from "./Resource.js";
+import { Base64Utils } from "../utils/binary/Base64Utils.js";
+import { ArraybufferUtils } from "../utils/binary/ArraybufferUtils.js";
+import { FileSystem } from "../FileSystem.js";
+import { Resource } from "./Resource.js";
 
 /**
  * Audio class is used to store audio data as a arraybuffer to be later used by objects with the WebAudio API.
@@ -18,17 +18,17 @@ class Audio extends Resource
 	{
 		super("audio", "Audio");
 
-		if (url !== undefined)
+		if(url !== undefined)
 		{
 			// Arraybuffer
-			if (url instanceof ArrayBuffer)
+			if(url instanceof ArrayBuffer)
 			{
 				this.data = url;
 				this.encoding = encoding !== undefined ? encoding : "";
 				this.format = "arraybuffer";
 			}
 			// Base64
-			else if (Base64Utils.isBase64(url))
+			else if(Base64Utils.isBase64(url))
 			{
 				this.encoding = encoding !== undefined ? encoding : "";
 				this.data = ArraybufferUtils.fromBase64(url);
@@ -37,9 +37,12 @@ class Audio extends Resource
 			// URL
 			else
 			{
-				this.data = FileSystem.readFileArrayBuffer(url);
-				this.encoding = FileSystem.getFileExtension(url);
-				this.format = "arraybuffer";
+				FileSystem.readFileArrayBuffer(url).then(data =>
+				{
+					this.data = data;
+					this.encoding = FileSystem.getFileExtension(url);
+					this.format = "arraybuffer";
+				})
 			}
 		}
 	}
@@ -55,7 +58,7 @@ class Audio extends Resource
 	 */
 	getAudioBuffer(context, callback)
 	{
-		context.decodeAudioData(this.data.slice(0), callback, function(error)
+		context.decodeAudioData(this.data.slice(0), callback, function (error)
 		{
 			console.error("nunuStudio: Cannot decode audio buffer (" + error + ")");
 		});
@@ -72,7 +75,7 @@ class Audio extends Resource
 	 */
 	toJSON(meta)
 	{
-		if (meta.audio[this.uuid] !== undefined)
+		if(meta.audio[this.uuid] !== undefined)
 		{
 			return meta.audio[this.uuid];
 		}
@@ -97,11 +100,11 @@ class Audio extends Resource
  * @param {File} file
  * @return {boolean} True if the file refers to a supported audio format.
  */
-Audio.fileIsAudio = function(file)
+Audio.fileIsAudio = function (file)
 {
-	if (file !== undefined)
+	if(file !== undefined)
 	{
-		if (file.type.startsWith("audio"))
+		if(file.type.startsWith("audio"))
 		{
 			return true;
 		}
@@ -110,4 +113,4 @@ Audio.fileIsAudio = function(file)
 	return false;
 };
 
-export {Audio};
+export { Audio };

@@ -1,8 +1,8 @@
-import {MathUtils} from "../utils/MathUtils.js";
-import {Base64Utils} from "../utils/binary/Base64Utils.js";
-import {ArraybufferUtils} from "../utils/binary/ArraybufferUtils.js";
-import {FileSystem} from "../FileSystem.js";
-import {Resource} from "./Resource.js";
+import { MathUtils } from "../utils/MathUtils.js";
+import { Base64Utils } from "../utils/binary/Base64Utils.js";
+import { ArraybufferUtils } from "../utils/binary/ArraybufferUtils.js";
+import { FileSystem } from "../FileSystem.js";
+import { Resource } from "./Resource.js";
 
 /**
  * Image class is used to store image data that is used to create Textures.
@@ -43,25 +43,27 @@ class Image extends Resource
 		 */
 		this.height = -1;
 
-		if (url !== undefined)
+		if(url !== undefined)
 		{
 			// ArrayBuffer
-			if (url instanceof ArrayBuffer)
+			if(url instanceof ArrayBuffer)
 			{
 				this.loadArrayBufferData(url, encoding);
 			}
 			// Base64
-			else if (Base64Utils.isBase64(url))
+			else if(Base64Utils.isBase64(url))
 			{
 				this.encoding = Base64Utils.getFileFormat(url);
 				this.format = "base64";
 				this.data = url;
 			}
 			// Blob (Need to be read immediatly might be revoked to clean space).
-			else if (url.startsWith("blob"))
+			else if(url.startsWith("blob"))
 			{
-				var arraybuffer = FileSystem.readFileArrayBuffer(url, true);
-				this.loadArrayBufferData(arraybuffer);
+				FileSystem.readFileArrayBuffer(url, true).then(arraybuffer =>
+				{
+					this.loadArrayBufferData(arraybuffer);
+				})
 			}
 			// URL
 			else
@@ -85,7 +87,7 @@ class Image extends Resource
 	 */
 	getImageSize(onLoad)
 	{
-		if (this.width > -1 && this.height > -1)
+		if(this.width > -1 && this.height > -1)
 		{
 			onLoad(this.width, this.height);
 		}
@@ -95,7 +97,7 @@ class Image extends Resource
 
 			var image = document.createElement("img");
 			image.src = this.data;
-			image.onload = function()
+			image.onload = function ()
 			{
 				self.width = image.naturalWidth;
 				self.height = image.naturalHeight;
@@ -118,7 +120,7 @@ class Image extends Resource
 
 		var image = document.createElement("img");
 		image.src = this.data;
-		image.onload = function()
+		image.onload = function ()
 		{
 			self.width = image.naturalWidth;
 			self.height = image.naturalHeight;
@@ -169,7 +171,7 @@ class Image extends Resource
 	loadArrayBufferData(data, encoding)
 	{
 		var view = new Uint8Array(data);
-		var blob = new Blob([view], {type: "image/" + encoding});
+		var blob = new Blob([view], { type: "image/" + encoding });
 
 		this.data = URL.createObjectURL(blob);
 		this.arraybuffer = data;
@@ -188,7 +190,7 @@ class Image extends Resource
 	 */
 	hasTransparency(perPixel)
 	{
-		if (perPixel === true && this.width > -1 && this.height > -1)
+		if(perPixel === true && this.width > -1 && this.height > -1)
 		{
 			var image = document.createElement("img");
 
@@ -201,9 +203,9 @@ class Image extends Resource
 
 			var data = context.getImageData(0, 0, image.width, image.height).data;
 
-			for (var i = 3; i < data.length; i += 4)
+			for(var i = 3; i < data.length; i += 4)
 			{
-				if (data[i] !== 255)
+				if(data[i] !== 255)
 				{
 					return true;
 				}
@@ -239,11 +241,11 @@ class Image extends Resource
 
 		var self = this;
 
-		canvas.toBlob(function(blob)
+		canvas.toBlob(function (blob)
 		{
 			var reader = new FileReader();
 
-			reader.onload = function()
+			reader.onload = function ()
 			{
 				self.encoding = "jpeg";
 				self.format = "arraybuffer";
@@ -257,7 +259,7 @@ class Image extends Resource
 
 	dispose()
 	{
-		if (this.format === "arraybuffer")
+		if(this.format === "arraybuffer")
 		{
 			URL.revokeObjectURL(this.data);
 		}
@@ -272,30 +274,33 @@ class Image extends Resource
 	 * @param {Object} meta
 	 * @return {Object} json
 	 */
-	toJSON(meta)
+	async toJSON(meta)
 	{
-		if (meta.images[this.uuid] !== undefined)
+		if(meta.images[this.uuid] !== undefined)
 		{
 			return meta.images[this.uuid];
 		}
 
 		var data = super.toJSON(meta);
 
-		if (this.format === "url")
+		if(this.format === "url")
 		{
-			this.loadArrayBufferData(FileSystem.readFileArrayBuffer(this.data), this.encoding);
+			FileSystem.readFileArrayBuffer(this.data).then(arrayBuffer =>
+			{
+				this.loadArrayBufferData(arrayBuffer, this.encoding);
+			})
 		}
 
 		data.width = this.width;
 		data.height = this.height;
 		data.encoding = this.encoding;
 
-		if (this.format === "arraybuffer")
+		if(this.format === "arraybuffer")
 		{
 			data.format = this.format;
 			data.data = this.arraybuffer;
 		}
-		else if (this.format === "base64")
+		else if(this.format === "base64")
 		{
 			data.format = "arraybuffer";
 			data.data = ArraybufferUtils.fromBase64(Base64Utils.removeHeader(this.data));
@@ -320,11 +325,11 @@ class Image extends Resource
  * @param {File} file File to check format of.
  * @return {boolean} True if the file refers to a supported image format.
  */
-Image.fileIsImage = function(file)
+Image.fileIsImage = function (file)
 {
-	if (file !== undefined)
+	if(file !== undefined)
 	{
-		if (file.type.startsWith("image"))
+		if(file.type.startsWith("image"))
 		{
 			return true;
 		}
@@ -337,4 +342,4 @@ Image.fileIsImage = function(file)
 	return false;
 };
 
-export {Image};
+export { Image };
