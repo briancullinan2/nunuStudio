@@ -57,7 +57,7 @@ class Interface
 			leftBottom.addTab(ProfilingTab, false);
 		}
 
-		this.tree = rightTop.addTab(TreeView, false);
+		this.tree = await rightTop.addTab(TreeView, false);
 
 		this.inspector = rightBottom.addTab(InspectorContainer, false);
 

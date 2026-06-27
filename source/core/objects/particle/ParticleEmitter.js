@@ -258,7 +258,7 @@ ParticleEmitter.defaultGroup =
 	hasPerspective: true
 };
 
-ParticleEmitter.fromJSON = function (data, resources)
+ParticleEmitter.fromJSON = async function (data, resources)
 {
 	function loadVector3(data)
 	{
@@ -289,7 +289,7 @@ ParticleEmitter.fromJSON = function (data, resources)
 		}
 	}
 
-	return new ParticleEmitter(data.group, data.emitter);
+	return await ParticleEmitter.create(data.group, data.emitter);
 };
 
 export { ParticleEmitter };

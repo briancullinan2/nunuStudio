@@ -30,7 +30,7 @@ class TransformGizmoRotate extends TransformGizmo
 			Y: [[new Mesh(TransformGizmoRotate.torus, TransformGizmo.pickerMaterial), [0, 0, 0], [Math.PI / 2, 0, 0]]],
 			Z: [[new Mesh(TransformGizmoRotate.torus, TransformGizmo.pickerMaterial), [0, 0, 0], [0, 0, - Math.PI / 2]]],
 			E: [[new Mesh(TransformGizmoRotate.torusBig, TransformGizmo.pickerMaterial)]],
-			XYZE: [[new Mesh(new Geometry())]]
+			XYZE: [[new Mesh(new BufferGeometry())]]
 		};
 
 		super();

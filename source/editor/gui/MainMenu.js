@@ -450,14 +450,7 @@ class MainMenu extends Component
 		{
 			var geometry = object.geometry;
 
-			if(geometry instanceof BufferGeometry)
-			{
-				geometry = new Geometry().fromBufferGeometry(geometry);
-			}
-			else
-			{
-				geometry = geometry.clone();
-			}
+			geometry = geometry.clone();
 
 			geometry.applyMatrix4(object.matrixWorld);
 
@@ -656,7 +649,7 @@ class MainMenu extends Component
 				return;
 			}
 
-			var geometry = new Geometry();
+			var geometry = new BufferGeometry();
 
 			for(var i = 0; i < Editor.selection.length; i++)
 			{
@@ -666,8 +659,7 @@ class MainMenu extends Component
 					// Convert to geometry and merge
 					if(obj.geometry instanceof BufferGeometry)
 					{
-						var converted = new Geometry();
-						converted.fromBufferGeometry(obj.geometry);
+						var converted = obj.geometry.clone();
 						geometry.merge(converted, obj.matrixWorld);
 					}
 					// Merge geometry

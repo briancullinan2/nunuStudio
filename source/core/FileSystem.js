@@ -48,26 +48,10 @@ FileSystem.isLocalFile = function (url)
  */
 FileSystem.readFile = async function (fname, sync, onLoad, onProgress, onError)
 {
-	if(sync === undefined)
-	{
-		sync = true;
-	}
-
-	// NodeJS
+	// NodeJS Environment
 	if(FileSystem.fs && FileSystem.isLocalFile(fname))
 	{
-		if(sync === true)
-		{
-			var data = FileSystem.fs.readFileSync(fname, "utf8");
-
-			if(onLoad !== undefined)
-			{
-				onLoad(data);
-			}
-
-			return data;
-		}
-		else
+		return new Promise(function (resolve)
 		{
 			FileSystem.fs.readFile(fname, "utf8", function (error, data)
 			{
@@ -77,43 +61,42 @@ FileSystem.readFile = async function (fname, sync, onLoad, onProgress, onError)
 					{
 						onError(error);
 					}
+					resolve(null);
 				}
-				else if(onLoad !== undefined)
+				else
 				{
-					onLoad(data);
-				}
-			});
-
-			return null;
-		}
-	}
-	// Browser
-	else
-	{
-		(async () =>
-		{
-			try
-			{
-				const response = await fetch(fname);
-
-				if(!response.ok)
-				{
-					throw new Error(`HTTP error! status: ${response.status}`);
-				}
-
-				// If no progress tracking is needed, read the text directly
-				if(onProgress === undefined)
-				{
-					const text = await response.text();
 					if(onLoad !== undefined)
 					{
-						onLoad(text);
+						onLoad(data);
 					}
-					return;
+					resolve(data);
 				}
+			});
+		});
+	}
+	// Browser Environment
+	else
+	{
+		try
+		{
+			const response = await fetch(fname);
 
+			if(!response.ok)
+			{
+				throw new Error("HTTP error! status: " + response.status);
+			}
+
+			let text = "";
+
+			// If no progress tracking is needed, read text directly
+			if(onProgress === undefined)
+			{
+				text = await response.text();
+			}
+			else
+			{
 				// Progress tracking implementation using streams
-				const contentLength = response.headers.get('content-length');
+				const contentLength = response.headers.get("content-length");
 				const total = contentLength ? parseInt(contentLength, 10) : 0;
 				let loaded = 0;
 
@@ -122,15 +105,15 @@ FileSystem.readFile = async function (fname, sync, onLoad, onProgress, onError)
 
 				while(true)
 				{
-					const { done, value } = await reader.read();
+					const result = await reader.read();
 
-					if(done)
+					if(result.done)
 					{
 						break;
 					}
 
-					chunks.push(value);
-					loaded += value.length;
+					chunks.push(result.value);
+					loaded += result.value.length;
 
 					onProgress({
 						lengthComputable: total !== 0,
@@ -139,24 +122,26 @@ FileSystem.readFile = async function (fname, sync, onLoad, onProgress, onError)
 					});
 				}
 
-				// Combine chunks into a single string
+				// Combine chunks into a single string representation
 				const blob = new Blob(chunks);
-				const text = await blob.text();
-
-				if(onLoad !== undefined)
-				{
-					onLoad(text);
-				}
-			} catch(error)
-			{
-				if(onError !== undefined)
-				{
-					onError(error);
-				}
+				text = await blob.text();
 			}
-		})();
 
-		return null;
+			if(onLoad !== undefined)
+			{
+				onLoad(text);
+			}
+
+			return text;
+		}
+		catch(error)
+		{
+			if(onError !== undefined)
+			{
+				onError(error);
+			}
+			return null;
+		}
 	}
 };
 
@@ -175,20 +160,10 @@ FileSystem.readFile = async function (fname, sync, onLoad, onProgress, onError)
  */
 FileSystem.readFileArrayBuffer = async function (fname, sync, onLoad, onProgress, onError)
 {
-	if(sync === undefined)
-	{
-		sync = true;
-	}
-
-	// NodeJS
+	// NodeJS Environment
 	if(FileSystem.fs && FileSystem.isLocalFile(fname))
 	{
-		if(sync === true)
-		{
-			var buffer = FileSystem.fs.readFileSync(fname);
-			return ArraybufferUtils.fromBuffer(buffer);
-		}
-		else
+		return new Promise(function (resolve)
 		{
 			FileSystem.fs.readFile(fname, function (error, buffer)
 			{
@@ -198,43 +173,43 @@ FileSystem.readFileArrayBuffer = async function (fname, sync, onLoad, onProgress
 					{
 						onError(error);
 					}
+					resolve(null);
 				}
-				else if(onLoad !== undefined)
+				else
 				{
-					onLoad(ArraybufferUtils.fromBuffer(buffer));
-				}
-			});
-
-			return null;
-		}
-	}
-	// Browser
-	else
-	{
-		(async () =>
-		{
-			try
-			{
-				const response = await fetch(fname);
-
-				if(!response.ok)
-				{
-					throw new Error(`HTTP error! status: ${response.status}`);
-				}
-
-				// If no progress tracking is needed, read the buffer directly
-				if(onProgress === undefined)
-				{
-					const buffer = await response.arrayBuffer();
+					var arrayBuffer = ArraybufferUtils.fromBuffer(buffer);
 					if(onLoad !== undefined)
 					{
-						onLoad(ArraybufferUtils.fromBinaryString(buffer));
+						onLoad(arrayBuffer);
 					}
-					return;
+					resolve(arrayBuffer);
 				}
+			});
+		});
+	}
+	// Browser Environment
+	else
+	{
+		try
+		{
+			const response = await fetch(fname);
 
+			if(!response.ok)
+			{
+				throw new Error("HTTP error! status: " + response.status);
+			}
+
+			let buffer;
+
+			// If no progress tracking is needed, read the buffer directly
+			if(onProgress === undefined)
+			{
+				buffer = await response.arrayBuffer();
+			}
+			else
+			{
 				// Progress tracking implementation using streams
-				const contentLength = response.headers.get('content-length');
+				const contentLength = response.headers.get("content-length");
 				const total = contentLength ? parseInt(contentLength, 10) : 0;
 				let loaded = 0;
 
@@ -243,15 +218,15 @@ FileSystem.readFileArrayBuffer = async function (fname, sync, onLoad, onProgress
 
 				while(true)
 				{
-					const { done, value } = await reader.read();
+					const result = await reader.read();
 
-					if(done)
+					if(result.done)
 					{
 						break;
 					}
 
-					chunks.push(value);
-					loaded += value.length;
+					chunks.push(result.value);
+					loaded += result.value.length;
 
 					onProgress({
 						lengthComputable: total !== 0,
@@ -262,22 +237,27 @@ FileSystem.readFileArrayBuffer = async function (fname, sync, onLoad, onProgress
 
 				// Combine chunks into a single ArrayBuffer
 				const blob = new Blob(chunks);
-				const buffer = await blob.arrayBuffer();
-
-				if(onLoad !== undefined)
-				{
-					onLoad(ArraybufferUtils.fromBinaryString(buffer));
-				}
-			} catch(error)
-			{
-				if(onError !== undefined)
-				{
-					onError(error);
-				}
+				buffer = await blob.arrayBuffer();
 			}
-		})();
 
-		return null;
+			// Route through utility to preserve your binary-to-string format expectations if necessary
+			var finalData = ArraybufferUtils.fromBinaryString(buffer);
+
+			if(onLoad !== undefined)
+			{
+				onLoad(finalData);
+			}
+
+			return finalData;
+		}
+		catch(error)
+		{
+			if(onError !== undefined)
+			{
+				onError(error);
+			}
+			return null;
+		}
 	}
 };
 
@@ -296,20 +276,10 @@ FileSystem.readFileArrayBuffer = async function (fname, sync, onLoad, onProgress
  */
 FileSystem.readFileBase64 = async function (fname, sync, onLoad, onProgress, onError)
 {
-	if(sync === undefined)
-	{
-		sync = true;
-	}
-
-	// NodeJS
+	// NodeJS Environment
 	if(FileSystem.fs && FileSystem.isLocalFile(fname))
 	{
-		if(sync === true)
-		{
-			var buffer = FileSystem.fs.readFileSync(fname);
-			return new Buffer(buffer).toString("base64");
-		}
-		else
+		return new Promise(function (resolve)
 		{
 			FileSystem.fs.readFile(fname, function (error, buffer)
 			{
@@ -319,43 +289,44 @@ FileSystem.readFileBase64 = async function (fname, sync, onLoad, onProgress, onE
 					{
 						onError(error);
 					}
+					resolve(null);
 				}
-				else if(onLoad !== undefined)
+				else
 				{
-					onLoad(new Buffer(buffer).toString("base64"));
-				}
-			});
-
-			return null;
-		}
-	}
-	// Browser
-	else
-	{
-		(async () =>
-		{
-			try
-			{
-				const response = await fetch(fname);
-
-				if(!response.ok)
-				{
-					throw new Error(`HTTP error! status: ${response.status}`);
-				}
-
-				// If no progress tracking is needed, read the buffer directly
-				if(onProgress === undefined)
-				{
-					const buffer = await response.arrayBuffer();
+					// Convert buffer to Base64 string cleanly without using deprecated new Buffer constructor
+					var base64String = buffer.toString("base64");
 					if(onLoad !== undefined)
 					{
-						onLoad(Base64Utils.fromBinaryString(buffer));
+						onLoad(base64String);
 					}
-					return;
+					resolve(base64String);
 				}
+			});
+		});
+	}
+	// Browser Environment
+	else
+	{
+		try
+		{
+			const response = await fetch(fname);
 
+			if(!response.ok)
+			{
+				throw new Error("HTTP error! status: " + response.status);
+			}
+
+			let buffer;
+
+			// If no progress tracking is needed, read the buffer directly
+			if(onProgress === undefined)
+			{
+				buffer = await response.arrayBuffer();
+			}
+			else
+			{
 				// Progress tracking implementation using streams
-				const contentLength = response.headers.get('content-length');
+				const contentLength = response.headers.get("content-length");
 				const total = contentLength ? parseInt(contentLength, 10) : 0;
 				let loaded = 0;
 
@@ -364,15 +335,15 @@ FileSystem.readFileBase64 = async function (fname, sync, onLoad, onProgress, onE
 
 				while(true)
 				{
-					const { done, value } = await reader.read();
+					const result = await reader.read();
 
-					if(done)
+					if(result.done)
 					{
 						break;
 					}
 
-					chunks.push(value);
-					loaded += value.length;
+					chunks.push(result.value);
+					loaded += result.value.length;
 
 					onProgress({
 						lengthComputable: total !== 0,
@@ -383,22 +354,27 @@ FileSystem.readFileBase64 = async function (fname, sync, onLoad, onProgress, onE
 
 				// Combine chunks into a single ArrayBuffer
 				const blob = new Blob(chunks);
-				const buffer = await blob.arrayBuffer();
-
-				if(onLoad !== undefined)
-				{
-					onLoad(Base64Utils.fromBinaryString(buffer));
-				}
-			} catch(error)
-			{
-				if(onError !== undefined)
-				{
-					onError(error);
-				}
+				buffer = await blob.arrayBuffer();
 			}
-		})();
 
-		return null;
+			// Convert array buffer to Base64 using your internal utility pipeline
+			var base64Data = Base64Utils.fromBinaryString(buffer);
+
+			if(onLoad !== undefined)
+			{
+				onLoad(base64Data);
+			}
+
+			return base64Data;
+		}
+		catch(error)
+		{
+			if(onError !== undefined)
+			{
+				onError(error);
+			}
+			return null;
+		}
 	}
 };
 

@@ -1,8 +1,8 @@
-import { DirectionalLight, AmbientLight, Mesh, MeshPhongMaterial, Vector3 } from "three";
+import { DirectionalLight, AmbientLight, Mesh, MeshPhongMaterial, BufferGeometry, Vector3 } from "three";
 import { OrthographicCamera } from "../../../core/objects/cameras/OrthographicCamera.js";
 import { PreviewRenderer } from "./PreviewRenderer.js";
 
-/** 
+/**
  * The geometry renderer is used to generate preview thumbnails.
  *
  * A basic phong material is used to preview the geometry.
@@ -10,8 +10,10 @@ import { PreviewRenderer } from "./PreviewRenderer.js";
  * @class TextureRenderer
  * @extends {PreviewRenderer}
  */
-class GeometryRenderer extends PreviewRenderer {
-	constructor() {
+class GeometryRenderer extends PreviewRenderer
+{
+	constructor()
+	{
 		super();
 
 		this.camera = new OrthographicCamera(3, 1);
@@ -21,11 +23,12 @@ class GeometryRenderer extends PreviewRenderer {
 		this.scene.add(directional);
 		this.scene.add(new AmbientLight(0x888888));
 
-		this.mesh = new Mesh(new Geometry(), new MeshPhongMaterial({ color: 0xFFFFFF }));
+		this.mesh = new Mesh(new BufferGeometry(), new MeshPhongMaterial({ color: 0xFFFFFF }));
 		this.scene.add(this.mesh);
 	}
 
-	render(geometry, onRender) {
+	render(geometry, onRender)
+	{
 		geometry.computeBoundingBox();
 
 		var box = geometry.boundingBox;
@@ -47,8 +50,10 @@ class GeometryRenderer extends PreviewRenderer {
 		onRender(this.canvas.toDataURL());
 	}
 
-	static render = function (material, onRender) {
-		if (GeometryRenderer.instance === undefined) {
+	static render = function (material, onRender)
+	{
+		if(GeometryRenderer.instance === undefined)
+		{
 		}
 
 		GeometryRenderer.instance.render(material, onRender);

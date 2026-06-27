@@ -170,6 +170,7 @@ Editor.initialize = async function ()
 
 	// Initialize User Interface
 	Editor.gui = new Interface();
+	await Editor.gui.loading
 	Editor.gui.updateInterface();
 
 	// Check is some project file passed as argument
@@ -177,12 +178,12 @@ Editor.initialize = async function ()
 	{
 		if(Editor.args[i].endsWith(".isp"))
 		{
-			Editor.loadProgram(Editor.args[i], false);
+			await Editor.loadProgram(Editor.args[i], false);
 			break;
 		}
 		else if(Editor.args[i].endsWith(".nsp"))
 		{
-			Editor.loadProgram(Editor.args[i], true);
+			await Editor.loadProgram(Editor.args[i], true);
 			break;
 		}
 	}
@@ -677,7 +678,7 @@ Editor.deleteObject = async function (object)
 			Editor.addAction(new RemoveResourceAction(selected[i], Editor.program, "videos"));
 		}
 		// Geometries
-		else if(selected[i] instanceof Geometry || selected[i] instanceof BufferGeometry)
+		else if(selected[i] instanceof BufferGeometry || selected[i] instanceof BufferGeometry)
 		{
 			Editor.addAction(new RemoveResourceAction(selected[i], Editor.program, "geometries"));
 		}

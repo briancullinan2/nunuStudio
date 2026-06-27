@@ -330,6 +330,8 @@ class TabGroup extends Component
 		const { TabButton } = await import("./TabButton.js");
 
 		var tab = new TabConstructor(this.tab, closeable, this, this.options.length);
+		if(tab.loading && tab.loading instanceof Promise)
+			await tab.loading
 		tab.button = new TabButton(this.buttons, tab);
 		this.options.push(tab);
 
