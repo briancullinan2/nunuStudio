@@ -15,7 +15,8 @@ import { CheckBox } from "../../../components/input/CheckBox.js";
 import { DualDivision } from "../../../components/containers/DualDivision.js";
 import { DualContainer } from "../../../components/containers/DualContainer.js";
 
-class MaterialEditor extends TabComponent {
+class MaterialEditor extends TabComponent
+{
 
 	static geometries = [
 		[Locale.sphere, new SphereGeometry(1, 40, 40)],
@@ -26,14 +27,16 @@ class MaterialEditor extends TabComponent {
 	];
 
 
-	constructor(parent, closeable, container, index) {
+	constructor(parent, closeable, container, index)
+	{
 		super(parent, closeable, container, index, Locale.material, Global.FILE_PATH + "icons/misc/material.png");
 
 		var self = this;
 
 		// Canvas
 		this.canvas = new RendererCanvas();
-		this.canvas.setOnResize(function (x, y) {
+		this.canvas.setOnResize(function (x, y)
+		{
 			self.camera.aspect = x / y;
 			self.camera.updateProjectionMatrix();
 		});
@@ -73,7 +76,8 @@ class MaterialEditor extends TabComponent {
 		this.form.addText(Locale.name);
 		this.name = new TextBox(this.form);
 		this.name.size.set(200, 18);
-		this.name.setOnChange(function () {
+		this.name.setOnChange(function ()
+		{
 			Editor.addAction(new ChangeAction(self.material, "name", self.name.getText()));
 		});
 		this.form.add(this.name);
@@ -86,7 +90,8 @@ class MaterialEditor extends TabComponent {
 		this.side.addValue(Locale.front, FrontSide);
 		this.side.addValue(Locale.back, BackSide);
 		this.side.addValue(Locale.double, DoubleSide);
-		this.side.setOnChange(function () {
+		this.side.setOnChange(function ()
+		{
 			Editor.addAction(new ChangeAction(self.material, "side", self.side.getValue()));
 			self.material.needsUpdate = true;
 		});
@@ -97,7 +102,8 @@ class MaterialEditor extends TabComponent {
 		this.form.addText(Locale.toneMapped);
 		this.toneMapped = new CheckBox(this.form);
 		this.toneMapped.size.set(18, 18);
-		this.toneMapped.setOnChange(function () {
+		this.toneMapped.setOnChange(function ()
+		{
 			Editor.addAction(new ChangeAction(self.material, "toneMapped", self.toneMapped.getValue()));
 			self.material.needsUpdate = true;
 		});
@@ -108,7 +114,8 @@ class MaterialEditor extends TabComponent {
 		this.form.addText(Locale.depthTest);
 		this.depthTest = new CheckBox(this.form);
 		this.depthTest.size.set(18, 18);
-		this.depthTest.setOnChange(function () {
+		this.depthTest.setOnChange(function ()
+		{
 			Editor.addAction(new ChangeAction(self.material, "depthTest", self.depthTest.getValue()));
 			self.material.needsUpdate = true;
 		});
@@ -119,7 +126,8 @@ class MaterialEditor extends TabComponent {
 		this.form.addText(Locale.depthWrite);
 		this.depthWrite = new CheckBox(this.form);
 		this.depthWrite.size.set(18, 18);
-		this.depthWrite.setOnChange(function () {
+		this.depthWrite.setOnChange(function ()
+		{
 			Editor.addAction(new ChangeAction(self.material, "depthWrite", self.depthWrite.getValue()));
 			self.material.needsUpdate = true;
 		});
@@ -137,7 +145,8 @@ class MaterialEditor extends TabComponent {
 		this.depthFunc.addValue(Locale.greaterOrEqual, GreaterEqualDepth);
 		this.depthFunc.addValue(Locale.greater, GreaterDepth);
 		this.depthFunc.addValue(Locale.notEqual, NotEqualDepth);
-		this.depthFunc.setOnChange(function () {
+		this.depthFunc.setOnChange(function ()
+		{
 			Editor.addAction(new ChangeAction(self.material, "depthFunc", self.depthFunc.getValue()));
 			self.material.needsUpdate = true;
 		});
@@ -148,7 +157,8 @@ class MaterialEditor extends TabComponent {
 		this.form.addText(Locale.transparent);
 		this.transparent = new CheckBox(this.form);
 		this.transparent.size.set(18, 18);
-		this.transparent.setOnChange(function () {
+		this.transparent.setOnChange(function ()
+		{
 			Editor.addAction(new ChangeAction(self.material, "transparent", self.transparent.getValue()));
 			self.material.needsUpdate = true;
 		});
@@ -159,7 +169,8 @@ class MaterialEditor extends TabComponent {
 		this.form.addText(Locale.dithering);
 		this.dithering = new CheckBox(this.form);
 		this.dithering.size.set(18, 18);
-		this.dithering.setOnChange(function () {
+		this.dithering.setOnChange(function ()
+		{
 			Editor.addAction(new ChangeAction(self.material, "dithering", self.dithering.getValue()));
 			self.material.needsUpdate = true;
 		});
@@ -170,7 +181,8 @@ class MaterialEditor extends TabComponent {
 		this.form.addText(Locale.premultipliedAlpha);
 		this.premultipliedAlpha = new CheckBox(this.form);
 		this.premultipliedAlpha.size.set(18, 18);
-		this.premultipliedAlpha.setOnChange(function () {
+		this.premultipliedAlpha.setOnChange(function ()
+		{
 			Editor.addAction(new ChangeAction(self.material, "premultipliedAlpha", self.premultipliedAlpha.getValue()));
 			self.material.needsUpdate = true;
 		});
@@ -183,7 +195,8 @@ class MaterialEditor extends TabComponent {
 		this.opacity.size.set(160, 18);
 		this.opacity.setRange(0, 1);
 		this.opacity.setStep(0.01);
-		this.opacity.setOnChange(function () {
+		this.opacity.setOnChange(function ()
+		{
 			Editor.addAction(new ChangeAction(self.material, "opacity", self.opacity.getValue()));
 			self.material.needsUpdate = true;
 		});
@@ -196,7 +209,8 @@ class MaterialEditor extends TabComponent {
 		this.alphaTest.size.set(160, 18);
 		this.alphaTest.setRange(0, 1);
 		this.alphaTest.setStep(0.01);
-		this.alphaTest.setOnChange(function () {
+		this.alphaTest.setOnChange(function ()
+		{
 			Editor.addAction(new ChangeAction(self.material, "alphaTest", self.alphaTest.getValue()));
 			self.material.needsUpdate = true;
 		});
@@ -212,7 +226,8 @@ class MaterialEditor extends TabComponent {
 		this.blending.addValue(Locale.additive, AdditiveBlending);
 		this.blending.addValue(Locale.subtractive, SubtractiveBlending);
 		this.blending.addValue(Locale.multiply, MultiplyBlending);
-		this.blending.setOnChange(function () {
+		this.blending.setOnChange(function ()
+		{
 			Editor.addAction(new ChangeAction(self.material, "blending", self.blending.getValue()));
 			self.material.needsUpdate = true;
 		});
@@ -223,7 +238,8 @@ class MaterialEditor extends TabComponent {
 		this.form.addText(Locale.premultipliedAlpha);
 		this.premultipliedAlpha = new CheckBox(this.form);
 		this.premultipliedAlpha.size.set(18, 18);
-		this.premultipliedAlpha.setOnChange(function () {
+		this.premultipliedAlpha.setOnChange(function ()
+		{
 			Editor.addAction(new ChangeAction(self.material, "premultipliedAlpha", self.premultipliedAlpha.getValue()));
 			self.material.needsUpdate = true;
 		});
@@ -234,7 +250,8 @@ class MaterialEditor extends TabComponent {
 		this.form.addText(Locale.vertexColors);
 		this.vertexColors = new CheckBox(this.form);
 		this.vertexColors.size.set(18, 18);
-		this.vertexColors.setOnChange(function () {
+		this.vertexColors.setOnChange(function ()
+		{
 			Editor.addAction(new ChangeAction(self.material, "vertexColors", self.vertexColors.getValue()));
 			self.material.needsUpdate = true;
 		});
@@ -245,7 +262,8 @@ class MaterialEditor extends TabComponent {
 		this.form.addText(Locale.polygonOffset);
 		this.polygonOffset = new CheckBox(this.form);
 		this.polygonOffset.size.set(18, 18);
-		this.polygonOffset.setOnChange(function () {
+		this.polygonOffset.setOnChange(function ()
+		{
 			Editor.addAction(new ChangeAction(self.material, "polygonOffset", self.polygonOffset.getValue()));
 			self.material.needsUpdate = true;
 		});
@@ -257,7 +275,8 @@ class MaterialEditor extends TabComponent {
 		this.polygonOffsetFactor = new NumberBox(this.form);
 		this.polygonOffsetFactor.size.set(60, 18);
 		this.polygonOffsetFactor.setStep(0.001);
-		this.polygonOffsetFactor.setOnChange(function () {
+		this.polygonOffsetFactor.setOnChange(function ()
+		{
 			Editor.addAction(new ChangeAction(self.material, "polygonOffsetFactor", self.polygonOffsetFactor.getValue()));
 			self.material.needsUpdate = true;
 		});
@@ -269,7 +288,8 @@ class MaterialEditor extends TabComponent {
 		this.polygonOffsetUnits = new NumberBox(this.form);
 		this.polygonOffsetUnits.size.set(60, 18);
 		this.polygonOffsetUnits.setStep(0.001);
-		this.polygonOffsetUnits.setOnChange(function () {
+		this.polygonOffsetUnits.setOnChange(function ()
+		{
 			Editor.addAction(new ChangeAction(self.material, "polygonOffsetUnits", self.polygonOffsetUnits.getValue()));
 			self.material.needsUpdate = true;
 		});
@@ -295,9 +315,11 @@ class MaterialEditor extends TabComponent {
 	}
 
 	// Attach material to material editor
-	attach(material, asset) {
+	attach(material, asset)
+	{
 		// Material asset
-		if (asset !== undefined) {
+		if(asset !== undefined)
+		{
 			this.asset = asset;
 		}
 
@@ -326,23 +348,27 @@ class MaterialEditor extends TabComponent {
 		this.polygonOffsetUnits.setValue(material.polygonOffsetUnits);
 	}
 
-	isAttached(material) {
+	isAttached(material)
+	{
 		return this.material === material;
 	}
 
-	activate() {
+	activate()
+	{
 		super.activate();
 
 		this.mouse.create();
 	}
 
-	deactivate() {
+	deactivate()
+	{
 		super.deactivate();
 
 		this.mouse.dispose();
 	}
 
-	destroy() {
+	destroy()
+	{
 		super.destroy();
 
 		this.mouse.dispose();
@@ -350,10 +376,13 @@ class MaterialEditor extends TabComponent {
 	}
 
 	// Update object data
-	updateMetadata() {
-		if (this.material !== null) {
+	updateMetadata()
+	{
+		if(this.material !== null)
+		{
 			// Set name
-			if (this.material.name !== undefined) {
+			if(this.material.name !== undefined)
+			{
 				this.setName(this.material.name);
 				this.name.setText(this.material.name);
 			}
@@ -361,20 +390,24 @@ class MaterialEditor extends TabComponent {
 			this.scene.background = this.material.envMap !== null ? this.material.envMap : null;
 
 			// If not found close tab
-			if (Editor.program.materials[this.material.uuid] === undefined) {
+			if(Editor.program.materials[this.material.uuid] === undefined)
+			{
 				this.close();
 			}
 		}
 	}
 
 	// Update material editor
-	update() {
+	update()
+	{
 		this.mouse.update();
 
 		// Render Material
-		if (this.material !== null) {
+		if(this.material !== null)
+		{
 			// If needs update file metadata
-			if (this.material.needsUpdate) {
+			if(this.material.needsUpdate)
+			{
 				Editor.updateObjectsViewsGUI();
 
 				this.scene.background = this.material.envMap !== null ? this.material.envMap : null;
@@ -387,12 +420,14 @@ class MaterialEditor extends TabComponent {
 		}
 
 		// Move material view
-		if (this.mouse.insideCanvas()) {
+		if(this.mouse.insideCanvas())
+		{
 			// Zoom
 			this.camera.position.z += this.camera.position.z * this.mouse.wheel * 0.001;
 
 			// Rotate object
-			if (this.mouse.buttonPressed(Mouse.LEFT)) {
+			if(this.mouse.buttonPressed(Mouse.LEFT))
+			{
 				var delta = new Quaternion();
 				delta.setFromEuler(new Euler(this.mouse.delta.y * 0.005, this.mouse.delta.x * 0.005, 0, 'XYZ'));
 
@@ -402,7 +437,8 @@ class MaterialEditor extends TabComponent {
 	}
 
 	// Update elements
-	updateSize() {
+	updateSize()
+	{
 		super.updateSize();
 
 		this.main.size.copy(this.size);

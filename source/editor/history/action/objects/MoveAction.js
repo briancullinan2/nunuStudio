@@ -1,6 +1,6 @@
-import {Object3D, Matrix4} from "three";
-import {Action} from "../Action.js";
-import {Editor} from "../../../Editor.js";
+import { Object3D, Matrix4 } from "three";
+import { Action } from "../Action.js";
+import { Editor } from "../../../Editor.js";
 
 /**
  * Action to represent a object move in the children tree.
@@ -15,86 +15,91 @@ import {Editor} from "../../../Editor.js";
  * @param {Object3D} newParent New parent of the object.
  * @param {number} newIndex Index to insert the object.
  */
-class MoveAction {
-	constructor(object, newParent, newIndex, keepGlobalPose) {
-	Action.call(this);
-	
-	this.object = object;
-
-	this.oldParent = object.parent;
-	this.oldIndex = this.oldParent.children.indexOf(this.object);
-
-	this.newParent = newParent;
-	this.newIndex = newIndex;
-
-	this.keepGlobalPose = keepGlobalPose !== undefined ? keepGlobalPose : Editor.settings.editor.keepTransformMove;
-	}
-
-	apply() {
-	this.oldParent.remove(this.object);
-	
-	if (this.keepGlobalPose)
+class MoveAction
+{
+	constructor(object, newParent, newIndex, keepGlobalPose)
 	{
-		this.inverseTransform(this.oldParent, this.newParent);
+		Action.call(this);
+
+		this.object = object;
+
+		this.oldParent = object.parent;
+		this.oldIndex = this.oldParent.children.indexOf(this.object);
+
+		this.newParent = newParent;
+		this.newIndex = newIndex;
+
+		this.keepGlobalPose = keepGlobalPose !== undefined ? keepGlobalPose : Editor.settings.editor.keepTransformMove;
 	}
 
-	if (this.newIndex === undefined)
+	apply()
 	{
-		this.newParent.add(this.object);
-		this.newIndex = this.newParent.children.indexOf(this.object);
+		this.oldParent.remove(this.object);
+
+		if(this.keepGlobalPose)
+		{
+			this.inverseTransform(this.oldParent, this.newParent);
+		}
+
+		if(this.newIndex === undefined)
+		{
+			this.newParent.add(this.object);
+			this.newIndex = this.newParent.children.indexOf(this.object);
+		}
+		else
+		{
+			var children = this.newParent.children;
+			children.splice(this.newIndex, 0, this.object);
+			this.object.parent = this.newParent;
+		}
+
+		MoveAction.updateGUI(this.object, this.oldParent, this.newParent, this.newIndex);
 	}
-	else
+
+	revert()
 	{
-		var children = this.newParent.children;
-		children.splice(this.newIndex, 0, this.object);
-		this.object.parent = this.newParent;
+		this.newParent.remove(this.object);
+
+		if(this.keepGlobalPose)
+		{
+			this.inverseTransform(this.newParent, this.oldParent);
+		}
+
+		var children = this.oldParent.children;
+		children.splice(this.oldIndex, 0, this.object);
+		this.object.parent = this.oldParent;
+
+		MoveAction.updateGUI(this.object, this.newParent, this.oldParent, this.oldIndex);
 	}
 
-	MoveAction.updateGUI(this.object, this.oldParent, this.newParent, this.newIndex);
-	}
-
-	revert() {
-	this.newParent.remove(this.object);
-
-	if (this.keepGlobalPose)
+	inverseTransform(oldParent, newParent)
 	{
-		this.inverseTransform(this.newParent, this.oldParent);
-	}
+		var matrix = this.object.matrix;
 
-	var children = this.oldParent.children;
-	children.splice(this.oldIndex, 0, this.object);
-	this.object.parent = this.oldParent;
+		// Apply world matrix to object (calculate transform as if it was on the root)
+		matrix.multiplyMatrices(oldParent.matrixWorld, matrix);
 
-	MoveAction.updateGUI(this.object, this.newParent, this.oldParent, this.oldIndex);
-	}
+		// Get inverse of the world matrix of the new parent
+		var inverse = new Matrix4();
+		inverse.getInverse(newParent.matrixWorld);
 
-	inverseTransform(oldParent, newParent) {
-	var matrix = this.object.matrix;
+		// Apply inverse transform to the object matrix
+		matrix.multiplyMatrices(inverse, matrix);
 
-	// Apply world matrix to object (calculate transform as if it was on the root)
-	matrix.multiplyMatrices(oldParent.matrixWorld, matrix);
-
-	// Get inverse of the world matrix of the new parent
-	var inverse = new Matrix4();
-	inverse.getInverse(newParent.matrixWorld);
-
-	// Apply inverse transform to the object matrix
-	matrix.multiplyMatrices(inverse, matrix);
-
-	// Decompose matrix into components
-	matrix.decompose(this.object.position, this.object.quaternion, this.object.scale);
+		// Decompose matrix into components
+		matrix.decompose(this.object.position, this.object.quaternion, this.object.scale);
 	}
 
 }
 
-MoveAction.updateGUI = function(object, oldParent, newParent, newIndex)
+MoveAction.updateGUI = function (object, oldParent, newParent, newIndex)
 {
-	if (this.keepGlobalPose)
+	if(this.keepGlobalPose)
 	{
 		Editor.gui.inspector.updateValues();
 	}
-	
+
 	Editor.gui.tree.moveObject(object, oldParent, newParent, newIndex);
 };
 
-export {MoveAction};
+export { MoveAction };

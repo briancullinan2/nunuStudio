@@ -1,7 +1,7 @@
-import {Object3D, Camera} from "three";
-import {Action} from "../Action.js";
-import {Editor} from "../../../Editor.js";
-import {AddAction} from "./AddAction.js";
+import { Object3D, Camera } from "three";
+import { Action } from "../Action.js";
+import { Editor } from "../../../Editor.js";
+import { AddAction } from "./AddAction.js";
 
 /**
  * Remove object from the scene.
@@ -11,51 +11,55 @@ import {AddAction} from "./AddAction.js";
  * @param {Object3D} object
  * @param {Object3D} parent Optional.
  */
-class RemoveAction {
-	constructor(object, parent) {
-	Action.call(this);
-	
-	this.object = object;
+class RemoveAction
+{
+	constructor(object, parent)
+	{
+		Action.call(this);
 
-	this.parent = parent !== undefined ? parent : object.parent;
-	this.index = -1;
+		this.object = object;
+
+		this.parent = parent !== undefined ? parent : object.parent;
+		this.index = -1;
 	}
 
-	apply() {
-	if (this.object instanceof Camera)
+	apply()
 	{
-		var scene = this.object.getScene();
-		if (scene !== null)
+		if(this.object instanceof Camera)
 		{
-			scene.removeCamera(this.object);
+			var scene = this.object.getScene();
+			if(scene !== null)
+			{
+				scene.removeCamera(this.object);
+			}
 		}
-	}
-	
-	this.index = this.parent.children.indexOf(this.object);
-	this.parent.remove(this.object);
 
-	RemoveAction.updateGUI(this.object, this.parent);
+		this.index = this.parent.children.indexOf(this.object);
+		this.parent.remove(this.object);
+
+		RemoveAction.updateGUI(this.object, this.parent);
 	}
 
-	revert() {
-	if (this.index === -1)
+	revert()
 	{
-		this.parent.add(this.object);
-	}
-	else
-	{
-		this.parent.children.splice(this.index, 0, this.object);
-		this.object.parent = this.parent;
-	}
+		if(this.index === -1)
+		{
+			this.parent.add(this.object);
+		}
+		else
+		{
+			this.parent.children.splice(this.index, 0, this.object);
+			this.object.parent = this.parent;
+		}
 
-	AddAction.updateGUI(this.object, this.parent, this.index);
+		AddAction.updateGUI(this.object, this.parent, this.index);
 	}
 
 }
 
-RemoveAction.updateGUI = function(object, parent)
+RemoveAction.updateGUI = function (object, parent)
 {
-	if (Editor.isSelected(object))
+	if(Editor.isSelected(object))
 	{
 		Editor.unselectObject(object);
 	}
@@ -63,4 +67,4 @@ RemoveAction.updateGUI = function(object, parent)
 	Editor.gui.tree.removeObject(object, parent);
 };
 
-export {RemoveAction};
+export { RemoveAction };
