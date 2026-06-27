@@ -78,6 +78,12 @@ Interface.saveProgram
 Interface.loadProgram
 Interface.newProgram
 
+ParticleEmitter.reload
+TransformGizmo.updatePose
+AddResourcesAction.revert
+TransformControls.setMode
+TransformGizmoRotate.transformObject
+
 
 projectMenu.addOption(Locale.executeScript callback inside MainMenu FileSystem.chooseFile(async and FileSystem.chooseFile does NOT need async because fire and forget onLoad callback will still allow access to the chooser
 
@@ -96,7 +102,11 @@ Program.receiveDataApp
 Program.clone
 
 
-\b(?:extends\s+(?:Object|TabComponent|Interface|Audio|Video|SceneEditor)|new\s+(?:Audio|Font|Image|Video|SceneEditor|TabComponent|Interface)|(?:loadFile|loadProgram|compileCode|toJSON|\.export|initialize|updateNunu|loadSpineAnimation|loadModel|exportWebProjectZip|load|runProject|addObject|addObjects|renameObject|deleteObject|copyObject|cutObject|pasteObject|redo|undo|createDefaultResouces|createNewProgram|saveProgramPath|saveProgram|setProgram|updateCameraControls|updateSettings|focusObject|update|createMeasurement|render|selectObjectWithMouse|setCameraMode|selectTool|updateSelection|newProgram|addOption|chooseFile|addResource|removeImage|removeVideo|removeTexture|addFont|addAudio|removeAudio|receiveDataApp|clone))\b
+TabGroup.addTab
+TabGroup, this.buttons.element.ondrop
+
+
+\b(?:extends\s+(?:Object|TabComponent|Interface|Audio|Video|SceneEditor|TransformControls|TransformGizmoRotate)|new\s+(?:Audio|Font|Image|Video|SceneEditor|TabComponent|Interface|TransformControls|TransformGizmoRotate)|(?:loadFile|loadProgram|compileCode|toJSON|\.export|initialize|updateNunu|loadSpineAnimation|loadModel|exportWebProjectZip|load|runProject|addObject|addObjects|renameObject|deleteObject|copyObject|cutObject|pasteObject|redo|undo|createDefaultResouces|createNewProgram|saveProgramPath|saveProgram|setProgram|updateCameraControls|updateSettings|focusObject|update|createMeasurement|render|selectObjectWithMouse|setCameraMode|selectTool|updateSelection|newProgram|addOption|chooseFile|addResource|removeImage|removeVideo|removeTexture|addFont|addAudio|removeAudio|receiveDataApp|clone|reload|addTab|updatePose|revert|setMode|transformObject|))\b
 
 
 This awesome auto package upgrader and a couple of automated tests/*.

@@ -25,7 +25,7 @@ class SceneEditor extends TabComponent
 	constructor(parent, closeable, container, index)
 	{
 		super(parent, closeable, container, index, "Scene", Global.FILE_PATH + "icons/misc/scene.png");
-
+		this.loading = this.initialize(parent, closeable, container, index)
 	}
 
 	async initialize(parent, closeable, container, index)

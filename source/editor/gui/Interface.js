@@ -7,6 +7,11 @@
  */
 class Interface
 {
+	constructor()
+	{
+		this.loading = this.initialize()
+	}
+
 	async initialize()
 	{
 		const { TabContainer } = await import("../components/tabs/splittable/TabContainer.js");

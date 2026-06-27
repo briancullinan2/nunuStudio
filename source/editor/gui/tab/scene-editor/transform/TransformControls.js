@@ -1,6 +1,5 @@
 import { Camera, Object3D, Raycaster, Vector2, Vector3, Matrix4, Euler, Quaternion, PerspectiveCamera } from "three";
 import { Mouse } from "../../../../../core/input/Mouse.js";
-import { TransformGizmoTranslate } from "./gizmo/TransformGizmoTranslate.js";
 import { TransformGizmoScale } from "./gizmo/TransformGizmoScale.js";
 import { TransformGizmoRotate } from "./gizmo/TransformGizmoRotate.js";
 import { TransformGizmo } from "./gizmo/TransformGizmo.js";
@@ -12,8 +11,10 @@ import { TransformGizmo } from "./gizmo/TransformGizmo.js";
  *
  * @class TransformControlAtttributes
  */
-class TransformControlAtttributes {
-	constructor() {
+class TransformControlAtttributes
+{
+	constructor()
+	{
 		this.parentRotationMatrix = new Matrix4();
 		this.parentScale = new Vector3();
 		this.worldRotationMatrix = new Matrix4();
@@ -36,8 +37,10 @@ class TransformControlAtttributes {
  * @param {Canvas} canvas
  * @param {Mouse} mouse
  */
-class TransformControls extends Object3D {
-	constructor(camera, canvas, mouse) {
+class TransformControls extends Object3D
+{
+	constructor(camera, canvas, mouse)
+	{
 		super();
 
 		this.visible = false;
@@ -48,7 +51,7 @@ class TransformControls extends Object3D {
 		 * The rotation and direction of the camera affects the appearence of the gizmos and the vectors applied to transform objects.
 		 *
 		 * Booth perspective or orthographic cameras are supported.
-		 * 
+		 *
 		 * @attribute camera
 		 * @type {Camera}
 		 */
@@ -60,7 +63,7 @@ class TransformControls extends Object3D {
 		 * Mouse input is calculated relative to this canvas position on screen.
 		 *
 		 * @attribute canvas
-		 * @type {DOM} 
+		 * @type {DOM}
 		 */
 		this.canvas = canvas;
 
@@ -86,7 +89,7 @@ class TransformControls extends Object3D {
 		 * Can be reused between selected objects.
 		 *
 		 * @attribute attributes
-		 * @type {Array} 
+		 * @type {Array}
 		 */
 		this.attributes = [];
 
@@ -97,7 +100,7 @@ class TransformControls extends Object3D {
 		 *
 		 * If set to LOCAL the transformations are applied relative to the object current transform
 		 *
-		 * After chaging 
+		 * After chaging
 		 *
 		 * @attribute space
 		 * @type {number}
@@ -261,34 +264,41 @@ class TransformControls extends Object3D {
 	 * @method attach
 	 * @param {Array} objects Array of objects to be attached.
 	 */
-	attach(objects) {
+	attach(objects)
+	{
 		this.objects = [];
 
-		for (var i = 0; i < objects.length; i++) {
-			if (objects[i].isObject3D && !objects[i].locked && objects[i].parent !== null) {
+		for(var i = 0; i < objects.length; i++)
+		{
+			if(objects[i].isObject3D && !objects[i].locked && objects[i].parent !== null)
+			{
 				this.objects.push(objects[i]);
 			}
 		}
 
 		// Add more temporary attributes if necessary
-		while (this.attributes.length < this.objects.length) {
+		while(this.attributes.length < this.objects.length)
+		{
 			this.attributes.push(new TransformControlAtttributes());
 		}
 
-		if (this.objects.length > 0) {
+		if(this.objects.length > 0)
+		{
 			this.updatePose();
 		}
-		else {
+		else
+		{
 			this.clear();
 		}
 	}
 
 	/**
 	 * Detach/clear all objects attached to the transform controls.
-	 * 
+	 *
 	 * @method clear
 	 */
-	clear() {
+	clear()
+	{
 		this.objects = [];
 		this.visible = false;
 		this.axis = null;
@@ -300,7 +310,8 @@ class TransformControls extends Object3D {
 	 * @method setCanvas
 	 * @param {DOM} canvas Canvas element.
 	 */
-	setCanvas(canvas) {
+	setCanvas(canvas)
+	{
 		this.canvas = canvas;
 	}
 
@@ -310,16 +321,22 @@ class TransformControls extends Object3D {
 	 * @method setMode
 	 * @param {string} mode Name of the gizmo to be activated.
 	 */
-	setMode(mode) {
-		if (this.mode === mode) {
+	async setMode(mode)
+	{
+		const { TransformGizmoTranslate } = await import("./gizmo/TransformGizmoTranslate.js");
+
+		if(this.mode === mode)
+		{
 			return;
 		}
 
 		this.mode = mode;
 
 		// Remove old gizmo
-		if (this.gizmo !== null) {
-			if (this.gizmo.dismiss !== undefined) {
+		if(this.gizmo !== null)
+		{
+			if(this.gizmo.dismiss !== undefined)
+			{
 				this.gizmo.dismiss();
 			}
 
@@ -328,19 +345,23 @@ class TransformControls extends Object3D {
 		}
 
 		// Create gizmo for the mode selected
-		if (this.mode === TransformControls.TRANSLATE) {
+		if(this.mode === TransformControls.TRANSLATE)
+		{
 			this.gizmo = new TransformGizmoTranslate();
 		}
-		else if (this.mode === TransformControls.ROTATE) {
+		else if(this.mode === TransformControls.ROTATE)
+		{
 			this.gizmo = new TransformGizmoRotate();
 		}
-		else if (this.mode === TransformControls.SCALE) {
+		else if(this.mode === TransformControls.SCALE)
+		{
 			// If scale mode force local space
 			this.space = TransformControls.LOCAL;
 			this.gizmo = new TransformGizmoScale();
 		}
 
-		if (this.gizmo !== null) {
+		if(this.gizmo !== null)
+		{
 			this.add(this.gizmo);
 		}
 
@@ -354,16 +375,20 @@ class TransformControls extends Object3D {
 	 *
 	 * @method update
 	 */
-	update() {
-		if (this.mouse.buttonJustPressed(Mouse.LEFT)) {
+	update()
+	{
+		if(this.mouse.buttonJustPressed(Mouse.LEFT))
+		{
 			this.onPointerDown();
 		}
 
-		if (this.mouse.buttonJustReleased(Mouse.LEFT)) {
+		if(this.mouse.buttonJustReleased(Mouse.LEFT))
+		{
 			this.onPointerUp();
 		}
 
-		if (this.mouse.delta.x !== 0 || this.mouse.delta.y !== 0) {
+		if(this.mouse.delta.x !== 0 || this.mouse.delta.y !== 0)
+		{
 			this.onPointerHover();
 			this.onPointerMove();
 		}
@@ -378,8 +403,10 @@ class TransformControls extends Object3D {
 	 *
 	 * @method updatePose
 	 */
-	updatePose() {
-		if (this.objects.length === 0 || this.gizmo === null) {
+	updatePose()
+	{
+		if(this.objects.length === 0 || this.gizmo === null)
+		{
 			return;
 		}
 
@@ -387,13 +414,15 @@ class TransformControls extends Object3D {
 
 		// Calculate position from the avegare of all selected objects.
 		this.position.set(0, 0, 0);
-		for (var i = 0; i < this.objects.length; i++) {
+		for(var i = 0; i < this.objects.length; i++)
+		{
 			this.attributes[i].worldPosition.setFromMatrixPosition(this.objects[i].matrixWorld);
 			this.attributes[i].worldRotation.setFromRotationMatrix(this.tempMatrix.extractRotation(this.objects[i].matrixWorld));
 			this.position.add(this.attributes[i].worldPosition);
 		}
 
-		if (this.objects.length > 0) {
+		if(this.objects.length > 0)
+		{
 			this.position.divideScalar(this.objects.length);
 		}
 
@@ -402,11 +431,13 @@ class TransformControls extends Object3D {
 		this.camRotation.setFromRotationMatrix(this.tempMatrix.extractRotation(this.camera.matrixWorld));
 
 		// Set controls scale based of camera dsitance to object
-		if (this.camera instanceof PerspectiveCamera) {
+		if(this.camera instanceof PerspectiveCamera)
+		{
 			this.toolScale = this.position.distanceTo(this.camPosition) / 6 * this.size;
 			this.scale.set(this.toolScale, this.toolScale, this.toolScale);
 		}
-		else {
+		else
+		{
 			this.toolScale = this.camera.size / 6 * this.size;
 			this.scale.set(this.toolScale, this.toolScale, this.toolScale);
 		}
@@ -425,30 +456,38 @@ class TransformControls extends Object3D {
 	 *
 	 * @method onPointerHover
 	 */
-	onPointerHover() {
-		if (this.objects.length === 0 || this.dragging === true || this.gizmo === null) {
+	onPointerHover()
+	{
+		if(this.objects.length === 0 || this.dragging === true || this.gizmo === null)
+		{
 			return;
 		}
 
 		var intersect = this.intersectObjects(this.gizmo.pickers.children);
-		if (intersect) {
+		if(intersect)
+		{
 			var axis = intersect.object.name;
-			if (this.axis !== axis) {
+			if(this.axis !== axis)
+			{
 				this.axis = axis;
 			}
 		}
-		else {
+		else
+		{
 			this.axis = null;
 		}
 	}
 
-	onPointerDown() {
-		if (this.objects.length === 0 || this.dragging === true || this.gizmo === null) {
+	onPointerDown()
+	{
+		if(this.objects.length === 0 || this.dragging === true || this.gizmo === null)
+		{
 			return;
 		}
 
 		var intersect = this.intersectObjects(this.gizmo.pickers.children);
-		if (intersect) {
+		if(intersect)
+		{
 			this.editing = true;
 			this.axis = intersect.object.name;
 
@@ -458,8 +497,10 @@ class TransformControls extends Object3D {
 			this.gizmo.setActivePlane(this.axis, this.eye);
 
 			var planeIntersect = this.intersectObjects([this.gizmo.activePlane]);
-			if (planeIntersect) {
-				for (var i = 0; i < this.objects.length; i++) {
+			if(planeIntersect)
+			{
+				for(var i = 0; i < this.objects.length; i++)
+				{
 					this.attributes[i].oldPosition.copy(this.objects[i].position);
 					this.attributes[i].oldScale.copy(this.objects[i].scale);
 					this.attributes[i].oldQuaternion.copy(this.objects[i].quaternion);
@@ -485,8 +526,10 @@ class TransformControls extends Object3D {
 	 *
 	 * @method onPointerMove
 	 */
-	onPointerMove() {
-		if (this.objects.length === 0 || this.axis === null || this.dragging === false || this.gizmo === null) {
+	onPointerMove()
+	{
+		if(this.objects.length === 0 || this.axis === null || this.dragging === false || this.gizmo === null)
+		{
 			return;
 		}
 
@@ -497,11 +540,13 @@ class TransformControls extends Object3D {
 	 * Method called when user input button is released.
 	 *
 	 * Changes made to the object are added to the editor action history.
-	 * 
+	 *
 	 * @method onPointerUp
 	 */
-	onPointerUp() {
-		if (this.editing) {
+	onPointerUp()
+	{
+		if(this.editing)
+		{
 			this.gizmo.applyChanges(this);
 		}
 
@@ -516,7 +561,8 @@ class TransformControls extends Object3D {
 	 * @param {Array} objects Object to be tested.
 	 * @return {Object} Object intersected is any, false otherwise.
 	 */
-	intersectObjects(objects) {
+	intersectObjects(objects)
+	{
 		var rect = this.canvas.getBoundingClientRect();
 		var x = this.mouse.position.x / rect.width;
 		var y = this.mouse.position.y / rect.height;

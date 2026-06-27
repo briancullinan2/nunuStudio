@@ -1,8 +1,6 @@
 import { MathUtils } from "three";
 import { Component } from "../Component.js";
 import { TabGroup } from "./TabGroup.js";
-import { TabButton } from "./TabButton.js";
-import { TabContainer } from "./splittable/TabContainer.js";
 
 /**
  * Tab element is used to create tabbed elements.

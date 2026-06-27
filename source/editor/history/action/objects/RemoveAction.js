@@ -1,7 +1,6 @@
 import { Object3D, Camera } from "three";
 import { Action } from "../Action.js";
 import { Editor } from "../../../Editor.js";
-import { AddAction } from "./AddAction.js";
 
 /**
  * Remove object from the scene.
@@ -40,8 +39,10 @@ class RemoveAction
 		RemoveAction.updateGUI(this.object, this.parent);
 	}
 
-	revert()
+	async revert()
 	{
+		const { AddAction } = await import("./AddAction.js");
+
 		if(this.index === -1)
 		{
 			this.parent.add(this.object);

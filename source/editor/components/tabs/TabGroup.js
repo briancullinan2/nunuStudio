@@ -1,555 +1,579 @@
-import {Vector2} from "three";
-import {Locale} from "../../locale/LocaleManager.js";
-import {DragBuffer} from "../../gui/DragBuffer.js";
-import {Division} from "../Division.js";
-import {Component} from "../Component.js";
-import {TabComponent} from "./TabComponent.js";
-import {TabButton} from "./TabButton.js";
+import { Vector2 } from "three";
+import { Locale } from "../../locale/LocaleManager.js";
+import { DragBuffer } from "../../gui/DragBuffer.js";
+import { Division } from "../Division.js";
+import { Component } from "../Component.js";
 
 /**
  * A tab group contains and manages tab elements.
  *
  * The group is also responsible for creating and managing the lifecycle of its tab elements.
- * 
+ *
  * @class TabGroup
  * @extends {Component}
  * @param {Component} parent Parent element.
  */
-class TabGroup extends Component {
-	constructor(parent, placement) {
-	super(parent, "div");
-
-	var self = this;
-
-	this.element.style.overflow = "visible";
-	this.element.style.backgroundColor = "var(--panel-color)";
-
-	this.preventDragEvents();
-	
-	// Buttons
-	this.buttons = new Division(this);
-	this.buttons.element.style.backgroundColor = "var(--bar-color)";
-	this.buttons.element.ondrop = function(event)
+class TabGroup extends Component
+{
+	constructor(parent, placement)
 	{
-		event.preventDefault();
+		super(parent, "div");
 
-		var uuid = event.dataTransfer.getData("uuid");
-		var tab = DragBuffer.get(uuid);
+		var self = this;
 
-		if (tab instanceof TabComponent)
+		this.element.style.overflow = "visible";
+		this.element.style.backgroundColor = "var(--panel-color)";
+
+		this.preventDragEvents();
+
+		// Buttons
+		this.buttons = new Division(this);
+		this.buttons.element.style.backgroundColor = "var(--bar-color)";
+		this.buttons.element.ondrop = async function (event)
 		{
-			self.attachTab(tab);
-			DragBuffer.pop(uuid);
-		}
-	};
+			const { TabComponent } = await import("./TabComponent.js");
 
-	// Tab
-	this.tab = new Division(this);
+			event.preventDefault();
 
-	/**
-	 * Division used to display a message indicating that the tab is empty.
-	 *
-	 * @property empty
-	 * @type {Component}
-	 */
-	this.empty = document.createElement("div");
-	this.empty.style.position = "absolute";
-	this.empty.style.textAlign = "center";
-	this.empty.style.display = "none";
-	this.empty.style.width = "100%";
-	this.empty.style.height = "100%";
-	this.empty.style.flexDirection = "column";
-	this.empty.style.justifyContent = "center";
-	this.empty.style.pointerEvents = "none";
-	this.empty.appendChild(document.createTextNode(Locale.openTabToEditContent));
-	this.element.appendChild(this.empty);
+			var uuid = event.dataTransfer.getData("uuid");
+			var tab = DragBuffer.get(uuid);
 
-	/**
-	 * Tab that is currently selected.
-	 *
-	 * @property selected
-	 * @type {TabComponent}
-	 */
-	this.selected = null;
-	
-	/**
-	 * Base size of the buttons in this group.
-	 * 
-	 * Size may be ajusted to fit the available space.
-	 *
-	 * @property buttonSize
-	 * @type {Vector2}
-	 */
-	this.buttonSize = new Vector2(150, 22);
+			if(tab instanceof TabComponent)
+			{
+				self.attachTab(tab);
+				DragBuffer.pop(uuid);
+			}
+		};
 
-	/**
-	 * Tab buttons placement.
-	 *
-	 * @property placement
-	 * @type {number}
-	 */
-	this.placement = placement !== undefined ? placement : TabGroup.TOP;
-	this.setPlacement(this.placement);
+		// Tab
+		this.tab = new Division(this);
 
-	/**
-	 * Tab elements attache to this group.
-	 * 
-	 * @type {Array}
-	 */
-	this.options = [];
+		/**
+		 * Division used to display a message indicating that the tab is empty.
+		 *
+		 * @property empty
+		 * @type {Component}
+		 */
+		this.empty = document.createElement("div");
+		this.empty.style.position = "absolute";
+		this.empty.style.textAlign = "center";
+		this.empty.style.display = "none";
+		this.empty.style.width = "100%";
+		this.empty.style.height = "100%";
+		this.empty.style.flexDirection = "column";
+		this.empty.style.justifyContent = "center";
+		this.empty.style.pointerEvents = "none";
+		this.empty.appendChild(document.createTextNode(Locale.openTabToEditContent));
+		this.element.appendChild(this.empty);
 
-	/**
-	 * Indicates if the tab is currently on focus.
-	 *
-	 * @property focused
-	 * @type {boolean}
-	 */
-	this.focused = false;
-
-	this.element.onmouseenter = function()
-	{
-		self.focused = true;
-	};
-	this.element.onmouseleave = function()
-	{
-		self.focused = false;
-	};
-	}
-
-
-/**
- * Update all tabs object data.
- *
- * @method updateMetadata
- */
-	updateMetadata() {
-	for (var i = 0; i < this.options.length; i++)
-	{
-		this.options[i].updateMetadata();
-	}
-	}
-
-/**
- * Update all tab object views.
- *
- * @method updateMetadata
- */
-	updateObjectsView() {
-	for (var i = 0; i < this.options.length; i++)
-	{
-		this.options[i].updateObjectsView();
-	}
-	}
-
-/**
- * Attach tab to this group and remove it from the original group.
- *
- * @method attachTab
- * @param {TabComponent} tab Tab to be moved.
- * @param {number} insertIndex Index where to place the tab.
- */
-	attachTab(tab, insertIndex) {	
-	// Remove from old group
-	tab.container.removeTab(tab.index, true);
-	
-	// Attach to this group
-	tab.container = this;
-	tab.button.attachTo(this.buttons);
-	tab.attachTo(this.tab);
-	
-	// Add to options
-	if (insertIndex !== undefined)
-	{
-		tab.index = insertIndex;
-		this.options.splice(insertIndex, 0, tab);
-	}
-	else
-	{
-		tab.index = this.options.length;
-		this.options.push(tab);
-	}
-
-	// Select the tab if none selected
-	if (this.selected === null)
-	{
-		this.selectTab(tab);
-	}
-	
-	this.updateOptionIndex();
-	this.updateInterface();
-
-	return tab;
-	}
-
-/**
- * Move tab from position to another.
- *
- * @method moveTabIndex
- * @param {number} origin Origin index.
- * @param {number} destination Destination index.
- */
-	moveTabIndex(origin, destination) {
-	var button = this.options[origin];
-
-	this.options.splice(origin, 1);
-	this.options.splice(destination, 0, button);
-
-	this.updateOptionIndex();
-	this.updateInterface();
-	}
-
-	updateSelection() {
-	for (var i = 0; i < this.options.length; i++)
-	{
-		this.options[i].updateSelection();
-	}
-	}
-
-	updateSettings() {
-	for (var i = 0; i < this.options.length; i++)
-	{
-		this.options[i].updateSettings();
-	}
-	}
-
-/**
- * Get the currently active tab of the group.
- *
- * @method getActiveTab
- */
-	getActiveTab() {
-	if (this.selected !== null)
-	{
-		return this.selected;
-	}
-
-	return null;
-	}
-
-/**
- * Close actual tab if its closeable.
- *
- * @method closeActual
- */
-	closeActual() {
-	if (this.selected !== null && this.selected.closeable)
-	{
-		this.selected.deactivate();
-		this.removeTab(this.selected);
-	}
-	}
-
-/** 
- * Select tab to set active on this group.
- *
- * If not valid tab is selected the actual selection will be cleared.
- *
- * @method selectTab
- * @param {TabComponent} tab TabComponent to be selected or index in the tab array.
- */
-	selectTab(tab) {
-	if (this.selected !== null)
-	{
-		this.selected.deactivate();
-	}
-
-	// Tab as a TabComponent object
-	if (tab instanceof TabComponent)
-	{
-		this.selected = tab;
-		this.selected.activate();
-	}
-	// Tab as a index
-	else if (typeof tab === "number" && tab > -1 && tab < this.options.length)
-	{
-		this.selected = this.options[tab];
-		this.selected.activate();
-	}
-	else
-	{
+		/**
+		 * Tab that is currently selected.
+		 *
+		 * @property selected
+		 * @type {TabComponent}
+		 */
 		this.selected = null;
-	}
 
-	this.empty.style.display = this.selected === null ? "flex" : "none";
-	this.updateInterface();
-	}
+		/**
+		 * Base size of the buttons in this group.
+		 *
+		 * Size may be ajusted to fit the available space.
+		 *
+		 * @property buttonSize
+		 * @type {Vector2}
+		 */
+		this.buttonSize = new Vector2(150, 22);
 
-/**
- * Select next tab.
- *
- * @method selectNextTab
- */
-	selectNextTab() {
-	if (this.options.length > 0)
-	{
-		this.selectTab((this.selected.index + 1) % this.options.length);
-	}
-	}
+		/**
+		 * Tab buttons placement.
+		 *
+		 * @property placement
+		 * @type {number}
+		 */
+		this.placement = placement !== undefined ? placement : TabGroup.TOP;
+		this.setPlacement(this.placement);
 
-/**
- * Select previous tab.
- *
- * @method selectPreviousTab
- */
-	selectPreviousTab() {
-	if (this.options.length > 0)
-	{
-		if (this.selected.index === 0)
+		/**
+		 * Tab elements attache to this group.
+		 *
+		 * @type {Array}
+		 */
+		this.options = [];
+
+		/**
+		 * Indicates if the tab is currently on focus.
+		 *
+		 * @property focused
+		 * @type {boolean}
+		 */
+		this.focused = false;
+
+		this.element.onmouseenter = function ()
 		{
-			this.selectTab(this.options.length - 1);
+			self.focused = true;
+		};
+		this.element.onmouseleave = function ()
+		{
+			self.focused = false;
+		};
+	}
+
+
+	/**
+	 * Update all tabs object data.
+	 *
+	 * @method updateMetadata
+	 */
+	updateMetadata()
+	{
+		for(var i = 0; i < this.options.length; i++)
+		{
+			this.options[i].updateMetadata();
+		}
+	}
+
+	/**
+	 * Update all tab object views.
+	 *
+	 * @method updateMetadata
+	 */
+	updateObjectsView()
+	{
+		for(var i = 0; i < this.options.length; i++)
+		{
+			this.options[i].updateObjectsView();
+		}
+	}
+
+	/**
+	 * Attach tab to this group and remove it from the original group.
+	 *
+	 * @method attachTab
+	 * @param {TabComponent} tab Tab to be moved.
+	 * @param {number} insertIndex Index where to place the tab.
+	 */
+	attachTab(tab, insertIndex)
+	{
+		// Remove from old group
+		tab.container.removeTab(tab.index, true);
+
+		// Attach to this group
+		tab.container = this;
+		tab.button.attachTo(this.buttons);
+		tab.attachTo(this.tab);
+
+		// Add to options
+		if(insertIndex !== undefined)
+		{
+			tab.index = insertIndex;
+			this.options.splice(insertIndex, 0, tab);
 		}
 		else
 		{
-			this.selectTab(this.selected.index - 1);
+			tab.index = this.options.length;
+			this.options.push(tab);
 		}
-	}
+
+		// Select the tab if none selected
+		if(this.selected === null)
+		{
+			this.selectTab(tab);
+		}
+
+		this.updateOptionIndex();
+		this.updateInterface();
+
+		return tab;
 	}
 
-/**
- * Add new option to tab group.
- *
- * @method addtab
- */
-	addTab(TabConstructor, closeable) {
-	var tab = new TabConstructor(this.tab, closeable, this, this.options.length);
-	tab.button = new TabButton(this.buttons, tab);
-	this.options.push(tab);
-	
-	if (this.selected === null || this.options.length === 1)
+	/**
+	 * Move tab from position to another.
+	 *
+	 * @method moveTabIndex
+	 * @param {number} origin Origin index.
+	 * @param {number} destination Destination index.
+	 */
+	moveTabIndex(origin, destination)
 	{
-		this.selectTab(tab);
-	}
-	else
-	{
+		var button = this.options[origin];
+
+		this.options.splice(origin, 1);
+		this.options.splice(destination, 0, button);
+
+		this.updateOptionIndex();
 		this.updateInterface();
 	}
 
-	return tab;
-	}
-
-/**
- * Get tab from tab type and attached object is there is any.
- *
- * @method getTab
- * @param {Constructor} type Type of tab to look for.
- * @param {Object} object Object attached to the tab.
- */
-	getTab(type, object) {
-	for (var i = 0; i < this.options.length; i++)
+	updateSelection()
 	{
-		if (this.options[i] instanceof type)
+		for(var i = 0; i < this.options.length; i++)
 		{
-			if (object === undefined || this.options[i].isAttached(object))
-			{
-				return this.options[i];
-			}
+			this.options[i].updateSelection();
 		}
 	}
 
-	return null;
-	}
-
-/**
- * Remove tab from group.
- *
- * @method removeTab
- * @param {number} index Index of tab to look for.
- * @param {boolean} dontDestroy If true the element is not destroyed.
- */
-	removeTab(index, dontDestroy) {	
-	// If index is an object get the actual index
-	if (typeof index === "object")
+	updateSettings()
 	{
-		index = this.options.indexOf(index);
-	}
-
-	// Check if the index is in range
-	if (index > -1 && index < this.options.length)
-	{
-		var tab = this.options[index];
-
-		if (dontDestroy !== true)
+		for(var i = 0; i < this.options.length; i++)
 		{
-			tab.destroy();
+			this.options[i].updateSettings();
+		}
+	}
+
+	/**
+	 * Get the currently active tab of the group.
+	 *
+	 * @method getActiveTab
+	 */
+	getActiveTab()
+	{
+		if(this.selected !== null)
+		{
+			return this.selected;
 		}
 
-		this.options.splice(index, 1);
-		this.updateOptionIndex();
+		return null;
+	}
 
-		// Select option
-		if (this.selected === tab)
+	/**
+	 * Close actual tab if its closeable.
+	 *
+	 * @method closeActual
+	 */
+	closeActual()
+	{
+		if(this.selected !== null && this.selected.closeable)
 		{
-			if (this.options.length > 0)
+			this.selected.deactivate();
+			this.removeTab(this.selected);
+		}
+	}
+
+	/**
+	 * Select tab to set active on this group.
+	 *
+	 * If not valid tab is selected the actual selection will be cleared.
+	 *
+	 * @method selectTab
+	 * @param {TabComponent} tab TabComponent to be selected or index in the tab array.
+	 */
+	async selectTab(tab)
+	{
+		const { TabComponent } = await import("./TabComponent.js");
+
+		if(this.selected !== null)
+		{
+			this.selected.deactivate();
+		}
+
+		// Tab as a TabComponent object
+		if(tab instanceof TabComponent)
+		{
+			this.selected = tab;
+			this.selected.activate();
+		}
+		// Tab as a index
+		else if(typeof tab === "number" && tab > -1 && tab < this.options.length)
+		{
+			this.selected = this.options[tab];
+			this.selected.activate();
+		}
+		else
+		{
+			this.selected = null;
+		}
+
+		this.empty.style.display = this.selected === null ? "flex" : "none";
+		this.updateInterface();
+	}
+
+	/**
+	 * Select next tab.
+	 *
+	 * @method selectNextTab
+	 */
+	selectNextTab()
+	{
+		if(this.options.length > 0)
+		{
+			this.selectTab((this.selected.index + 1) % this.options.length);
+		}
+	}
+
+	/**
+	 * Select previous tab.
+	 *
+	 * @method selectPreviousTab
+	 */
+	selectPreviousTab()
+	{
+		if(this.options.length > 0)
+		{
+			if(this.selected.index === 0)
 			{
-				this.selectTab(index !== 0 ? index - 1 : 0);
+				this.selectTab(this.options.length - 1);
 			}
 			else
 			{
-				this.selectTab(null);
+				this.selectTab(this.selected.index - 1);
 			}
 		}
-		else 
+	}
+
+	/**
+	 * Add new option to tab group.
+	 *
+	 * @method addtab
+	 */
+	async addTab(TabConstructor, closeable)
+	{
+		const { TabButton } = await import("./TabButton.js");
+
+		var tab = new TabConstructor(this.tab, closeable, this, this.options.length);
+		tab.button = new TabButton(this.buttons, tab);
+		this.options.push(tab);
+
+		if(this.selected === null || this.options.length === 1)
 		{
-			this.selectTab(null);
+			this.selectTab(tab);
+		}
+		else
+		{
+			this.updateInterface();
 		}
 
 		return tab;
 	}
 
-	return null;
-	}
-
-/**
- * Remove all closable tabs from the group.
- *
- * @method clear
- * @param {boolean} forceAll Remove also the not closable tabs.
- */
-	clear(forceAll) {
-	if (forceAll === true)
+	/**
+	 * Get tab from tab type and attached object is there is any.
+	 *
+	 * @method getTab
+	 * @param {Constructor} type Type of tab to look for.
+	 * @param {Object} object Object attached to the tab.
+	 */
+	getTab(type, object)
 	{
-		while (this.options.length > 0)
+		for(var i = 0; i < this.options.length; i++)
 		{
-			this.options.pop().destroy();
+			if(this.options[i] instanceof type)
+			{
+				if(object === undefined || this.options[i].isAttached(object))
+				{
+					return this.options[i];
+				}
+			}
 		}
 
-		this.selectTab(null);
+		return null;
 	}
-	else
+
+	/**
+	 * Remove tab from group.
+	 *
+	 * @method removeTab
+	 * @param {number} index Index of tab to look for.
+	 * @param {boolean} dontDestroy If true the element is not destroyed.
+	 */
+	removeTab(index, dontDestroy)
 	{
-		var i = 0;
-		while (i < this.options.length)
+		// If index is an object get the actual index
+		if(typeof index === "object")
 		{
-			if (this.options[i].closeable)
+			index = this.options.indexOf(index);
+		}
+
+		// Check if the index is in range
+		if(index > -1 && index < this.options.length)
+		{
+			var tab = this.options[index];
+
+			if(dontDestroy !== true)
 			{
-				this.options[i].destroy();
-				this.options.splice(i, 1);
+				tab.destroy();
+			}
+
+			this.options.splice(index, 1);
+			this.updateOptionIndex();
+
+			// Select option
+			if(this.selected === tab)
+			{
+				if(this.options.length > 0)
+				{
+					this.selectTab(index !== 0 ? index - 1 : 0);
+				}
+				else
+				{
+					this.selectTab(null);
+				}
 			}
 			else
 			{
-				i++;
+				this.selectTab(null);
+			}
+
+			return tab;
+		}
+
+		return null;
+	}
+
+	/**
+	 * Remove all closable tabs from the group.
+	 *
+	 * @method clear
+	 * @param {boolean} forceAll Remove also the not closable tabs.
+	 */
+	clear(forceAll)
+	{
+		if(forceAll === true)
+		{
+			while(this.options.length > 0)
+			{
+				this.options.pop().destroy();
+			}
+
+			this.selectTab(null);
+		}
+		else
+		{
+			var i = 0;
+			while(i < this.options.length)
+			{
+				if(this.options[i].closeable)
+				{
+					this.options[i].destroy();
+					this.options.splice(i, 1);
+				}
+				else
+				{
+					i++;
+				}
+			}
+
+			// Check is selected tab is still available
+			var index = this.options.indexOf(this.selected);
+			if(index === -1 && this.options.length > 0)
+			{
+				this.selectTab(0);
 			}
 		}
+	}
 
-		// Check is selected tab is still available
-		var index = this.options.indexOf(this.selected);
-		if (index === -1 && this.options.length > 0)
+	/**
+	 * Update index variable stored in the tabs.
+	 *
+	 * @method updateOptionIndex
+	 */
+	updateOptionIndex()
+	{
+		for(var i = 0; i < this.options.length; i++)
 		{
-			this.selectTab(0);
+			this.options[i].index = i;
 		}
 	}
-	}
 
-/**
- * Update index variable stored in the tabs.
- *
- * @method updateOptionIndex
- */
-	updateOptionIndex() {
-	for (var i = 0; i < this.options.length; i++)
+	/**
+	 * Set the tab group buttons placement.
+	 *
+	 * @method setPlacement
+	 * @param {number} placement
+	 */
+	setPlacement(placement)
 	{
-		this.options[i].index = i;
-	}
-	}
-
-/**
- * Set the tab group buttons placement.
- *
- * @method setPlacement
- * @param {number} placement
- */
-	setPlacement(placement) {
-	this.placement = placement;
+		this.placement = placement;
 	}
 
-	updateSize() {
-	super.updateSize();
-
-	var tabSize = this.size.clone();
-	var buttonSize = this.buttonSize.clone();
-	var offset = this.buttonSize.clone();
-
-	// Calculate size of the buttons and offset
-	if (this.placement === TabGroup.TOP || this.placement === TabGroup.BOTTOM)
+	updateSize()
 	{
-		if (buttonSize.x * this.options.length > this.size.x)
+		super.updateSize();
+
+		var tabSize = this.size.clone();
+		var buttonSize = this.buttonSize.clone();
+		var offset = this.buttonSize.clone();
+
+		// Calculate size of the buttons and offset
+		if(this.placement === TabGroup.TOP || this.placement === TabGroup.BOTTOM)
 		{
-			buttonSize.x = this.size.x / this.options.length;
-			offset.x = buttonSize.x;
+			if(buttonSize.x * this.options.length > this.size.x)
+			{
+				buttonSize.x = this.size.x / this.options.length;
+				offset.x = buttonSize.x;
+			}
+			tabSize.y -= this.buttonSize.y;
+			offset.y = 0;
 		}
-		tabSize.y -= this.buttonSize.y;
-		offset.y = 0;
-	}
-	else if (this.placement === TabGroup.LEFT || this.placement === TabGroup.RIGHT)
-	{
-		if (buttonSize.y * this.options.length > this.size.y)
+		else if(this.placement === TabGroup.LEFT || this.placement === TabGroup.RIGHT)
 		{
-			buttonSize.y = this.size.y / this.options.length;
-			offset.y = buttonSize.y;
+			if(buttonSize.y * this.options.length > this.size.y)
+			{
+				buttonSize.y = this.size.y / this.options.length;
+				offset.y = buttonSize.y;
+			}
+			tabSize.x -= this.buttonSize.x;
+			offset.x = 0;
 		}
-		tabSize.x -= this.buttonSize.x;
-		offset.x = 0;
-	}
-	
-	// Update tab and buttons
-	for (var i = 0; i < this.options.length; i++)
-	{
-		var tab = this.options[i];
-		tab.visible = this.selected === tab;
-		tab.size.copy(tabSize);
-		tab.updateInterface();
 
-		var button = tab.button;
-		button.size.copy(buttonSize);
-		button.position.copy(offset);
-		button.position.multiplyScalar(i);
-		button.updateInterface();
-	}
+		// Update tab and buttons
+		for(var i = 0; i < this.options.length; i++)
+		{
+			var tab = this.options[i];
+			tab.visible = this.selected === tab;
+			tab.size.copy(tabSize);
+			tab.updateInterface();
 
-	this.tab.size.copy(tabSize);
-	this.tab.updateSize();
+			var button = tab.button;
+			button.size.copy(buttonSize);
+			button.position.copy(offset);
+			button.position.multiplyScalar(i);
+			button.updateInterface();
+		}
 
-	// Position buttons and tab division
-	if (this.placement === TabGroup.TOP)
-	{	
-		this.buttons.position.set(0, 0);
-		this.buttons.updatePosition();
-		this.buttons.size.set(this.size.x, this.buttonSize.y);
-		this.buttons.updateSize();
+		this.tab.size.copy(tabSize);
+		this.tab.updateSize();
 
-		this.tab.position.set(0, this.buttonSize.y);
-		this.tab.updatePosition();
-	}
-	else if (this.placement === TabGroup.BOTTOM)
-	{
-		this.buttons.position.set(0, this.size.y - this.buttonSize.y);
-		this.buttons.updatePosition();
-		this.buttons.size.set(this.size.x, this.buttonSize.y);
-		this.buttons.updateSize();
+		// Position buttons and tab division
+		if(this.placement === TabGroup.TOP)
+		{
+			this.buttons.position.set(0, 0);
+			this.buttons.updatePosition();
+			this.buttons.size.set(this.size.x, this.buttonSize.y);
+			this.buttons.updateSize();
 
-		this.tab.position.set(0, 0);
-		this.tab.updatePosition();
-	}
-	else if (this.placement === TabGroup.LEFT)
-	{
-		this.buttons.position.set(0, 0);
-		this.buttons.updatePosition();
-		this.buttons.size.set(this.buttonSize.x, this.size.y);
-		this.buttons.updateSize();
-		
-		this.tab.position.set(this.buttonSize.x, 0);
-		this.tab.updatePosition();
-	}
-	else if (this.placement === TabGroup.RIGHT)
-	{
-		this.buttons.position.set(this.size.x - this.buttonSize.x, 0);
-		this.buttons.updatePosition();
-		this.buttons.size.set(this.buttonSize.x, this.size.y);
-		this.buttons.updateSize();
+			this.tab.position.set(0, this.buttonSize.y);
+			this.tab.updatePosition();
+		}
+		else if(this.placement === TabGroup.BOTTOM)
+		{
+			this.buttons.position.set(0, this.size.y - this.buttonSize.y);
+			this.buttons.updatePosition();
+			this.buttons.size.set(this.size.x, this.buttonSize.y);
+			this.buttons.updateSize();
 
-		this.tab.position.set(0, 0);
-		this.tab.updatePosition();
-	}
+			this.tab.position.set(0, 0);
+			this.tab.updatePosition();
+		}
+		else if(this.placement === TabGroup.LEFT)
+		{
+			this.buttons.position.set(0, 0);
+			this.buttons.updatePosition();
+			this.buttons.size.set(this.buttonSize.x, this.size.y);
+			this.buttons.updateSize();
+
+			this.tab.position.set(this.buttonSize.x, 0);
+			this.tab.updatePosition();
+		}
+		else if(this.placement === TabGroup.RIGHT)
+		{
+			this.buttons.position.set(this.size.x - this.buttonSize.x, 0);
+			this.buttons.updatePosition();
+			this.buttons.size.set(this.buttonSize.x, this.size.y);
+			this.buttons.updateSize();
+
+			this.tab.position.set(0, 0);
+			this.tab.updatePosition();
+		}
 	}
 
 }
@@ -559,4 +583,4 @@ TabGroup.BOTTOM = 1;
 TabGroup.LEFT = 2;
 TabGroup.RIGHT = 3;
 
-export {TabGroup};
+export { TabGroup };

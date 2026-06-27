@@ -1,7 +1,6 @@
 import { Line, Mesh, TorusGeometry, BufferGeometry, Float32BufferAttribute, Matrix4, Euler, Quaternion, Vector3 } from "three";
 import { ChangeAction } from "../../../../../history/action/ChangeAction.js";
 import { ActionBundle } from "../../../../../history/action/ActionBundle.js";
-import { TransformControls } from "../TransformControls.js";
 import { GizmoLineMaterial } from "../GizmoLineMaterial.js";
 import { Editor } from "../../../../../Editor.js";
 import { TransformGizmo } from "./TransformGizmo.js";
@@ -12,8 +11,10 @@ import { TransformGizmo } from "./TransformGizmo.js";
  * @class TransformGizmoRotate
  * @extends {TransformGizmo}
  */
-class TransformGizmoRotate extends TransformGizmo {
-	constructor() {
+class TransformGizmoRotate extends TransformGizmo
+{
+	constructor()
+	{
 		this.handleGizmos =
 		{
 			X: [[new Line(new CircleGeometry(1, "x", 0.5), GizmoLineMaterial.red)]],
@@ -36,22 +37,28 @@ class TransformGizmoRotate extends TransformGizmo {
 	}
 
 
-	setActivePlane(axis) {
-		if (axis === "E") {
+	setActivePlane(axis)
+	{
+		if(axis === "E")
+		{
 			this.activePlane = this.planes["XYZE"];
 		}
-		else if (axis === "X") {
+		else if(axis === "X")
+		{
 			this.activePlane = this.planes["YZ"];
 		}
-		else if (axis === "Y") {
+		else if(axis === "Y")
+		{
 			this.activePlane = this.planes["XZ"];
 		}
-		else if (axis === "Z") {
+		else if(axis === "Z")
+		{
 			this.activePlane = this.planes["XY"];
 		}
 	}
 
-	update(rotation, eye2) {
+	update(rotation, eye2)
+	{
 		super.update(arguments);
 
 		var tempMatrix = new Matrix4();
@@ -71,20 +78,24 @@ class TransformGizmoRotate extends TransformGizmo {
 		tempMatrix.makeRotationFromQuaternion(tempQuaternion).getInverse(tempMatrix);
 		eye.applyMatrix4(tempMatrix);
 
-		this.traverse(function (child) {
+		this.traverse(function (child)
+		{
 			tempQuaternion.setFromEuler(worldRotation);
 
-			if (child.name === "X") {
+			if(child.name === "X")
+			{
 				quaternionX.setFromAxisAngle(unitX, Math.atan2(- eye.y, eye.z));
 				tempQuaternion.multiplyQuaternions(tempQuaternion, quaternionX);
 				child.quaternion.copy(tempQuaternion);
 			}
-			else if (child.name === "Y") {
+			else if(child.name === "Y")
+			{
 				quaternionY.setFromAxisAngle(unitY, Math.atan2(eye.x, eye.z));
 				tempQuaternion.multiplyQuaternions(tempQuaternion, quaternionY);
 				child.quaternion.copy(tempQuaternion);
 			}
-			else if (child.name === "Z") {
+			else if(child.name === "Z")
+			{
 				quaternionZ.setFromAxisAngle(unitZ, Math.atan2(eye.y, eye.x));
 				tempQuaternion.multiplyQuaternions(tempQuaternion, quaternionZ);
 				child.quaternion.copy(tempQuaternion);
@@ -92,10 +103,12 @@ class TransformGizmoRotate extends TransformGizmo {
 		});
 	}
 
-	applyChanges(controls) {
+	applyChanges(controls)
+	{
 		var actions = [];
 
-		for (var i = 0; i < controls.objects.length; i++) {
+		for(var i = 0; i < controls.objects.length; i++)
+		{
 			var object = controls.objects[i].quaternion;
 			actions.push(new ChangeAction(object, "x", object.x, controls.attributes[i].oldQuaternion.x));
 			actions.push(new ChangeAction(object, "y", object.y, controls.attributes[i].oldQuaternion.y));
@@ -106,20 +119,26 @@ class TransformGizmoRotate extends TransformGizmo {
 		Editor.addAction(new ActionBundle(actions));
 	}
 
-	transformObject(controls) {
+	async transformObject(controls)
+	{
+		const { TransformControls } = await import("../TransformControls.js");
+
 		var planeIntersect = controls.intersectObjects([controls.gizmo.activePlane]);
-		if (planeIntersect === false) {
+		if(planeIntersect === false)
+		{
 			return;
 		}
 
-		for (var i = 0; i < controls.objects.length; i++) {
+		for(var i = 0; i < controls.objects.length; i++)
+		{
 			controls.point.copy(planeIntersect.point);
 			controls.point.sub(controls.attributes[i].worldPosition);
 			controls.point.multiply(controls.attributes[i].parentScale);
 			controls.tempVector.copy(controls.offset).sub(controls.attributes[i].worldPosition);
 			controls.tempVector.multiply(controls.attributes[i].parentScale);
 
-			if (controls.axis === "E") {
+			if(controls.axis === "E")
+			{
 				controls.point.applyMatrix4(controls.tempMatrix.getInverse(controls.lookAtMatrix));
 				controls.tempVector.applyMatrix4(controls.tempMatrix.getInverse(controls.lookAtMatrix));
 
@@ -136,7 +155,8 @@ class TransformGizmoRotate extends TransformGizmo {
 
 				controls.objects[i].quaternion.copy(controls.tempQuaternion);
 			}
-			else if (controls.axis === "XYZE") {
+			else if(controls.axis === "XYZE")
+			{
 				controls.quaternionE.setFromEuler(controls.point.clone().cross(controls.tempVector).normalize()); // rotation axis
 
 				controls.tempQuaternion.setFromRotationMatrix(controls.tempMatrix.getInverse(controls.attributes[i].parentRotationMatrix));
@@ -148,7 +168,8 @@ class TransformGizmoRotate extends TransformGizmo {
 
 				controls.objects[i].quaternion.copy(controls.tempQuaternion);
 			}
-			else if (controls.space === TransformControls.LOCAL) {
+			else if(controls.space === TransformControls.LOCAL)
+			{
 				controls.point.applyMatrix4(controls.tempMatrix.getInverse(controls.attributes[i].worldRotationMatrix));
 
 				controls.tempVector.applyMatrix4(controls.tempMatrix.getInverse(controls.attributes[i].worldRotationMatrix));
@@ -158,40 +179,48 @@ class TransformGizmoRotate extends TransformGizmo {
 
 				controls.quaternionXYZ.setFromRotationMatrix(controls.attributes[i].oldRotationMatrix);
 
-				if (controls.snap) {
+				if(controls.snap)
+				{
 					controls.quaternionX.setFromAxisAngle(controls.unitX, Math.round((controls.toolRotation.x - controls.offsetRotation.x) / controls.rotationSnap) * controls.rotationSnap);
 					controls.quaternionY.setFromAxisAngle(controls.unitY, Math.round((controls.toolRotation.y - controls.offsetRotation.y) / controls.rotationSnap) * controls.rotationSnap);
 					controls.quaternionZ.setFromAxisAngle(controls.unitZ, Math.round((controls.toolRotation.z - controls.offsetRotation.z) / controls.rotationSnap) * controls.rotationSnap);
 				}
-				else {
+				else
+				{
 					controls.quaternionX.setFromAxisAngle(controls.unitX, controls.toolRotation.x - controls.offsetRotation.x);
 					controls.quaternionY.setFromAxisAngle(controls.unitY, controls.toolRotation.y - controls.offsetRotation.y);
 					controls.quaternionZ.setFromAxisAngle(controls.unitZ, controls.toolRotation.z - controls.offsetRotation.z);
 				}
 
-				if (controls.axis === "X") {
+				if(controls.axis === "X")
+				{
 					controls.quaternionXYZ.multiplyQuaternions(controls.quaternionXYZ, controls.quaternionX);
 				}
-				else if (controls.axis === "Y") {
+				else if(controls.axis === "Y")
+				{
 					controls.quaternionXYZ.multiplyQuaternions(controls.quaternionXYZ, controls.quaternionY);
 				}
-				else if (controls.axis === "Z") {
+				else if(controls.axis === "Z")
+				{
 					controls.quaternionXYZ.multiplyQuaternions(controls.quaternionXYZ, controls.quaternionZ);
 				}
 
 				controls.objects[i].quaternion.copy(controls.quaternionXYZ);
 			}
-			else if (controls.space === TransformControls.WORLD) {
+			else if(controls.space === TransformControls.WORLD)
+			{
 				controls.toolRotation.set(Math.atan2(controls.point.z, controls.point.y), Math.atan2(controls.point.x, controls.point.z), Math.atan2(controls.point.y, controls.point.x));
 				controls.offsetRotation.set(Math.atan2(controls.tempVector.z, controls.tempVector.y), Math.atan2(controls.tempVector.x, controls.tempVector.z), Math.atan2(controls.tempVector.y, controls.tempVector.x));
 				controls.tempQuaternion.setFromRotationMatrix(controls.tempMatrix.getInverse(controls.attributes[i].parentRotationMatrix));
 
-				if (controls.snap) {
+				if(controls.snap)
+				{
 					controls.quaternionX.setFromAxisAngle(controls.unitX, Math.round((controls.toolRotation.x - controls.offsetRotation.x) / controls.rotationSnap) * controls.rotationSnap);
 					controls.quaternionY.setFromAxisAngle(controls.unitY, Math.round((controls.toolRotation.y - controls.offsetRotation.y) / controls.rotationSnap) * controls.rotationSnap);
 					controls.quaternionZ.setFromAxisAngle(controls.unitZ, Math.round((controls.toolRotation.z - controls.offsetRotation.z) / controls.rotationSnap) * controls.rotationSnap);
 				}
-				else {
+				else
+				{
 					controls.quaternionX.setFromAxisAngle(controls.unitX, controls.toolRotation.x - controls.offsetRotation.x);
 					controls.quaternionY.setFromAxisAngle(controls.unitY, controls.toolRotation.y - controls.offsetRotation.y);
 					controls.quaternionZ.setFromAxisAngle(controls.unitZ, controls.toolRotation.z - controls.offsetRotation.z);
@@ -199,13 +228,16 @@ class TransformGizmoRotate extends TransformGizmo {
 
 				controls.quaternionXYZ.setFromRotationMatrix(controls.attributes[i].worldRotationMatrix);
 
-				if (controls.axis === "X") {
+				if(controls.axis === "X")
+				{
 					controls.tempQuaternion.multiplyQuaternions(controls.tempQuaternion, controls.quaternionX);
 				}
-				else if (controls.axis === "Y") {
+				else if(controls.axis === "Y")
+				{
 					controls.tempQuaternion.multiplyQuaternions(controls.tempQuaternion, controls.quaternionY);
 				}
-				else if (controls.axis === "Z") {
+				else if(controls.axis === "Z")
+				{
 					controls.tempQuaternion.multiplyQuaternions(controls.tempQuaternion, controls.quaternionZ);
 				}
 
@@ -223,21 +255,27 @@ class TransformGizmoRotate extends TransformGizmo {
  *
  * @class CircleGeometry
  */
-class CircleGeometry extends BufferGeometry {
-	constructor(radius, facing, arc) {
+class CircleGeometry extends BufferGeometry
+{
+	constructor(radius, facing, arc)
+	{
 		super();
 		var vertices = [];
 
 		var arcLen = arc !== undefined ? arc * 64 : 64;
 
-		for (var i = 0; i < arcLen; i++) {
-			if (facing === "x") {
+		for(var i = 0; i < arcLen; i++)
+		{
+			if(facing === "x")
+			{
 				vertices.push(0, Math.cos(i / 32 * Math.PI) * radius, Math.sin(i / 32 * Math.PI) * radius);
 			}
-			else if (facing === "y") {
+			else if(facing === "y")
+			{
 				vertices.push(Math.cos(i / 32 * Math.PI) * radius, 0, Math.sin(i / 32 * Math.PI) * radius);
 			}
-			else if (facing === "z") {
+			else if(facing === "z")
+			{
 				vertices.push(Math.sin(i / 32 * Math.PI) * radius, Math.cos(i / 32 * Math.PI) * radius, 0);
 			}
 		}

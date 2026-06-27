@@ -1,9 +1,9 @@
-import {ResourceManager} from "../../../../core/resources/ResourceManager.js";
-import {Resource} from "../../../../core/resources/Resource.js";
-import {ResourceCrawler} from "../../ResourceCrawler.js";
-import {Action} from "../Action.js";
-import {Editor} from "../../../Editor.js";
-import {AddResourceAction} from "./AddResourceAction.js";
+import { ResourceManager } from "../../../../core/resources/ResourceManager.js";
+import { Resource } from "../../../../core/resources/Resource.js";
+import { ResourceCrawler } from "../../ResourceCrawler.js";
+import { Action } from "../Action.js";
+import { Editor } from "../../../Editor.js";
+import { AddResourceAction } from "./AddResourceAction.js";
 
 /**
  * Remove a resource from the manager.
@@ -15,36 +15,40 @@ import {AddResourceAction} from "./AddResourceAction.js";
  * @param {ResourceManager} manager Manager to insert the resource into.
  * @param {string} category Category of the resource.
  */
-class RemoveResourceAction {
-	constructor(resource, manager, category) {
-	Action.call(this);
-	
-	this.resource = resource;
-	this.category = category;
-	this.manager = manager;
-	}
-
-	apply() {
-	ResourceCrawler.removeResource(this.manager, this.resource, this.category);
-
-	if (this.resource.dispose !== undefined)
+class RemoveResourceAction
+{
+	constructor(resource, manager, category)
 	{
-		this.resource.dispose();
+		Action.call(this);
+
+		this.resource = resource;
+		this.category = category;
+		this.manager = manager;
 	}
 
-	RemoveResourceAction.updateGUI();
+	apply()
+	{
+		ResourceCrawler.removeResource(this.manager, this.resource, this.category);
+
+		if(this.resource.dispose !== undefined)
+		{
+			this.resource.dispose();
+		}
+
+		RemoveResourceAction.updateGUI();
 	}
 
-	revert() {
-	ResourceCrawler.addResource(this.manager, this.resource, this.category);
+	revert()
+	{
+		ResourceCrawler.addResource(this.manager, this.resource, this.category);
 
-	AddResourceAction.updateGUI();
+		AddResourceAction.updateGUI();
 	}
 
 }
 
-RemoveResourceAction.updateGUI = function()
+RemoveResourceAction.updateGUI = function ()
 {
 	Editor.updateObjectsViewsGUI();
 };
-export {RemoveResourceAction};
+export { RemoveResourceAction };

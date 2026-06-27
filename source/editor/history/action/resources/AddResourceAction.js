@@ -1,9 +1,8 @@
-import {ResourceManager} from "../../../../core/resources/ResourceManager.js";
-import {Resource} from "../../../../core/resources/Resource.js";
-import {ResourceCrawler} from "../../ResourceCrawler.js";
-import {Action} from "../Action.js";
-import {Editor} from "../../../Editor.js";
-import {RemoveResourceAction} from "./RemoveResourceAction.js";
+import { ResourceManager } from "../../../../core/resources/ResourceManager.js";
+import { Resource } from "../../../../core/resources/Resource.js";
+import { ResourceCrawler } from "../../ResourceCrawler.js";
+import { Action } from "../Action.js";
+import { Editor } from "../../../Editor.js";
 
 /**
  * Add resource to the resource manager.
@@ -13,36 +12,42 @@ import {RemoveResourceAction} from "./RemoveResourceAction.js";
  * @param {ResourceManager} manager Manager to insert the resource into.
  * @param {string} category Category of the resource.
  */
-class AddResourceAction {
-	constructor(resource, manager, category) {
-	Action.call(this);
-	
-	this.resource = resource;
-	this.manager = manager;
-	this.category = category;
-	}
-
-	apply() {
-	ResourceCrawler.addResource(this.manager, this.resource, this.category);
-	
-	AddResourceAction.updateGUI();
-	}
-
-	revert() {
-	ResourceCrawler.removeResource(this.manager, this.resource, this.category);
-
-	if (this.resource.dispose !== undefined)
+class AddResourceAction
+{
+	constructor(resource, manager, category)
 	{
-		this.resource.dispose();
+		Action.call(this);
+
+		this.resource = resource;
+		this.manager = manager;
+		this.category = category;
 	}
 
-	RemoveResourceAction.updateGUI();
+	apply()
+	{
+		ResourceCrawler.addResource(this.manager, this.resource, this.category);
+
+		AddResourceAction.updateGUI();
+	}
+
+	async revert()
+	{
+		const { RemoveResourceAction } = await import("./RemoveResourceAction.js");
+
+		ResourceCrawler.removeResource(this.manager, this.resource, this.category);
+
+		if(this.resource.dispose !== undefined)
+		{
+			this.resource.dispose();
+		}
+
+		RemoveResourceAction.updateGUI();
 	}
 
 }
 
-AddResourceAction.updateGUI = function()
+AddResourceAction.updateGUI = function ()
 {
 	Editor.updateObjectsViewsGUI();
 };
-export {AddResourceAction};
+export { AddResourceAction };
