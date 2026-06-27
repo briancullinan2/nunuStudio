@@ -400,7 +400,7 @@ class SceneEditor extends TabComponent
 		 * @attribute gridHelper
 		 * @type {GridHelper}
 		 */
-		this.gridHelper = new GridHelper(Editor.settings.editor.gridSize, Editor.settings.editor.gridSpacing, 0x888888);
+		this.gridHelper = GridHelper.create(Editor.settings.editor.gridSize, Editor.settings.editor.gridSpacing, 0x888888);
 		this.gridHelper.visible = Editor.settings.editor.gridEnabled;
 		this.helperScene.add(this.gridHelper);
 

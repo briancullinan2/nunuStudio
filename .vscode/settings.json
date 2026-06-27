@@ -26,7 +26,7 @@
 	"[javascript]": {
 		"editor.defaultFormatter": "vscode.typescript-language-features"
 	},
-	"js/javascript.format.semicolons": "insert",
+	"js/ts.format.semicolons": "insert",
 	"js/ts.format.insertSpaceBeforeFunctionParenthesis": false,
 	"js/ts.format.insertSpaceAfterKeywordsInControlFlowStatements": false,
 	"js/ts.format.placeOpenBraceOnNewLineForControlBlocks": true,
@@ -71,5 +71,24 @@
 			"icon": "check",
 			"type": "text"
 		}
-	}
+	},
+	"search.exclude": {
+		"**/node_modules": true,
+		"**/build": true,
+		"**/docs": true,
+		"**/.git": true,
+		"**/*.nsp": true,
+		"**/*.js.mem": true,
+		"**/*.wasm": true,
+		"**/*.zip": true,
+		"**/*.bin": true,
+		"**/dist": true
+	},
+	"files.exclude": {
+		"**/.git": true,
+		"**/*.js.mem": true
+	},
+	"search.followSymlinks": false,
+	"search.useIgnoreFiles": true,
+	"search.maxResults": 5000
 }

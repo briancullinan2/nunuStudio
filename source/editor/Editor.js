@@ -1258,6 +1258,8 @@ Editor.loadProgram = async function (file, binary)
  */
 Editor.setOpenFile = async function (file)
 {
+	const { Nunu } = await import("../core/Nunu.js");
+
 	if(file !== undefined && file !== null)
 	{
 		if(file instanceof window.File)

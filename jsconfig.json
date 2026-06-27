@@ -1,17 +1,20 @@
 {
-    "compilerOptions": {
-        "target": "ESNext",
-        "module": "commonjs",
-        "checkJs": false,
-        "maxNodeModuleJsDepth": 0
-    },
-    "exclude": [
-        "node_modules",
-        "build",
-        "docs",
-        "source/page/node_modules",
-        "**.nsp",
-        "**.js.mem",
-        "**/.git"
-    ]
+	"compilerOptions": {
+		"target": "ESNext",
+		"module": "Node16",
+		"moduleResolution": "node16",
+		"checkJs": false,
+		"maxNodeModuleJsDepth": 0,
+		"skipLibCheck": true
+	},
+	"exclude": [
+		"node_modules",
+		"**/node_modules",
+		"build",
+		"docs",
+		"source/page/node_modules",
+		"**/*.nsp",
+		"**/*.js.mem",
+		"**/.git"
+	]
 }

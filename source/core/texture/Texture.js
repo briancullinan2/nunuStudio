@@ -1,11 +1,11 @@
-import {Texture as TTexture, RGBAFormat, RGBFormat, LinearFilter} from "three";
-import {Image} from "../resources/Image.js";
+import { Source, Texture as TTexture, RGBAFormat, RGBFormat, LinearFilter } from "three";
+import { Image } from "../resources/Image.js";
 
 /**
  * Basic image texture object wraps a texture from a img DOM element
  *
  * Support for GIF animations without playback controls.
- * 
+ *
  * @class Texture
  * @extends {Texture}
  * @module Textures
@@ -26,11 +26,11 @@ class Texture extends TTexture
 	{
 		// Resolve source before calling super
 		var resolvedSource;
-		if (typeof source === "string")
+		if(typeof source === "string")
 		{
 			resolvedSource = new Image(source);
 		}
-		else if (source === undefined)
+		else if(source === undefined)
 		{
 			resolvedSource = new Image();
 		}
@@ -39,11 +39,15 @@ class Texture extends TTexture
 			resolvedSource = source;
 		}
 
-		super(document.createElement("img"), mapping, wrapS, wrapT, magFilter, minFilter, format, type, anisotropy, encoding);
+		const newImage = document.createElement("img")
+
+		super(new Source(newImage), mapping, wrapS, wrapT, magFilter, minFilter, format, type, anisotropy, encoding);
+
+		this.element = newImage;
 
 		/**
 		 * Source image of the texture.
-		 * 
+		 *
 		 * @property source
 		 * @type {Image}
 		 */
@@ -62,9 +66,9 @@ class Texture extends TTexture
 
 		/**
 		 * Flag used to know is the texture has been disposed.
-		 * 
+		 *
 		 * Is used to control animation when using a gif as a texture.
-		 * 
+		 *
 		 * @property disposed
 		 * @type {boolean}
 		 * @default false
@@ -76,7 +80,7 @@ class Texture extends TTexture
 		this.updateSource();
 
 		// Check if image is animated format and start an update cycle
-		if (this.source.encoding === "gif")
+		if(this.source.encoding === "gif")
 		{
 			this.generateMipmaps = false;
 			this.magFilter = LinearFilter;
@@ -84,7 +88,7 @@ class Texture extends TTexture
 
 			function update()
 			{
-				if (!self.disposed)
+				if(!self.disposed)
 				{
 					self.needsUpdate = true;
 					requestAnimationFrame(update);
@@ -103,21 +107,22 @@ class Texture extends TTexture
 	 */
 	updateSource()
 	{
-		if (this.source !== null)
+
+		if(this.source !== null)
 		{
 			var self = this;
 
-			this.image.crossOrigin = "anonymous";
-			this.image.src = this.source.data;
-			this.image.onload = function()
+			this.element.crossOrigin = "anonymous";
+			this.element.src = this.source.data;
+			this.element.onload = function ()
 			{
 				self.needsUpdate = true;
 			};
-			this.image.onerror = function()
+			this.element.onerror = function ()
 			{
 				console.log("nunuStudio: Failed to load image " + self.source.uuid + " data.");
 				self.source.createSolidColor();
-				self.image.src = self.source.data;
+				self.element.src = self.source.data;
 				self.needsUpdate = true;
 			};
 		}
@@ -126,14 +131,14 @@ class Texture extends TTexture
 			console.warn("nunuStudio: Texture source is null.");
 
 			this.source.createSolidColor();
-			this.image.src = self.source.data;
+			this.element.src = self.source.data;
 			this.needsUpdate = true;
 		}
 	}
 
 	/**
 	 * Dispose texture.
-	 * 
+	 *
 	 * @method dispose
 	 */
 	dispose()
@@ -155,7 +160,7 @@ class Texture extends TTexture
 		var data = super.toJSON(meta);
 		var image = this.source.toJSON(meta);
 
-		data.image = image.uuid;
+		data.element = image.uuid;
 
 		return data;
 	}
@@ -169,19 +174,19 @@ class Texture extends TTexture
  */
 /**
  * How much a single repetition of the texture is offset from the beginning, in each direction U and V.
- * 
+ *
  * @property offset
  * @type {Vector2}
  */
 /**
  * How many times the texture is repeated across the surface, in each direction U and V.  If repeat is set greater than 1 in either direction, the corresponding Wrap parameter should also be set to .
- * 
+ *
  * @property repeat
  * @type {Vector2}
  */
 /**
  * Indicates where the center of rotation is. To rotate around the center point set this value to (0.5, 0.5).
- * 
+ *
  * @property center
  * @type {Vector2}
  */
@@ -212,8 +217,8 @@ class Texture extends TTexture
  */
 /**
  * DOM element attached to the texture
- * 
+ *
  * @property image
  * @type {Element}
  */
-export {Texture};
+export { Texture };

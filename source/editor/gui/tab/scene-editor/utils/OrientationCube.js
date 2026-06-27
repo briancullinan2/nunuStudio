@@ -3,18 +3,18 @@ import { Texture } from "../../../../../core/texture/Texture.js";
 import { Viewport } from "../../../../../core/objects/cameras/Viewport.js";
 import { Global } from "../../../../Global.js";
 
-/** 
+/**
  * Orietantion cube can be used to preview and change the rotation of an object.
- * 
+ *
  * Is used in the editor to preview and manipulate the camera prespective.
- * 
+ *
  * @class OrientationCube
  */
 class OrientationCube {
 	constructor() {
 		/**
 		 * Orientation cube viewport.
-		 * 
+		 *
 		 * @attribute viewport
 		 * @type {Viewport}
 		 */
@@ -143,7 +143,7 @@ class OrientationCube {
 	updateRotation(camera) {
 		this.scene.quaternion.copy(camera.quaternion);
 		this.scene.updateMatrix();
-		this.scene.matrix.getInverse(this.scene.matrix);
+		this.scene.matrix.invert();
 	}
 
 	/**
