@@ -1,0 +1,17 @@
+{
+    "compilerOptions": {
+        "target": "ESNext",
+        "module": "commonjs",
+        "checkJs": false,
+        "maxNodeModuleJsDepth": 0
+    },
+    "exclude": [
+        "node_modules",
+        "build",
+        "docs",
+        "source/page/node_modules",
+        "**.nsp",
+        "**.js.mem",
+        "**/.git"
+    ]
+}
