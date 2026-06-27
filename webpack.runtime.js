@@ -10,7 +10,13 @@ const config = {
 	target: ["web", "es2020"],
 	devtool: false,
 	mode: "production",
-	optimization: { minimize: true },
+	optimization: {
+		minimize: true,
+		sideEffects: true,
+		moduleIds: "named",
+		//runtimeChunk: "single",
+		concatenateModules: false
+	},
 	performance: {
 		hints: false,
 	},

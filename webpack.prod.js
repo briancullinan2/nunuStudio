@@ -13,6 +13,10 @@ module.exports = [
 		mode: "production",
 		optimization: {
 			minimize: true,
+			sideEffects: true,
+            moduleIds: "named",
+            //runtimeChunk: "single",
+			concatenateModules: false
 		},
 		performance: {
 			hints: false,

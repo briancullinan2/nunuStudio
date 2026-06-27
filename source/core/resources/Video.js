@@ -1,7 +1,7 @@
-import {Base64Utils} from "../utils/binary/Base64Utils.js";
-import {ArraybufferUtils} from "../utils/binary/ArraybufferUtils.js";
-import {FileSystem} from "../FileSystem.js";
-import {Resource} from "./Resource.js";
+import { Base64Utils } from "../utils/binary/Base64Utils.js";
+import { ArraybufferUtils } from "../utils/binary/ArraybufferUtils.js";
+import { FileSystem } from "../FileSystem.js";
+import { Resource } from "./Resource.js";
 
 /**
  * Video resources are used to store video.
@@ -14,29 +14,23 @@ import {Resource} from "./Resource.js";
  * @param {string} url URL to video file.
  * @param {string} encoding Image encoding, required for ArrayBuffer data.
  */
-class Video extends Resource
-{
-	constructor(url, encoding)
-	{
+class Video extends Resource {
+	constructor(url, encoding) {
 		super("video", "Video");
 
-		if (url !== undefined)
-		{	
+		if (url !== undefined) {
 			// ArrayBuffer
-			if (url instanceof ArrayBuffer)
-			{
+			if (url instanceof ArrayBuffer) {
 				this.loadArrayBufferData(url, encoding);
 			}
 			// Base64
-			else if (Base64Utils.isBase64(url))
-			{
+			else if (Base64Utils.isBase64(url)) {
 				this.encoding = Base64Utils.getFileFormat(url);
 				this.format = "base64";
 				this.data = url;
 			}
 			// URL
-			else
-			{
+			else {
 				this.loadArrayBufferData(FileSystem.readFileArrayBuffer(url), FileSystem.getFileExtension(url));
 			}
 		}
@@ -51,10 +45,9 @@ class Video extends Resource
 	 * @param {ArrayBuffer} data Data to be loaded.
 	 * @param {string} encoding Video enconding (mp4, webm, etc).
 	 */
-	loadArrayBufferData(data, encoding)
-	{
+	loadArrayBufferData(data, encoding) {
 		var view = new Uint8Array(data);
-		var blob = new Blob([view], {type: "video/" + encoding});
+		var blob = new Blob([view], { type: "video/" + encoding });
 
 		this.data = URL.createObjectURL(blob);
 		this.arraybuffer = data;
@@ -71,29 +64,24 @@ class Video extends Resource
 	 * @param {Object} meta
 	 * @return {Object} json
 	 */
-	toJSON(meta)
-	{
-		if (meta.videos[this.uuid] !== undefined)
-		{
+	toJSON(meta) {
+		if (meta.videos[this.uuid] !== undefined) {
 			return meta.videos[this.uuid];
 		}
-		
+
 		var data = super.toJSON(meta);
-		
+
 		data.encoding = this.encoding;
 
-		if (this.format === "arraybuffer")
-		{
+		if (this.format === "arraybuffer") {
 			data.format = this.format;
 			data.data = this.arraybuffer;
 		}
-		else if (this.format === "base64")
-		{
+		else if (this.format === "base64") {
 			data.format = "arraybuffer";
 			data.data = ArraybufferUtils.fromBase64(Base64Utils.removeHeader(this.data));
 		}
-		else
-		{
+		else {
 			data.format = this.format;
 			data.data = this.data;
 		}
@@ -102,27 +90,26 @@ class Video extends Resource
 
 		return data;
 	}
+
+
+	/**
+	 * Check if a file name refers to a supported video file.
+	 *
+	 * @method fileIsVideo
+	 * @static
+	 * @param {File} file
+	 * @return {boolean} True if the file refers to a supported video format.
+	 */
+	static fileIsVideo = function (file) {
+		if (file !== undefined) {
+			if (file.type.startsWith("video")) {
+				return true;
+			}
+		}
+
+		return false;
+	}
 }
 
-/**
- * Check if a file name refers to a supported video file.
- *
- * @method fileIsVideo
- * @static
- * @param {File} file
- * @return {boolean} True if the file refers to a supported video format.
- */
-Video.fileIsVideo = function(file)
-{
-	if (file !== undefined)
-	{
-		if (file.type.startsWith("video"))
-		{
-			return true;
-		}
-	}
 
-	return false;
-};
-
-export {Video};
+export { Video };

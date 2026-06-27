@@ -5,6 +5,7 @@ const MergeIntoSingleFilePlugin = require("webpack-merge-and-include-globally");
 const CopyPlugin = require("copy-webpack-plugin");
 const { merge } = require("webpack-merge");
 const runtime = require("./webpack.runtime.js");
+const CircularDependencyPlugin = require('circular-dependency-plugin');
 
 const source = Path.resolve(__dirname, "source");
 const output = Path.resolve(__dirname, "docs/editor");
@@ -60,6 +61,16 @@ module.exports = [
 			}
 		},
 		plugins: [
+			new Webpack.optimize.LimitChunkCountPlugin({
+				maxChunks: 1
+			}),
+			new CircularDependencyPlugin({
+				exclude: /a\.js|node_modules/,
+				include: /source/,
+				failOnError: true, // Tells you exactly which files are loops
+				allowAsyncCycles: false,
+				cwd: process.cwd(),
+			}),
 			new CopyPlugin({
 				patterns: [
 					{
