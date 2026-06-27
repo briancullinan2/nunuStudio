@@ -66,6 +66,7 @@ module.exports = [
 			hashFunction: "sha256",
 			filename: "nunu.module.min.js",
 			path: output,
+			library: "Nunu",
 			libraryTarget: "umd"
 		}
 	}, config)
