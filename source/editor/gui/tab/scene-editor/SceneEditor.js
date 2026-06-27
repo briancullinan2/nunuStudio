@@ -1,5 +1,16 @@
 import { RendererCanvas } from "../../../components/RendererCanvas.js";
 import { TabComponent } from "../../../components/tabs/TabComponent.js";
+import
+{
+	Vector2, AxesHelper, BufferGeometry, Float32BufferAttribute,
+	Line, LineBasicMaterial, Material, Mesh, MeshStandardMaterial, Plane,
+	Points, PointsMaterial, Raycaster, Scene, ShaderMaterial, SkinnedMesh,
+	Sprite, SpriteMaterial, Texture, Vector3,
+	Camera, CameraHelper, Light, DirectionalLight, DirectionalLightHelper,
+	LightProbe, PointLight, PointLightHelper, RectAreaLight, SpotLight,
+	SpotLightHelper, HemisphereLight, HemisphereLightHelper,
+	Bone, BoxHelper
+} from "three";
 
 /**
  * The scene editor is the core of the nunuStudio editor.
@@ -15,7 +26,6 @@ class SceneEditor extends TabComponent
 	{
 		const { Locale } = await import("../../../locale/LocaleManager.js");
 		const { Global } = await import("../../../Global.js");
-		const { AxesHelper, BufferGeometry, Float32BufferAttribute, Line, LineBasicMaterial, Material, Mesh, MeshStandardMaterial, Plane, Points, PointsMaterial, Raycaster, Scene, ShaderMaterial, SkinnedMesh, Sprite, SpriteMaterial, Texture, Vector2, Vector3 } = await import("three");
 		const { ActionBundle } = await import("../../../history/action/ActionBundle.js");
 		const { AddResourceAction } = await import("../../../history/action/resources/AddResourceAction.js");
 		const { Audio } = await import("../../../../core/resources/Audio.js");
@@ -753,7 +763,7 @@ class SceneEditor extends TabComponent
 	 * @method updateCameraControls
 	 * @param {number} mode Camera mode.
 	 */
-	updateCameraControls(mode)
+	async updateCameraControls(mode)
 	{
 		const { Settings } = await import("../../../Settings.js");
 		const { EditorFreeControls } = await import("./controls/EditorFreeControls.js");
@@ -783,7 +793,7 @@ class SceneEditor extends TabComponent
 		this.controls.attach(this.camera);
 	}
 
-	updateSettings()
+	async updateSettings()
 	{
 		const { Editor } = await import("../../../Editor.js");
 
@@ -852,7 +862,7 @@ class SceneEditor extends TabComponent
 	 *
 	 * @method focusObject
 	 */
-	focusObject()
+	async focusObject()
 	{
 		const { Editor } = await import("../../../Editor.js");
 		const { Locale } = await import("../../../locale/LocaleManager.js");
@@ -872,7 +882,7 @@ class SceneEditor extends TabComponent
 	 *
 	 * @method update
 	 */
-	update()
+	async update()
 	{
 		const { Mouse } = await import("../../../../core/input/Mouse.js");
 		const { Editor } = await import("../../../Editor.js");
@@ -1024,7 +1034,7 @@ class SceneEditor extends TabComponent
 		return null;
 	}
 
-	createMeasurement(start, end)
+	async createMeasurement(start, end)
 	{
 		const { Measurement } = await import("../../../../core/objects/misc/Measurement.js");
 		const { Editor } = await import("../../../Editor.js");
@@ -1046,7 +1056,7 @@ class SceneEditor extends TabComponent
 	 *
 	 * @method render
 	 */
-	render()
+	async render()
 	{
 		const { Editor } = await import("../../../Editor.js");
 		const { Mouse } = await import("../../../../core/input/Mouse.js");
@@ -1055,7 +1065,6 @@ class SceneEditor extends TabComponent
 		const { OrthographicCamera } = await import("../../../../core/objects/cameras/OrthographicCamera.js");
 		const { CubeCamera } = await import("../../../../core/objects/cameras/CubeCamera.js");
 		const { CubeTexture } = await import("../../../../core/texture/CubeTexture.js");
-		const { Vector2 } = await import("three");
 
 		if(this.canvas.renderer === null)
 		{
@@ -1194,7 +1203,7 @@ class SceneEditor extends TabComponent
 	 *
 	 * @method selectObjectWithMouse
 	 */
-	selectObjectWithMouse()
+	async selectObjectWithMouse()
 	{
 		const { Keyboard } = await import("../../../../core/input/Keyboard.js");
 		const { Editor } = await import("../../../Editor.js");
@@ -1242,7 +1251,7 @@ class SceneEditor extends TabComponent
 	 * @method setCameraMode
 	 * @param {number} mode
 	 */
-	setCameraMode(mode)
+	async setCameraMode(mode)
 	{
 		const { OrthographicCamera } = await import("../../../../core/objects/cameras/OrthographicCamera.js");
 		const { PerspectiveCamera } = await import("../../../../core/objects/cameras/PerspectiveCamera.js");
@@ -1293,7 +1302,7 @@ class SceneEditor extends TabComponent
 	 * @param selectTool
 	 * @param {number} tool Tool to select.
 	 */
-	selectTool(tool)
+	async selectTool(tool)
 	{
 		const { TransformControls } = await import("./transform/TransformControls.js");
 		const { Editor } = await import("../../../Editor.js");
@@ -1357,10 +1366,9 @@ class SceneEditor extends TabComponent
 	 *
 	 * @method updateSelection
 	 */
-	updateSelection()
+	async updateSelection()
 	{
 		const { Editor } = await import("../../../Editor.js");
-		const { Camera, CameraHelper, Light, DirectionalLight, DirectionalLightHelper, LightProbe, PointLight, PointLightHelper, RectAreaLight, SpotLight, SpotLightHelper, HemisphereLight, HemisphereLightHelper, SkinnedMesh, Bone, Mesh, Line, Points, BoxHelper } = await import("three");
 		const { ObjectIconHelper } = await import("./helpers/ObjectIconHelper.js");
 		const { Global } = await import("../../../Global.js");
 		const { LightProbeHelper } = await import("./helpers/LightProbeHelper.js");

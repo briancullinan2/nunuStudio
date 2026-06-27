@@ -1,19 +1,12 @@
-import {Object3D, Material, MeshBasicMaterial, SpriteMaterial, Sprite, Texture} from "three";
-import {ParticleEmitter} from "../objects/particle/ParticleEmitter.js";
-import {Video} from "./Video.js";
-import {ResourceContainer} from "./ResourceContainer.js";
-import {Resource} from "./Resource.js";
-import {Image} from "./Image.js";
-import {Font} from "./Font.js";
-import {Audio} from "./Audio.js";
+import { Object3D, Material, MeshBasicMaterial, SpriteMaterial, Sprite, Texture } from "three";
 
 /**
  * Resource manager is used to manage available resources used by objects
- * 
+ *
  * The resource manager is used to extend Object3D elements and is not meant to be used as a standalone.
  *
  * For standalone resource management use the resource container.
- * 
+ *
  * @class ResourceManager
  * @module Resources
  * @extends {Object3D}
@@ -22,6 +15,7 @@ class ResourceManager extends Object3D
 {
 	constructor()
 	{
+		const { ResourceContainer } = await import("./ResourceContainer.js");
 		super();
 		ResourceContainer.call(this);
 	}
@@ -31,15 +25,16 @@ class ResourceManager extends Object3D
 	 *
 	 * @method dispose
 	 */
-	dispose()
+	async dispose()
 	{
-		for (var i = 0; i < ResourceContainer.libraries.length; i++)
+		const { ResourceContainer } = await import("./ResourceContainer.js");
+		for(var i = 0; i < ResourceContainer.libraries.length; i++)
 		{
 			var library = ResourceContainer.libraries[i];
 
-			for (var a in this[library])
+			for(var a in this[library])
 			{
-				if (this[library][a].dispose instanceof Function)
+				if(this[library][a].dispose instanceof Function)
 				{
 					this[library][a].dispose();
 				}
@@ -49,15 +44,15 @@ class ResourceManager extends Object3D
 
 	/**
 	 * Remove geometry from the list and replace by other.
-	 * 
+	 *
 	 * @method removeGeometry
 	 * @param {Resource} geometry
 	 */
 	removeGeometry(geometry, defaultGeometry)
 	{
-		this.traverse(function(child)
+		this.traverse(function (child)
 		{
-			if (child.geometry !== undefined && child.geometry.uuid === geometry.uuid)
+			if(child.geometry !== undefined && child.geometry.uuid === geometry.uuid)
 			{
 				child.geometry = defaultGeometry;
 			}
@@ -68,16 +63,16 @@ class ResourceManager extends Object3D
 
 	/**
 	 * Get resource by name.
-	 * 
+	 *
 	 * @method getResourceByName
 	 * @param {string} name Resource name
 	 * @return {Resource} Resource if found else null
 	 */
 	getResourceByName(name)
 	{
-		for (var i in this.resources)
+		for(var i in this.resources)
 		{
-			if (this.resources[i].name === name)
+			if(this.resources[i].name === name)
 			{
 				return this.resources[i];
 			}
@@ -89,13 +84,14 @@ class ResourceManager extends Object3D
 
 	/**
 	 * Add resource to resources manager.
-	 * 
+	 *
 	 * @method addResource
 	 * @param {Resource} Resource to add.
 	 */
-	addResource(resource)
+	async addResource(resource)
 	{
-		if (resource instanceof Resource)
+		const { Resource } = await import("./Resource.js");
+		if(resource instanceof Resource)
 		{
 			this.resources[resource.uuid] = resource;
 		}
@@ -103,7 +99,7 @@ class ResourceManager extends Object3D
 
 	/**
 	 * Remove resource from font list.
-	 * 
+	 *
 	 * @method removeResource
 	 * @param {Resource} resource
 	 */
@@ -114,16 +110,16 @@ class ResourceManager extends Object3D
 
 	/**
 	 * Get image by name.
-	 * 
+	 *
 	 * @method getImageByName
 	 * @param {string} name Image name
 	 * @return {Image} Image if found else null
 	 */
 	getImageByName(name)
 	{
-		for (var i in this.images)
+		for(var i in this.images)
 		{
-			if (this.images[i].name === name)
+			if(this.images[i].name === name)
 			{
 				return this.images[i];
 			}
@@ -135,13 +131,15 @@ class ResourceManager extends Object3D
 
 	/**
 	 * Remove image.
-	 * 
+	 *
 	 * @param {Image} image
 	 * @method removeImage
 	 */
-	removeImage(image)
+	async removeImage(image)
 	{
-		if (image instanceof Image)
+		const { Image } = await import("./Image.js");
+
+		if(image instanceof Image)
 		{
 			delete this.images[image.uuid];
 		}
@@ -149,16 +147,16 @@ class ResourceManager extends Object3D
 
 	/**
 	 * Get video by name.
-	 * 
+	 *
 	 * @method getVideoByName
 	 * @param {string} name Video name
 	 * @return {Video} Video if found else null
 	 */
 	getVideoByName(name)
 	{
-		for (var i in this.videos)
+		for(var i in this.videos)
 		{
-			if (this.videos[i].name === name)
+			if(this.videos[i].name === name)
 			{
 				return this.videos[i];
 			}
@@ -170,13 +168,15 @@ class ResourceManager extends Object3D
 
 	/**
 	 * Remove video.
-	 * 
+	 *
 	 * @param {Video} video
 	 * @method removeVideo
 	 */
-	removeVideo(video)
+	async removeVideo(video)
 	{
-		if (video instanceof Video)
+		const { Video } = await import("./Video.js");
+
+		if(video instanceof Video)
 		{
 			delete this.videos[video.uuid];
 		}
@@ -184,16 +184,16 @@ class ResourceManager extends Object3D
 
 	/**
 	 * Get material by its name.
-	 * 
+	 *
 	 * @method getMaterialByName
 	 * @param {string} name Material name
 	 * @return {Material} Material if found else null
 	 */
 	getMaterialByName(name)
 	{
-		for (var i in this.materials)
+		for(var i in this.materials)
 		{
-			if (this.materials[i].name === name)
+			if(this.materials[i].name === name)
 			{
 				return this.materials[i];
 			}
@@ -205,21 +205,21 @@ class ResourceManager extends Object3D
 
 	/**
 	 * Add material to materials list.
-	 * 
+	 *
 	 * @method addMaterial
 	 * @param {Material} material Material to be added
 	 */
 	addMaterial(material)
 	{
-		if (material instanceof Material)
+		if(material instanceof Material)
 		{
- 			this.materials[material.uuid] = material;
- 		}
+			this.materials[material.uuid] = material;
+		}
 	}
 
 	/**
 	 * Remove material from materials list, also receives default material used to replace.
-	 * 
+	 *
 	 * @method removeMaterial
 	 * @param {Material} material Material to be removed from manager.
 	 * @param {Material} defaultMeshMaterial Default mesh material to replace objects mesh materials.
@@ -227,25 +227,25 @@ class ResourceManager extends Object3D
 	 */
 	removeMaterial(material, defaultMeshMaterial, defaultSpriteMaterial)
 	{
-		if (defaultMeshMaterial === undefined)
+		if(defaultMeshMaterial === undefined)
 		{
 			defaultMeshMaterial = new MeshBasicMaterial();
 		}
 
-		if (defaultSpriteMaterial === undefined)
+		if(defaultSpriteMaterial === undefined)
 		{
 			defaultSpriteMaterial = new SpriteMaterial();
 		}
 
-		if (material instanceof Material)
+		if(material instanceof Material)
 		{
 			delete this.materials[material.uuid];
-			
-			this.traverse(function(child)
+
+			this.traverse(function (child)
 			{
-				if (child.material !== undefined && child.material.uuid === material.uuid)
+				if(child.material !== undefined && child.material.uuid === material.uuid)
 				{
-					if (child instanceof Sprite)
+					if(child instanceof Sprite)
 					{
 						child.material = defaultSpriteMaterial;
 					}
@@ -260,16 +260,16 @@ class ResourceManager extends Object3D
 
 	/**
 	 * Get texture by name.
-	 * 
+	 *
 	 * @method getTextureByName
 	 * @param {string} name Texture name.
 	 * @return {Texture} Texture is found else null.
 	 */
 	getTextureByName(name)
 	{
-		for (var i in this.textures)
+		for(var i in this.textures)
 		{
-			if (this.textures[i].name === name)
+			if(this.textures[i].name === name)
 			{
 				return this.textures[i];
 			}
@@ -281,97 +281,99 @@ class ResourceManager extends Object3D
 
 	/**
 	 * Add texture to texture list.
-	 * 
+	 *
 	 * @method addTexture
 	 * @param {Texture} texture
 	 */
 	addTexture(texture)
 	{
-		if (material instanceof Texture)
+		if(material instanceof Texture)
 		{
- 			this.textures[texture.uuid] = texture;
+			this.textures[texture.uuid] = texture;
 		}
 	}
 
 	/**
 	 * Remove texture from textures list (also receives default used to replace).
-	 * 
+	 *
 	 * @method removeTexture
 	 * @param {Texture} texture
 	 * @param {Texture} defaultTexture
 	 * @return {Texture} Texture if found, else null
 	 */
-	removeTexture(texture, defaultTexture)
+	async removeTexture(texture, defaultTexture)
 	{
-		if (defaultTexture === undefined)
+		const { ParticleEmitter } = await import("../objects/particle/ParticleEmitter.js");
+
+		if(defaultTexture === undefined)
 		{
 			defaultTexture = new Texture();
 		}
 
-		if (texture instanceof Texture)
+		if(texture instanceof Texture)
 		{
 			delete this.textures[texture.uuid];
-			
-			this.traverse(function(child)
+
+			this.traverse(function (child)
 			{
-				if (child.material !== undefined)
+				if(child.material !== undefined)
 				{
 					var material = child.material;
-					
-					if (material.map && material.map.uuid === texture.uuid)
+
+					if(material.map && material.map.uuid === texture.uuid)
 					{
 						material.map = defaultTexture;
 						material.needsUpdate = true;
 					}
-					if (material.bumpMap && material.bumpMap.uuid === texture.uuid)
+					if(material.bumpMap && material.bumpMap.uuid === texture.uuid)
 					{
 						material.bumpMap = defaultTexture;
 						material.needsUpdate = true;
 					}
-					if (material.normalMap && material.normalMap.uuid === texture.uuid)
+					if(material.normalMap && material.normalMap.uuid === texture.uuid)
 					{
 						material.normalMap = defaultTexture;
 						material.needsUpdate = true;
 					}
-					if (material.displacementMap && material.displacementMap.uuid === texture.uuid)
+					if(material.displacementMap && material.displacementMap.uuid === texture.uuid)
 					{
 						material.displacementMap = defaultTexture;
 						material.needsUpdate = true;
 					}
-					if (material.specularMap && material.specularMap.uuid === texture.uuid)
+					if(material.specularMap && material.specularMap.uuid === texture.uuid)
 					{
 						material.specularMap = defaultTexture;
 						material.needsUpdate = true;
 					}
-					if (material.emissiveMap && material.emissiveMap.uuid === texture.uuid)
+					if(material.emissiveMap && material.emissiveMap.uuid === texture.uuid)
 					{
 						material.emissiveMap = defaultTexture;
 						material.needsUpdate = true;
 					}
-					if (material.alphaMap && material.alphaMap.uuid === texture.uuid)
+					if(material.alphaMap && material.alphaMap.uuid === texture.uuid)
 					{
 						material.alphaMap = defaultTexture;
 						material.needsUpdate = true;
 					}
-					if (material.roughnessMap && material.roughnessMap.uuid === texture.uuid)
+					if(material.roughnessMap && material.roughnessMap.uuid === texture.uuid)
 					{
 						material.roughnessMap = defaultTexture;
 						material.needsUpdate = true;
 					}
-					if (material.metalnessMap && material.metalnessMap.uuid === texture.uuid)
+					if(material.metalnessMap && material.metalnessMap.uuid === texture.uuid)
 					{
 						material.metalnessMap = defaultTexture;
 						material.needsUpdate = true;
 					}
-					if (material.envMap && material.envMap.uuid === texture.uuid)
+					if(material.envMap && material.envMap.uuid === texture.uuid)
 					{
 						material.envMap = null;
 						material.needsUpdate = true;
 					}
 				}
-				else if (child instanceof ParticleEmitter)
+				else if(child instanceof ParticleEmitter)
 				{
-					if (child.group.texture.uuid === texture.uuid)
+					if(child.group.texture.uuid === texture.uuid)
 					{
 						child.group.texture = defaultTexture;
 					}
@@ -382,16 +384,16 @@ class ResourceManager extends Object3D
 
 	/**
 	 * Get font by name.
-	 * 
+	 *
 	 * @method getFontByName
 	 * @param {string} name
 	 * @return {Font} Font if found, else null
 	 */
 	getFontByName(name)
 	{
-		for (var i in this.fonts)
+		for(var i in this.fonts)
 		{
-			if (this.fonts[i].name === name)
+			if(this.fonts[i].name === name)
 			{
 				return this.fonts[i];
 			}
@@ -403,39 +405,41 @@ class ResourceManager extends Object3D
 
 	/**
 	 * Add font to fonts list.
-	 * 
+	 *
 	 * @method addFont
 	 * @param {Font} font
 	 */
-	addFont(font)
+	async addFont(font)
 	{
-		if (font instanceof Font)
+		const { Font } = await import("./Font.js");
+		if(font instanceof Font)
 		{
- 			this.fonts[font.uuid] = font;
- 		}
+			this.fonts[font.uuid] = font;
+		}
 	}
 
 	/**
 	 * Remove font from font list.
-	 * 
+	 *
 	 * @method removeFont
 	 * @param {Font} font
 	 * @param {Font} defaultFont
 	 */
-	removeFont(font, defaultFont)
+	async removeFont(font, defaultFont)
 	{
-		if (defaultFont === undefined)
+		const { Font } = await import("./Font.js");
+		if(defaultFont === undefined)
 		{
 			defaultFont = new Font();
 		}
 
-		if (font instanceof Font)
+		if(font instanceof Font)
 		{
 			delete this.fonts[font.uuid];
-			
-			this.traverse(function(child)
+
+			this.traverse(function (child)
 			{
-				if (child.font !== undefined && child.font.uuid === font.uuid)
+				if(child.font !== undefined && child.font.uuid === font.uuid)
 				{
 					child.setFont(defaultFont);
 				}
@@ -445,16 +449,16 @@ class ResourceManager extends Object3D
 
 	/**
 	 * Get audio by name.
-	 * 
+	 *
 	 * @method getAudioByName
 	 * @param {string} name
 	 * @return {Audio} Audio if found, else null
 	 */
 	getAudioByName(name)
 	{
-		for (var i in this.audio)
+		for(var i in this.audio)
 		{
-			if (this.audio[i].name === name)
+			if(this.audio[i].name === name)
 			{
 				return this.audio[i];
 			}
@@ -466,39 +470,41 @@ class ResourceManager extends Object3D
 
 	/**
 	 * Add audio to audio list.
-	 * 
+	 *
 	 * @param {Audio} audio
 	 * @method addAudio
 	 */
-	addAudio(audio)
+	async addAudio(audio)
 	{
-		if (audio instanceof Audio)
+		const { Audio } = await import("./Audio.js");
+		if(audio instanceof Audio)
 		{
- 			this.audio[audio.uuid] = audio;
- 		}
+			this.audio[audio.uuid] = audio;
+		}
 	}
 
 	/**
 	 * Remove audio resource from the manager, replace on objects that are using it with another resource.
-	 * 
+	 *
 	 * @param {Audio} audio
 	 * @param {Audio} defaultAudio
 	 * @method removeAudio
 	 */
-	removeAudio(audio, defaultAudio)
+	async removeAudio(audio, defaultAudio)
 	{
-		if (defaultAudio === undefined)
+		const { Audio } = await import("./Audio.js");
+		if(defaultAudio === undefined)
 		{
 			defaultAudio = new Audio();
 		}
 
-		if (audio instanceof Audio)
+		if(audio instanceof Audio)
 		{
 			delete this.audio[audio.uuid];
-			
-			this.traverse(function(child)
+
+			this.traverse(function (child)
 			{
-				if (child.audio !== undefined && child.audio.uuid === audio.uuid)
+				if(child.audio !== undefined && child.audio.uuid === audio.uuid)
 				{
 					child.setAudio(defaultAudio);
 				}
@@ -506,4 +512,4 @@ class ResourceManager extends Object3D
 		}
 	}
 }
-export {ResourceManager};
+export { ResourceManager };

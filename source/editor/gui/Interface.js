@@ -66,7 +66,7 @@ class Interface
 	 *
 	 * @method saveProgram
 	 */
-	saveProgram()
+	async saveProgram()
 	{
 		const { Nunu } = await import("../../core/Nunu.js");
 		const { FileSystem } = await import("../../core/FileSystem.js");
@@ -95,7 +95,7 @@ class Interface
 	 *
 	 * @method loadProgram
 	 */
-	loadProgram()
+	async loadProgram()
 	{
 		const { Editor } = await import("../Editor.js");
 		const { Locale } = await import("../locale/LocaleManager.js");
@@ -118,7 +118,7 @@ class Interface
 	 *
 	 * @method newProgram
 	 */
-	newProgram()
+	async newProgram()
 	{
 		const { Editor } = await import("../Editor.js");
 		const { Locale } = await import("../locale/LocaleManager.js");

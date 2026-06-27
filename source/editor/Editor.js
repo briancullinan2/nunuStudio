@@ -1,4 +1,9 @@
 import { runningOnDesktop, isFullscreen } from "../core/utils/Environment.js";
+import
+{
+	Texture, BoxGeometry, MeshStandardMaterial, SpriteMaterial,
+	MathUtils, Material, BufferGeometry, Shape
+} from "three";
 
 /**
  * Main editor entry point.
@@ -626,7 +631,6 @@ Editor.deleteObject = async function (object)
 {
 	const { Program } = await import("../core/objects/Program.js");
 	const { RemoveAction } = await import("./history/action/objects/RemoveAction.js");
-	const { Material, Texture, BufferGeometry, Shape } = await import("three");
 	const { RemoveResourceAction } = await import("./history/action/resources/RemoveResourceAction.js");
 	const { Font } = await import("../core/resources/Font.js");
 	const { Audio } = await import("../core/resources/Audio.js");
@@ -747,7 +751,7 @@ Editor.copyObject = async function (object)
  * @method copyObject
  * @param {Object3D} object Object to copy.
  */
-Editor.cutObject = function (object)
+Editor.cutObject = async function (object)
 {
 	const { Program } = await import("../core/objects/Program.js");
 	const { Scene } = await import("../core/objects/Scene.js");
@@ -783,11 +787,10 @@ Editor.cutObject = function (object)
  * @method pasteObject
  * @param {Object3D} parent
  */
-Editor.pasteObject = function (target)
+Editor.pasteObject = async function (target)
 {
 	const { Locale } = await import("./locale/LocaleManager.js");
 	const { ObjectLoader } = await import("../core/loaders/ObjectLoader.js");
-	const { MathUtils } = await import("three");
 
 	try
 	{
@@ -828,7 +831,7 @@ Editor.pasteObject = function (target)
  *
  * @method redo
  */
-Editor.redo = function ()
+Editor.redo = async function ()
 {
 	const { Locale } = await import("./locale/LocaleManager.js");
 
@@ -847,7 +850,7 @@ Editor.redo = function ()
  *
  * @method undo
  */
-Editor.undo = function ()
+Editor.undo = async function ()
 {
 	const { Locale } = await import("./locale/LocaleManager.js");
 
@@ -867,13 +870,12 @@ Editor.undo = function ()
  * @static
  * @method createDefaultResouces
  */
-Editor.createDefaultResouces = function ()
+Editor.createDefaultResouces = async function ()
 {
 	const { Global } = await import("./Global.js");
 	const { Image } = await import("../core/resources/Image.js");
 	const { Font } = await import("../core/resources/Font.js");
 	const { Audio } = await import("../core/resources/Audio.js");
-	const { Texture, BoxGeometry, MeshStandardMaterial, SpriteMaterial } = await import("three");
 
 	Editor.defaultImage = new Image(Global.FILE_PATH + "uv_color.jpg");
 	Editor.defaultFont = new Font(Global.FILE_PATH + "default.json");
@@ -955,7 +957,7 @@ Editor.resetEditor = function ()
  *
  * @method createNewProgram
  */
-Editor.createNewProgram = function ()
+Editor.createNewProgram = async function ()
 {
 	const { Program } = await import("../core/objects/Program.js");
 
@@ -975,9 +977,8 @@ Editor.createNewProgram = function ()
  * @method addDefaultScene
  * @param {Material} material Default material used by objects, if empty a new material is created
  */
-Editor.addDefaultScene = function (material)
+Editor.addDefaultScene = async function (material)
 {
-	const { MeshStandardMaterial, BoxGeometry } = await import("three");
 	const { Scene } = await import("../core/objects/Scene.js");
 	const { Sky } = await import("../core/objects/misc/Sky.js");
 	const { Mesh } = await import("../core/objects/mesh/Mesh.js");
@@ -1026,7 +1027,7 @@ Editor.addDefaultScene = function (material)
  * @method saveProgramPath
  * @param {string} path Target directory to export the files into.
  */
-Editor.saveProgramPath = function (path)
+Editor.saveProgramPath = async function (path)
 {
 	const { StaticPair } = await import("@as-com/pson");
 	const { ResourceContainer } = await import("../core/resources/ResourceContainer.js");
@@ -1073,7 +1074,7 @@ Editor.saveProgramPath = function (path)
  * @param {boolean} keepDirectory
  * @param {boolean} supressMessage
  */
-Editor.saveProgram = function (fname, binary, keepDirectory, suppressMessage)
+Editor.saveProgram = async function (fname, binary, keepDirectory, suppressMessage)
 {
 	const { StaticPair } = await import("@as-com/pson");
 	const { FileSystem } = await import("../core/FileSystem.js");
@@ -1126,7 +1127,7 @@ Editor.saveProgram = function (fname, binary, keepDirectory, suppressMessage)
  * @method setProgram
  * @param {Program} program
  */
-Editor.setProgram = function (program)
+Editor.setProgram = async function (program)
 {
 	const { History } = await import("./history/History.js");
 	const { SceneEditor } = await import("./gui/tab/scene-editor/SceneEditor.js");
@@ -1256,13 +1257,11 @@ Editor.loadProgram = async function (file, binary)
  */
 Editor.setOpenFile = async function (file)
 {
-	const { Nunu } = await import("../core/Nunu.js");
-
 	if(file !== undefined && file !== null)
 	{
 		if(file instanceof window.File)
 		{
-			if(Nunu.runningOnDesktop())
+			if(runningOnDesktop())
 			{
 				Editor.openFile = file.path;
 			}

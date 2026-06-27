@@ -49,6 +49,34 @@ Editor.addObjects
 Editor.renameObject
 Editor.deleteObject
 Editor.copyObject
+Editor.cutObject
+Editor.pasteObject
+Editor.redo
+Editor.undo
+Editor.createDefaultResouces
+Editor.createNewProgram
+Editor.saveProgramPath
+Editor.saveProgram
+Editor.setProgram
+Editor.loadProgram
+new SceneEditor
+extends TabComponent
+new TabComponent
+SceneEditor.updateCameraControls
+SceneEditor.updateSettings
+SceneEditor.focusObject
+SceneEditor.update
+SceneEditor.createMeasurement
+SceneEditor.render
+SceneEditor.selectObjectWithMouse
+SceneEditor.setCameraMode
+SceneEditor.selectTool
+SceneEditor.updateSelection
+new Interface
+extends Interface
+Interface.saveProgram
+Interface.loadProgram
+Interface.newProgram
 
 
 projectMenu.addOption(Locale.executeScript callback inside MainMenu FileSystem.chooseFile(async and FileSystem.chooseFile does NOT need async because fire and forget onLoad callback will still allow access to the chooser
@@ -56,6 +84,19 @@ projectMenu.addOption(Locale.executeScript callback inside MainMenu FileSystem.c
 text.addOption(Global.FILE_PATH + "icons/text/text.png", async function ()
 has a call to the font loader in SideBar.addOption (to be determined)
 
+
+new ResourceManager
+extends ResourceManager
+ResourceManager.addResource
+ResourceManager.removeImage
+ResourceManager.removeVideo
+ResourceManager.removeTexture
+ResourceManager.addFont
+ResourceManager.addAudio
+ResourceManager.removeAudio
+
+
+\b(?:extends\s+(?:Object|TabComponent|Interface)|new\s+(?:Audio|Font|Image|Video|SceneEditor|TabComponent|Interface)|(?:loadFile|loadProgram|compileCode|toJSON|\.export|initialize|updateNunu|loadSpineAnimation|loadModel|exportWebProjectZip|load|runProject|addObject|addObjects|renameObject|deleteObject|copyObject|cutObject|pasteObject|redo|undo|createDefaultResouces|createNewProgram|saveProgramPath|saveProgram|setProgram|updateCameraControls|updateSettings|focusObject|update|createMeasurement|render|selectObjectWithMouse|setCameraMode|selectTool|updateSelection|newProgram|addOption|chooseFile))\b
 
 
 This awesome auto package upgrader and a couple of automated tests/*.

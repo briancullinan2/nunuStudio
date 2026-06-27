@@ -1,4 +1,3 @@
-import {Mouse} from "../input/Mouse.js";
 
 /**
  * EventManager is used to manager DOM events creationg and destruction in a single function call.
@@ -13,9 +12,9 @@ function EventManager()
 {
 	/**
 	 * Stores all events in the manager, their target and callback.
-	 * 
+	 *
 	 * Format [target, event, callback, active]
-	 * 
+	 *
 	 * @attribute events
 	 * @type {Array}
 	 */
@@ -96,7 +95,7 @@ EventManager.prototype.clear = function()
  * Creates the events in this manager by attaching them to the DOM elements.
  *
  * Uses the element.addEventListener() method to attach the event handlers.
- * 
+ *
  * @method create
  */
 EventManager.prototype.create = function()
@@ -115,7 +114,7 @@ EventManager.prototype.create = function()
  * Uses the element.removeEventListener() method to destroy the event handlers.
  *
  * Does not remove the events from the manager.
- * 
+ *
  * @method destroy
  */
 EventManager.prototype.destroy = function()
