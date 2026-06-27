@@ -1,4 +1,5 @@
-import { ParametricGeometry as TParametricBufferGeometry, Vector3 } from "three/examples/jsm/geometries/ParametricGeometry.js";
+import { Vector3 } from "three";
+import { ParametricGeometry as TParametricBufferGeometry } from "three/examples/jsm/geometries/ParametricGeometry.js";
 
 /**
  * Parametric bufffer geometry are constructed from javascript code describing a parametric surface.

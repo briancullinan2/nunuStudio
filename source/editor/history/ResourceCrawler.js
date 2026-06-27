@@ -1,18 +1,18 @@
-import {Texture, Object3D, Material, MultiMaterial, Mesh, SkinnedMesh, BufferGeometry} from "three";
-import {Video} from "../../core/resources/Video.js";
-import {ResourceManager} from "../../core/resources/ResourceManager.js";
-import {ResourceContainer} from "../../core/resources/ResourceContainer.js";
-import {Resource} from "../../core/resources/Resource.js";
-import {Image} from "../../core/resources/Image.js";
-import {Font} from "../../core/resources/Font.js";
-import {Audio} from "../../core/resources/Audio.js";
-import {TextSprite} from "../../core/objects/text/TextSprite.js";
-import {TextBitmap} from "../../core/objects/text/TextBitmap.js";
-import {SpineAnimation} from "../../core/objects/spine/SpineAnimation.js";
-import {ParticleEmitter} from "../../core/objects/particle/ParticleEmitter.js";
-import {Sky} from "../../core/objects/misc/Sky.js";
-import {LensFlare} from "../../core/objects/misc/LensFlare.js";
-import {Editor} from "../Editor.js";
+import { Texture, Object3D, Material, Mesh, SkinnedMesh, BufferGeometry } from "three";
+import { Video } from "../../core/resources/Video.js";
+import { ResourceManager } from "../../core/resources/ResourceManager.js";
+import { ResourceContainer } from "../../core/resources/ResourceContainer.js";
+import { Resource } from "../../core/resources/Resource.js";
+import { Image } from "../../core/resources/Image.js";
+import { Font } from "../../core/resources/Font.js";
+import { Audio } from "../../core/resources/Audio.js";
+import { TextSprite } from "../../core/objects/text/TextSprite.js";
+import { TextBitmap } from "../../core/objects/text/TextBitmap.js";
+import { SpineAnimation } from "../../core/objects/spine/SpineAnimation.js";
+import { ParticleEmitter } from "../../core/objects/particle/ParticleEmitter.js";
+import { Sky } from "../../core/objects/misc/Sky.js";
+import { LensFlare } from "../../core/objects/misc/LensFlare.js";
+import { Editor } from "../Editor.js";
 
 /**
  * Resource utils contains multiple tools to manipulate data in the resource manager on the editor.
@@ -20,7 +20,7 @@ import {Editor} from "../Editor.js";
  * @static
  * @class ResourceCrawler
  */
-function ResourceCrawler() {}
+function ResourceCrawler() { }
 
 /**
  * Auxiliar method to traverse any type of JS object in depth.
@@ -28,32 +28,25 @@ function ResourceCrawler() {}
  * Is called recursively for every Array or Object found, the callback receives the (value, parent, attribute) as parameters.
  *
  * If the callback method returns false it does not traverse the object.
- * 
- * @static
+ * * @static
  * @method traverseDeep
  * @param {Object} object Object to be traversed.
  * @param {Function} callback Callback to process every attribute from the object.
  */
-ResourceCrawler.traverseDeep = function(object, callback)
-{
-	if (callback === undefined)
-	{
+ResourceCrawler.traverseDeep = function (object, callback) {
+	if (callback === undefined) {
 		return;
 	}
 
-	for (var i in object)
-	{
+	for (var i in object) {
 		var value = object[i];
 
-		if (typeof value === "object")
-		{
-			if (callback(value, object, i) !== false)
-			{
+		if (typeof value === "object" && value !== null) {
+			if (callback(value, object, i) !== false) {
 				ResourceCrawler.traverseDeep(value, callback);
 			}
 		}
-		else
-		{
+		else {
 			callback(value, object, i);
 		}
 	}
@@ -71,21 +64,17 @@ ResourceCrawler.traverseDeep = function(object, callback)
  * @param {Resource} oldResource Old resource being replaced.
  * @param {Resource} newResource New resource used to replace the old one.
  */
-ResourceCrawler.swapResource = function(manager, category, oldResource, newResource)
-{	
-	if (manager[category][oldResource.uuid] === undefined)
-	{
+ResourceCrawler.swapResource = function (manager, category, oldResource, newResource) {
+	if (manager[category][oldResource.uuid] === undefined) {
 		throw new Error("Old resource not found in the resource manager.");
 	}
-	
+
 	// Swap resource in the manager
 	delete manager[category][oldResource.uuid];
 
 	// Replace all instances found
-	ResourceCrawler.traverseDeep(manager, function(value, object, attribute)
-	{
-		if (value === oldResource)
-		{
+	ResourceCrawler.traverseDeep(manager, function (value, object, attribute) {
+		if (value === oldResource) {
 			object[attribute] = newResource;
 			return false;
 		}
@@ -102,23 +91,16 @@ ResourceCrawler.swapResource = function(manager, category, oldResource, newResou
  * @static
  * @method removeDuplicated
  */
-ResourceCrawler.removeDuplicated = function(object)
-{
-	// Check if two resources are similar
-
+ResourceCrawler.removeDuplicated = function (object) {
 	// Fetch resources to be optimized
-	ResourceCrawler.traverseDeep(object, function(value)
-	{
-		if (value instanceof Texture)
-		{
-
+	ResourceCrawler.traverseDeep(object, function (value) {
+		if (value instanceof Texture) {
+			// #todo implementation
 		}
-		else if (value instanceof Material)
-		{
-
+		else if (value instanceof Material) {
+			// #todo implementation
 		}
 	});
-
 };
 
 /**
@@ -130,8 +112,7 @@ ResourceCrawler.removeDuplicated = function(object)
  * @param {Resource} resource
  * @param {string} category
  */
-ResourceCrawler.addResource = function(manager, resource, category)
-{
+ResourceCrawler.addResource = function (manager, resource, category) {
 	manager[category][resource.uuid] = resource;
 };
 
@@ -145,33 +126,25 @@ ResourceCrawler.addResource = function(manager, resource, category)
  * @param {ResourceManager} manager
  * @param {Resource} resource
  * @param {string} category
- */ 
-ResourceCrawler.removeResource = function(manager, resource, category)
-{
-	if (category === "materials")
-	{
+ */
+ResourceCrawler.removeResource = function (manager, resource, category) {
+	if (category === "materials") {
 		manager.removeMaterial(resource, Editor.defaultMaterial, Editor.defaultSpriteMaterial);
 	}
-	else if (category === "textures")
-	{
+	else if (category === "textures") {
 		manager.removeTexture(resource, Editor.defaultTexture);
 	}
-	else if (category === "fonts")
-	{
+	else if (category === "fonts") {
 		manager.removeFont(resource, Editor.defaultFont);
 	}
-	else if (category === "audio")
-	{
+	else if (category === "audio") {
 		manager.removeAudio(resource, Editor.defaultAudio);
 	}
-	else if (category === "geometries")
-	{
+	else if (category === "geometries") {
 		manager.removeGeometry(resource, Editor.defaultGeometry);
 	}
-	else
-	{
-		if (manager[category] !== undefined && manager[category][resource.uuid] !== undefined)
-		{
+	else {
+		if (manager[category] !== undefined && manager[category][resource.uuid] !== undefined) {
 			delete manager[category][resource.uuid];
 		}
 	}
@@ -184,15 +157,14 @@ ResourceCrawler.removeResource = function(manager, resource, category)
  * @param {ResourceManager} manager
  * @param {string} name
  */
-ResourceCrawler.getResourceByName = function(manager, name)
-{
-	for (var category in manager)
-	{
-		for (var resources in category)
-		{
-			if (resources[i].name === name)
-			{
-				return resources[i];
+ResourceCrawler.getResourceByName = function (manager, name) {
+	for (var category in manager) {
+		const currentCategory = manager[category];
+		if (typeof currentCategory === "object" && currentCategory !== null) {
+			for (var id in currentCategory) {
+				if (currentCategory[id] && currentCategory[id].name === name) {
+					return currentCategory[id];
+				}
 			}
 		}
 	}
@@ -212,113 +184,76 @@ ResourceCrawler.getResourceByName = function(manager, name)
  * @param {ResourceContainer} target Optional resource container object that can be used to store the found resources.
  * @return {ResourceContainer} Object with the new resources found in the object.
  */
-ResourceCrawler.searchObject = function(object, manager, target)
-{
-	var resources;
+ResourceCrawler.searchObject = function (object, manager, target) {
+	var resources = (target !== undefined) ? target : new ResourceContainer();
 
-	if (target !== undefined)
-	{
-		resources = target;
-	}
-	else
-	{
-		resources = new ResourceContainer();
-	}
-	
-	object.traverse(function(child)
-	{
-		if (child.locked)
-		{
+	object.traverse(function (child) {
+		if (child.locked) {
 			return;
 		}
 
 		// Fonts
-		if (child.font instanceof Font)
-		{
-			if (manager.fonts[child.font.uuid] === undefined)
-			{
+		if (child.font instanceof Font) {
+			if (manager.fonts[child.font.uuid] === undefined) {
 				resources.fonts[child.font.uuid] = child.font;
 			}
 		}
 
 		// Audio
-		if (child.audio instanceof Audio)
-		{
-			if (manager.audio[child.audio.uuid] === undefined)
-			{
+		if (child.audio instanceof Audio) {
+			if (manager.audio[child.audio.uuid] === undefined) {
 				resources.audio[child.audio.uuid] = child.audio;
 			}
 		}
 
-		// Material/textures
-		if (child.material !== undefined && !(child instanceof TextBitmap || child instanceof TextSprite ||child instanceof LensFlare || child instanceof ParticleEmitter || child instanceof Sky || child instanceof SpineAnimation))
-		{
-			if (child.material instanceof Material)
-			{
+		// Material/textures array processing
+		if (child.material !== undefined && !(child instanceof TextBitmap || child instanceof TextSprite || child instanceof LensFlare || child instanceof ParticleEmitter || child instanceof Sky || child instanceof SpineAnimation)) {
+			if (child.material instanceof Material) {
 				addMaterial(child.material);
 			}
-			else if (child.material instanceof Array)
-			{
-				for (var j = 0; j < child.material.length; j++)
-				{
+			else if (Array.isArray(child.material)) {
+				for (var j = 0; j < child.material.length; j++) {
 					addMaterial(child.material[j]);
-				}
-			}
-			else if (child.materials instanceof Array)
-			{
-				for (var j = 0; j < child.materials.length; j++)
-				{
-					addMaterial(child.materials[j]);
-				}
-			}
-			else if (child.material instanceof MultiMaterial)
-			{
-				var materials = child.material.materials;
-				for (var j = 0; j < materials.length; j++)
-				{
-					addMaterial(materials[j]);
 				}
 			}
 		}
 
-		// Geometries
-		if ((child instanceof Mesh || child instanceof SkinnedMesh) && !(child instanceof TextBitmap))
-		{
-			if (child.geometry instanceof BufferGeometry || child.geometry instanceof Geometry)
-			{
-				if (manager.geometries[child.geometry.uuid] === undefined)
-				{
+		if (Array.isArray(child.materials)) {
+			for (var j = 0; j < child.materials.length; j++) {
+				addMaterial(child.materials[j]);
+			}
+		}
+
+		// Geometries (Strictly modern BufferGeometry check)
+		if ((child instanceof Mesh || child instanceof SkinnedMesh) && !(child instanceof TextBitmap)) {
+			if (child.geometry instanceof BufferGeometry) {
+				if (manager.geometries[child.geometry.uuid] === undefined) {
 					resources.geometries[child.geometry.uuid] = child.geometry;
-				}			
+				}
 			}
 		}
 
 		// Textures
-		if (child.texture !== undefined && !(child instanceof TextSprite))
-		{
+		if (child.texture !== undefined && !(child instanceof TextSprite)) {
 			addTexture(child.texture);
 		}
-		if (child instanceof LensFlare)
-		{
-			for (var i = 0; i < child.elements.length; i++)
-			{
+		if (child instanceof LensFlare) {
+			for (var i = 0; i < child.elements.length; i++) {
 				addTexture(child.elements[i].texture);
 			}
 		}
 	});
 
-	function addMaterial(material)
-	{
+	function addMaterial(material) {
+		if (!material) return;
 		addTexturesFromMaterial(material);
 
-		if (manager.materials[material.uuid] === undefined)
-		{
+		if (manager.materials[material.uuid] === undefined) {
 			resources.materials[material.uuid] = material;
 		}
 	}
 
-	function addTexturesFromMaterial(material)
-	{
+	function addTexturesFromMaterial(material) {
 		addTexture(material.map);
 		addTexture(material.bumpMap);
 		addTexture(material.normalMap);
@@ -331,62 +266,54 @@ ResourceCrawler.searchObject = function(object, manager, target)
 		addTexture(material.envMap);
 	}
 
-	function addTexture(texture)
-	{
-		if (texture !== null && texture !== undefined)
-		{
+	function addTexture(texture) {
+		if (texture !== null && texture !== undefined) {
 			addResourcesTexture(texture);
 
-			if (manager.textures[texture.uuid] === undefined)
-			{
-				resources.textures[texture.uuid] = texture;	
+			if (manager.textures[texture.uuid] === undefined) {
+				resources.textures[texture.uuid] = texture;
 			}
 		}
 	}
 
-	function addImage(image)
-	{
-		if (manager.images[image.uuid] === undefined)
-		{
+	function addImage(image) {
+		if (manager.images[image.uuid] === undefined) {
 			resources.images[image.uuid] = image;
 		}
 	}
 
-	function addResourcesTexture(texture)
-	{
-		// Image
-		if (texture.source instanceof Image)
-		{
+	function addResourcesTexture(texture) {
+		// Image source tracking
+		if (texture.source instanceof Image) {
 			addImage(texture.source);
 		}
+		// Fallback for direct image property references
+		if (texture.image instanceof Image) {
+			addImage(texture.image);
+		}
 		// Video
-		if (texture.video instanceof Video)
-		{
-			if (manager.videos[texture.video.uuid] === undefined)
-			{
+		if (texture.video instanceof Video) {
+			if (manager.videos[texture.video.uuid] === undefined) {
 				resources.videos[texture.video.uuid] = texture.video;
 			}
 		}
 		// Images array
-		if (texture.images !== undefined)
-		{
-			for (var i = 0; i < texture.images.length; i++)
-			{
+		if (texture.images !== undefined) {
+			for (var i = 0; i < texture.images.length; i++) {
 				addImage(texture.images[i]);
 			}
 		}
 	}
 
-	for (var i in manager.materials)
-	{
+	for (var i in manager.materials) {
 		addTexturesFromMaterial(manager.materials[i]);
 	}
 
-	for (var i in manager.textures)
-	{
+	for (var i in manager.textures) {
 		addResourcesTexture(manager.textures[i]);
 	}
 
 	return resources;
 };
-export {ResourceCrawler};
+
+export { ResourceCrawler };

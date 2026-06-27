@@ -1,20 +1,16 @@
-import { BufferGeometry, Matrix4, Mesh, Face3, Vector2, Face4, Vector3 } from "three";
+import { BufferGeometry, Matrix4, Mesh, Vector2, Vector3, Float32BufferAttribute } from "three";
 import { BSPNode } from "./BSPNode.js";
 import { BSPPolygon } from "./BSPPolygon.js";
 import { BSPVertex } from "./BSPVertex.js";
 
 function BSP(geometry) {
-	// Convert Geometry to BSP
-	var length;
-	var face, vertex, faceVertexUvs, uvs;
 	var polygon;
 	var polygons = [];
 
-	if (geometry instanceof Geometry) {
+	if (geometry instanceof BufferGeometry) {
 		this.matrix = new Matrix4();
 	}
 	else if (geometry instanceof Mesh) {
-		// #todo: add hierarchy support
 		geometry.updateMatrix();
 		this.matrix = geometry.matrix.clone();
 		geometry = geometry.geometry;
@@ -28,65 +24,53 @@ function BSP(geometry) {
 		throw new Error("nunuStudio: Given geometry is unsupported");
 	}
 
-	for (var i = 0, length = geometry.faces.length; i < length; i++) {
-		face = geometry.faces[i];
-		faceVertexUvs = geometry.faceVertexUvs[0][i];
-		polygon = new BSPPolygon();
+	const posAttr = geometry.getAttribute("position");
+	const normalAttr = geometry.getAttribute("normal");
+	const uvAttr = geometry.getAttribute("uv");
+	const indexAttr = geometry.getIndex();
 
-		if (face instanceof Face3) {
-			vertex = geometry.vertices[face.a];
-			uvs = faceVertexUvs ? new Vector2(faceVertexUvs[0].x, faceVertexUvs[0].y) : null;
-			vertex = new BSPVertex(vertex.x, vertex.y, vertex.z, face.vertexNormals[0], uvs);
-			vertex.applyMatrix4(this.matrix);
-			polygon.vertices.push(vertex);
+	const getVertex = (idx) => {
+		const vx = posAttr.getX(idx);
+		const vy = posAttr.getY(idx);
+		const vz = posAttr.getZ(idx);
 
-			vertex = geometry.vertices[face.b];
-			uvs = faceVertexUvs ? new Vector2(faceVertexUvs[1].x, faceVertexUvs[1].y) : null;
-			vertex = new BSPVertex(vertex.x, vertex.y, vertex.z, face.vertexNormals[1], uvs);
-			vertex.applyMatrix4(this.matrix);
-			polygon.vertices.push(vertex);
-
-			vertex = geometry.vertices[face.c];
-			uvs = faceVertexUvs ? new Vector2(faceVertexUvs[2].x, faceVertexUvs[2].y) : null;
-			vertex = new BSPVertex(vertex.x, vertex.y, vertex.z, face.vertexNormals[2], uvs);
-			vertex.applyMatrix4(this.matrix);
-			polygon.vertices.push(vertex);
-		}
-		else if (typeof Face4) {
-			vertex = geometry.vertices[face.a];
-			uvs = faceVertexUvs ? new Vector2(faceVertexUvs[0].x, faceVertexUvs[0].y) : null;
-			vertex = new BSPVertex(vertex.x, vertex.y, vertex.z, face.vertexNormals[0], uvs);
-			vertex.applyMatrix4(this.matrix);
-			polygon.vertices.push(vertex);
-
-			vertex = geometry.vertices[face.b];
-			uvs = faceVertexUvs ? new Vector2(faceVertexUvs[1].x, faceVertexUvs[1].y) : null;
-			vertex = new BSPVertex(vertex.x, vertex.y, vertex.z, face.vertexNormals[1], uvs);
-			vertex.applyMatrix4(this.matrix);
-			polygon.vertices.push(vertex);
-
-			vertex = geometry.vertices[face.c];
-			uvs = faceVertexUvs ? new Vector2(faceVertexUvs[2].x, faceVertexUvs[2].y) : null;
-			vertex = new BSPVertex(vertex.x, vertex.y, vertex.z, face.vertexNormals[2], uvs);
-			vertex.applyMatrix4(this.matrix);
-			polygon.vertices.push(vertex);
-
-			vertex = geometry.vertices[face.d];
-			uvs = faceVertexUvs ? new Vector2(faceVertexUvs[3].x, faceVertexUvs[3].y) : null;
-			vertex = new BSPVertex(vertex.x, vertex.y, vertex.z, face.vertexNormals[3], uvs);
-			vertex.applyMatrix4(this.matrix);
-			polygon.vertices.push(vertex);
-		}
-		else {
-			throw new Error("Invalid face type at index " + i);
+		let normal = null;
+		if (normalAttr) {
+			normal = new Vector3(normalAttr.getX(idx), normalAttr.getY(idx), normalAttr.getZ(idx));
 		}
 
-		polygon.calculateProperties();
-		polygons.push(polygon);
+		let uv = null;
+		if (uvAttr) {
+			uv = new Vector2(uvAttr.getX(idx), uvAttr.getY(idx));
+		}
+
+		const bspVert = new BSPVertex(vx, vy, vz, normal, uv);
+		bspVert.applyMatrix4(this.matrix);
+		return bspVert;
 	};
 
+	if (indexAttr) {
+		for (let i = 0; i < indexAttr.count; i += 3) {
+			polygon = new BSPPolygon();
+			polygon.vertices.push(getVertex(indexAttr.getX(i)));
+			polygon.vertices.push(getVertex(indexAttr.getX(i + 1)));
+			polygon.vertices.push(getVertex(indexAttr.getX(i + 2)));
+			polygon.calculateProperties();
+			polygons.push(polygon);
+		}
+	} else if (posAttr) {
+		for (let i = 0; i < posAttr.count; i += 3) {
+			polygon = new BSPPolygon();
+			polygon.vertices.push(getVertex(i));
+			polygon.vertices.push(getVertex(i + 1));
+			polygon.vertices.push(getVertex(i + 2));
+			polygon.calculateProperties();
+			polygons.push(polygon);
+		}
+	}
+
 	this.tree = new BSPNode(polygons);
-};
+}
 
 BSP.prototype.subtract = function (otherTree) {
 	var a = this.tree.clone();
@@ -137,69 +121,52 @@ BSP.prototype.intersect = function (otherTree) {
 };
 
 BSP.prototype.toGeometry = function () {
-	var matrix = new Matrix4().getInverse(this.matrix);
-	var geometry = new Geometry();
+	var matrix = new Matrix4().copy(this.matrix).invert();
+	var geometry = new BufferGeometry();
 	var polygons = this.tree.allPolygons();
 	var polygonCount = polygons.length;
-	var polygon, polygonVerticeCount;
-	var verticeDict = {};
-	var vertexIdxA, vertexIdxB, vertexIdxC;
-	var vertex, face;
-	var verticeUvs;
+
+	var positions = [];
+	var normals = [];
+	var uvs = [];
 
 	for (var i = 0; i < polygonCount; i++) {
-		polygon = polygons[i];
-		polygonVerticeCount = polygon.vertices.length;
+		var polygon = polygons[i];
+		var polygonVerticeCount = polygon.vertices.length;
 
 		for (var j = 2; j < polygonVerticeCount; j++) {
-			verticeUvs = [];
+			var verts = [
+				polygon.vertices[0],
+				polygon.vertices[j - 1],
+				polygon.vertices[j]
+			];
 
-			vertex = polygon.vertices[0];
-			verticeUvs.push(new Vector2(vertex.uv.x, vertex.uv.y));
-			vertex = new Vector3(vertex.x, vertex.y, vertex.z);
-			vertex.applyMatrix4(matrix);
+			for (var k = 0; k < 3; k++) {
+				var v = verts[k];
+				var pos = new Vector3(v.x, v.y, v.z).applyMatrix4(matrix);
+				positions.push(pos.x, pos.y, pos.z);
 
-			if (typeof verticeDict[vertex.x + "," + vertex.y + "," + vertex.z] !== "undefined") {
-				vertexIdxA = verticeDict[vertex.x + "," + vertex.y + "," + vertex.z];
+				if (polygon.normal) {
+					normals.push(polygon.normal.x, polygon.normal.y, polygon.normal.z);
+				} else {
+					normals.push(0, 1, 0);
+				}
+
+				if (v.uv) {
+					uvs.push(v.uv.x, v.uv.y);
+				} else {
+					uvs.push(0, 0);
+				}
 			}
-			else {
-				geometry.vertices.push(vertex);
-				vertexIdxA = verticeDict[vertex.x + "," + vertex.y + "," + vertex.z] = geometry.vertices.length - 1;
-			}
-
-			vertex = polygon.vertices[j - 1];
-
-			verticeUvs.push(new Vector2(vertex.uv.x, vertex.uv.y));
-
-			vertex = new Vector3(vertex.x, vertex.y, vertex.z);
-			vertex.applyMatrix4(matrix);
-			if (typeof verticeDict[vertex.x + "," + vertex.y + "," + vertex.z] !== "undefined") {
-				vertexIdxB = verticeDict[vertex.x + "," + vertex.y + "," + vertex.z];
-			}
-			else {
-				geometry.vertices.push(vertex);
-				vertexIdxB = verticeDict[vertex.x + "," + vertex.y + "," + vertex.z] = geometry.vertices.length - 1;
-			}
-
-			vertex = polygon.vertices[j];
-			verticeUvs.push(new Vector2(vertex.uv.x, vertex.uv.y));
-			vertex = new Vector3(vertex.x, vertex.y, vertex.z);
-			vertex.applyMatrix4(matrix);
-			if (typeof verticeDict[vertex.x + "," + vertex.y + "," + vertex.z] !== "undefined") {
-				vertexIdxC = verticeDict[vertex.x + "," + vertex.y + "," + vertex.z];
-			}
-			else {
-				geometry.vertices.push(vertex);
-				vertexIdxC = verticeDict[vertex.x + "," + vertex.y + "," + vertex.z] = geometry.vertices.length - 1;
-			}
-
-			face = new Face3(vertexIdxA, vertexIdxB, vertexIdxC, new Vector3(polygon.normal.x, polygon.normal.y, polygon.normal.z));
-
-			geometry.faces.push(face);
-			geometry.faceVertexUvs[0].push(verticeUvs);
 		}
-
 	}
+
+	geometry.setAttribute("position", new Float32BufferAttribute(positions, 3));
+	geometry.setAttribute("normal", new Float32BufferAttribute(normals, 3));
+	if (uvs.length > 0) {
+		geometry.setAttribute("uv", new Float32BufferAttribute(uvs, 2));
+	}
+
 	return geometry;
 };
 
