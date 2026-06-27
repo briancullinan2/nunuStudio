@@ -5,8 +5,9 @@
  * @method runningOnDesktop
  * @return {boolean} True if running inside NWJS
  */
-export function runningOnDesktop() {
-    return window.nw !== undefined;
+export function runningOnDesktop()
+{
+	return window.nw !== undefined;
 };
 
 
@@ -18,7 +19,8 @@ export function runningOnDesktop() {
  * @method isFullscreen
  * @return {boolean} True if there is some element in fullscreen mode.
  */
-export function isFullscreen() {
-    return document.webkitIsFullScreen === true || document.mozFullScreen === true || document.webkitIsFullScreen === true || document.webkitIsFullScreen === true || document.fullscreen === true || false;
+export function isFullscreen()
+{
+	return document.webkitIsFullScreen === true || document.mozFullScreen === true || document.webkitIsFullScreen === true || document.webkitIsFullScreen === true || document.fullscreen === true || false;
 };
 

@@ -1,7 +1,7 @@
 import { RendererCanvas } from "../../../components/RendererCanvas.js";
 import { TabComponent } from "../../../components/tabs/TabComponent.js";
 
-/** 
+/**
  * The scene editor is the core of the nunuStudio editor.
  *
  * It is used to edit the scenes and apply changes to the objects using helper objects.
@@ -9,38 +9,40 @@ import { TabComponent } from "../../../components/tabs/TabComponent.js";
  * @class SceneEditor
  * @extends {TabComponent}
  */
-class SceneEditor extends TabComponent {
-	constructor(parent, closeable, container, index) {
-		import { Locale } from "../../../locale/LocaleManager.js";
-		import { Global } from "../../../Global.js";
-		import { AxesHelper, BufferGeometry, Float32BufferAttribute, Line, LineBasicMaterial, Material, Mesh, MeshStandardMaterial, Plane, Points, PointsMaterial, Raycaster, Scene, ShaderMaterial, SkinnedMesh, Sprite, SpriteMaterial, Texture, Vector2, Vector3 } from "three";
-		import { ActionBundle } from "../../../history/action/ActionBundle.js";
-		import { AddResourceAction } from "../../../history/action/resources/AddResourceAction.js";
-		import { Audio } from "../../../../core/resources/Audio.js";
-		import { AudioEmitter } from "../../../../core/objects/audio/AudioEmitter.js";
-		import { ButtonIcon } from "../../../components/buttons/ButtonIcon.js";
-		import { ChangeAction } from "../../../history/action/ChangeAction.js";
-		import { Component } from "../../../components/Component.js";
-		import { DragBuffer } from "../../DragBuffer.js";
-		import { DropdownList } from "../../../components/input/DropdownList.js";
-		import { Editor } from "../../../Editor.js";
-		import { EventManager } from "../../../../core/utils/EventManager.js";
-		import { Font } from "../../../../core/resources/Font.js";
-		import { Group } from "../../../../core/objects/misc/Group.js";
-		import { Image } from "../../../../core/resources/Image.js";
-		import { Keyboard } from "../../../../core/input/Keyboard.js";
-		import { Loaders } from "../../../Loaders.js";
-		import { Model } from "../../../../core/resources/Model.js";
-		import { Mouse } from "../../../../core/input/Mouse.js";
-		import { Settings } from "../../../Settings.js";
-		import { SwapAction } from "../../../history/action/objects/SwapAction.js";
-		import { Video } from "../../../../core/resources/Video.js";
-		import { VideoTexture } from "../../../../core/texture/VideoTexture.js";
-		import { TransformControls } from "./transform/TransformControls.js";
-		import { ToolBar } from "./toolbar/ToolBar.js";
-		import { SideBar } from "./sidebar/SideBar.js";
-		import { GridHelper } from "./helpers/GridHelper.js";
-		import { OrientationCube } from "./utils/OrientationCube.js";
+class SceneEditor extends TabComponent
+{
+	constructor(parent, closeable, container, index)
+	{
+		const { Locale } = await import("../../../locale/LocaleManager.js");
+		const { Global } = await import("../../../Global.js");
+		const { AxesHelper, BufferGeometry, Float32BufferAttribute, Line, LineBasicMaterial, Material, Mesh, MeshStandardMaterial, Plane, Points, PointsMaterial, Raycaster, Scene, ShaderMaterial, SkinnedMesh, Sprite, SpriteMaterial, Texture, Vector2, Vector3 } = await import("three");
+		const { ActionBundle } = await import("../../../history/action/ActionBundle.js");
+		const { AddResourceAction } = await import("../../../history/action/resources/AddResourceAction.js");
+		const { Audio } = await import("../../../../core/resources/Audio.js");
+		const { AudioEmitter } = await import("../../../../core/objects/audio/AudioEmitter.js");
+		const { ButtonIcon } = await import("../../../components/buttons/ButtonIcon.js");
+		const { ChangeAction } = await import("../../../history/action/ChangeAction.js");
+		const { Component } = await import("../../../components/Component.js");
+		const { DragBuffer } = await import("../../DragBuffer.js");
+		const { DropdownList } = await import("../../../components/input/DropdownList.js");
+		const { Editor } = await import("../../../Editor.js");
+		const { EventManager } = await import("../../../../core/utils/EventManager.js");
+		const { Font } = await import("../../../../core/resources/Font.js");
+		const { Group } = await import("../../../../core/objects/misc/Group.js");
+		const { Image } = await import("../../../../core/resources/Image.js");
+		const { Keyboard } = await import("../../../../core/input/Keyboard.js");
+		const { Loaders } = await import("../../../Loaders.js");
+		const { Model } = await import("../../../../core/resources/Model.js");
+		const { Mouse } = await import("../../../../core/input/Mouse.js");
+		const { Settings } = await import("../../../Settings.js");
+		const { SwapAction } = await import("../../../history/action/objects/SwapAction.js");
+		const { Video } = await import("../../../../core/resources/Video.js");
+		const { VideoTexture } = await import("../../../../core/texture/VideoTexture.js");
+		const { TransformControls } = await import("./transform/TransformControls.js");
+		const { ToolBar } = await import("./toolbar/ToolBar.js");
+		const { SideBar } = await import("./sidebar/SideBar.js");
+		const { GridHelper } = await import("./helpers/GridHelper.js");
+		const { OrientationCube } = await import("./utils/OrientationCube.js");
 
 		super(parent, closeable, container, index, Locale.scene, Global.FILE_PATH + "icons/misc/scene.png");
 
@@ -53,19 +55,23 @@ class SceneEditor extends TabComponent {
 		 * @type {RendererCanvas}
 		 */
 		this.canvas = new RendererCanvas(this, Editor.getRendererConfig());
-		this.canvas.onResize = function (width, height) {
-			if (self.scene !== null) {
+		this.canvas.onResize = function (width, height)
+		{
+			if(self.scene !== null)
+			{
 				self.scene.resize(width, height);
 			}
 		};
-		this.canvas.resetCanvas = function () {
+		this.canvas.resetCanvas = function ()
+		{
 			RendererCanvas.prototype.resetCanvas.call(this);
 
 			self.transform.setCanvas(this.canvas);
 			self.mouse.setCanvas(this.canvas);
 
 			this.canvas.ondragover = Component.preventDefault;
-			this.canvas.ondrop = function (event) {
+			this.canvas.ondrop = function (event)
+			{
 				event.preventDefault();
 
 				var uuid = event.dataTransfer.getData("uuid");
@@ -81,7 +87,8 @@ class SceneEditor extends TabComponent {
 				var intersections = self.raycaster.intersectObjects(self.scene.children, true);
 
 				// Auxiliar method to copy details from a object to a destination
-				function copyDetails(destination, object) {
+				function copyDetails(destination, object)
+				{
 					destination.name = object.name;
 					destination.visible = object.visible;
 					destination.castShadow = object.castShadow;
@@ -95,21 +102,26 @@ class SceneEditor extends TabComponent {
 				}
 
 				// Auxiliar method to attach textures to objects
-				function attachTexture(texture, object) {
+				function attachTexture(texture, object)
+				{
 					var material = null;
-					if (object instanceof Mesh || object instanceof SkinnedMesh) {
+					if(object instanceof Mesh || object instanceof SkinnedMesh)
+					{
 						material = new MeshStandardMaterial({ map: texture, color: 0xFFFFFF, roughness: 0.6, metalness: 0.2 });
 						material.name = texture.name;
 					}
-					else if (object instanceof Line) {
+					else if(object instanceof Line)
+					{
 						material = new LineBasicMaterial({ color: 0xFFFFFF });
 						material.name = texture.name;
 					}
-					else if (object instanceof Points) {
+					else if(object instanceof Points)
+					{
 						material = new PointsMaterial({ map: texture, color: 0xFFFFFF });
 						material.name = texture.name;
 					}
-					else if (object instanceof Sprite) {
+					else if(object instanceof Sprite)
+					{
 						material = new SpriteMaterial({ map: texture, color: 0xFFFFFF });
 						material.name = texture.name;
 					}
@@ -122,53 +134,69 @@ class SceneEditor extends TabComponent {
 				}
 
 				// Dragged resource
-				if (draggedObject !== null) {
+				if(draggedObject !== null)
+				{
 					// Object intersected
-					if (intersections.length > 0) {
+					if(intersections.length > 0)
+					{
 						var object = intersections[0].object;
 
 						// Material
-						if (draggedObject instanceof Material) {
+						if(draggedObject instanceof Material)
+						{
 							// Sprite material
-							if (draggedObject instanceof SpriteMaterial) {
-								if (object instanceof Sprite) {
+							if(draggedObject instanceof SpriteMaterial)
+							{
+								if(object instanceof Sprite)
+								{
 									Editor.addAction(new ChangeAction(object, "material", draggedObject));
 								}
 							}
 							// Points material
-							else if (draggedObject instanceof PointsMaterial) {
-								if (object instanceof Points) {
+							else if(draggedObject instanceof PointsMaterial)
+							{
+								if(object instanceof Points)
+								{
 									Editor.addAction(new ChangeAction(object, "material", draggedObject));
 								}
-								else if (object.geometry !== undefined) {
+								else if(object.geometry !== undefined)
+								{
 									var newObject = new Points(object.geometry, draggedObject);
 									copyDetails(newObject, object);
 									Editor.addAction(new SwapAction(object, newObject, true));
 								}
 							}
 							// Line material
-							else if (draggedObject instanceof LineBasicMaterial) {
-								if (object instanceof Line) {
+							else if(draggedObject instanceof LineBasicMaterial)
+							{
+								if(object instanceof Line)
+								{
 									Editor.addAction(new ChangeAction(object, "material", draggedObject));
 								}
-								else if (object.geometry !== undefined) {
+								else if(object.geometry !== undefined)
+								{
 									var newObject = new Line(object.geometry, draggedObject);
 									copyDetails(newObject, object);
 									Editor.addAction(new SwapAction(object, newObject, true));
 								}
 							}
 							// Shader material
-							else if (draggedObject instanceof ShaderMaterial) {
-								if (object.material !== undefined) {
+							else if(draggedObject instanceof ShaderMaterial)
+							{
+								if(object.material !== undefined)
+								{
 									Editor.addAction(new ChangeAction(object, "material", draggedObject));
 								}
 							}
 							// Mesh material
-							else {
-								if (object instanceof Mesh) {
+							else
+							{
+								if(object instanceof Mesh)
+								{
 									Editor.addAction(new ChangeAction(object, "material", draggedObject));
 								}
-								else if (object.geometry !== undefined) {
+								else if(object.geometry !== undefined)
+								{
 									var newObject = new Mesh(object.geometry, draggedObject);
 									copyDetails(newObject, object);
 									Editor.addAction(new SwapAction(object, newObject, true));
@@ -176,73 +204,93 @@ class SceneEditor extends TabComponent {
 							}
 						}
 						// Cubemap
-						else if (draggedObject.isCubeTexture === true) {
-							if (object.material instanceof Material) {
+						else if(draggedObject.isCubeTexture === true)
+						{
+							if(object.material instanceof Material)
+							{
 								Editor.addAction(new ChangeAction(object.material, "envMap", draggedObject));
 								self.canvas.reloadContext();
 							}
 						}
 						// Texture
-						else if (draggedObject instanceof Texture) {
+						else if(draggedObject instanceof Texture)
+						{
 							attachTexture(draggedObject, object);
 						}
 						// Image
-						else if (draggedObject instanceof Image) {
+						else if(draggedObject instanceof Image)
+						{
 							attachTexture(new Texture(draggedObject), object);
 						}
 						// Video
-						else if (draggedObject instanceof Video) {
+						else if(draggedObject instanceof Video)
+						{
 							attachTexture(new VideoTexture(draggedObject), object);
 						}
 						// Font
-						else if (draggedObject instanceof Font) {
-							if (object.font !== undefined) {
+						else if(draggedObject instanceof Font)
+						{
+							if(object.font !== undefined)
+							{
 								object.setFont(draggedObject);
 								Editor.updateObjectsViewsGUI();
 							}
 						}
 						// Geometry
-						else if (draggedObject instanceof Geometry || draggedObject instanceof BufferGeometry) {
-							if (object instanceof Mesh || object instanceof Points || object instanceof Line) {
+						else if(draggedObject instanceof Geometry || draggedObject instanceof BufferGeometry)
+						{
+							if(object instanceof Mesh || object instanceof Points || object instanceof Line)
+							{
 								Editor.addAction(new ChangeAction(object, "geometry", draggedObject));
 							}
 						}
 					}
 
 					// Create audio emitter
-					if (draggedObject instanceof Audio) {
+					if(draggedObject instanceof Audio)
+					{
 						var audio = new AudioEmitter(draggedObject);
 						audio.name = draggedObject.name;
 						Editor.addObject(audio);
 					}
 				}
 				// Dragged file
-				else if (event.dataTransfer.files.length > 0) {
+				else if(event.dataTransfer.files.length > 0)
+				{
 					var files = event.dataTransfer.files;
 
-					for (var i = 0; i < files.length; i++) {
+					for(var i = 0; i < files.length; i++)
+					{
 						var file = files[i];
 
 						// Check if mouse intersects and object
-						if (intersections.length > 0) {
+						if(intersections.length > 0)
+						{
 							var object = intersections[0].object;
 
 							// Image
-							if (Image.fileIsImage(file)) {
-								Loaders.loadTexture(file, function (texture) {
+							if(Image.fileIsImage(file))
+							{
+								Loaders.loadTexture(file, function (texture)
+								{
 									attachTexture(texture, object);
 								});
 							}
 							// Video
-							else if (Video.fileIsVideo(file)) {
-								Loaders.loadVideoTexture(file, function (texture) {
+							else if(Video.fileIsVideo(file))
+							{
+								Loaders.loadVideoTexture(file, function (texture)
+								{
 									attachTexture(texture, object);
 								});
 							}
 							// Font
-							else if (Font.fileIsFont(file)) {
-								if (object.font !== undefined) {
-									Loaders.loadFont(file, function (font) {
+							else if(Font.fileIsFont(file))
+							{
+								if(object.font !== undefined)
+								{
+									Loaders.loadFont(file, function (font)
+									{
 										object.setFont(font);
 									});
 								}
@@ -250,7 +298,8 @@ class SceneEditor extends TabComponent {
 						}
 
 						// Model
-						if (Model.fileIsModel(file)) {
+						if(Model.fileIsModel(file))
+						{
 							Loaders.loadModel(file);
 						}
 					}
@@ -267,7 +316,7 @@ class SceneEditor extends TabComponent {
 		 */
 		this.keyboard = new Keyboard();
 
-		/** 
+		/**
 		 * Mouse input object
 		 *
 		 * It is attached to the window object to capture movement outside of the tab division.
@@ -277,7 +326,7 @@ class SceneEditor extends TabComponent {
 		 */
 		this.mouse = new Mouse(window, true);
 
-		/** 
+		/**
 		 * Raycaster object used for object picking.
 		 *
 		 * @attribute raycaster
@@ -303,7 +352,7 @@ class SceneEditor extends TabComponent {
 		 */
 		this.scene = null;
 
-		/** 
+		/**
 		 * The tool bar contains the selector for the transform tools and object placing icons.
 		 *
 		 * @attribute sideBar
@@ -421,7 +470,7 @@ class SceneEditor extends TabComponent {
 		 */
 		this.mode = SceneEditor.SELECT;
 
-		/** 
+		/**
 		 * Transform controls tool.
 		 *
 		 * @attribute transform
@@ -443,7 +492,7 @@ class SceneEditor extends TabComponent {
 		 */
 		this.camera = null;
 
-		/** 
+		/**
 		 * Camera controls object used to manipulate the camera position.
 		 *
 		 * Can be EditorFreeControls, EditorOrbitControls or EditorPlanarControls.
@@ -469,15 +518,18 @@ class SceneEditor extends TabComponent {
 		this.transformationSpace.addValue(Locale.local, TransformControls.LOCAL);
 		this.transformationSpace.addValue(Locale.world, TransformControls.WORLD);
 		this.transformationSpace.element.style.opacity = 0.5;
-		this.transformationSpace.setOnChange(function () {
+		this.transformationSpace.setOnChange(function ()
+		{
 			var space = self.transformationSpace.getValue();
 			Editor.settings.editor.transformationSpace = space;
 			self.transform.space = space;
 		});
-		this.transformationSpace.element.onmouseenter = function () {
+		this.transformationSpace.element.onmouseenter = function ()
+		{
 			this.style.opacity = 1.0;
 		};
-		this.transformationSpace.element.onmouseleave = function () {
+		this.transformationSpace.element.onmouseleave = function ()
+		{
 			this.style.opacity = 0.5;
 		};
 
@@ -502,14 +554,17 @@ class SceneEditor extends TabComponent {
 		this.navigation.addValue(Locale.top, Settings.PLANAR_TOP);
 		this.navigation.addValue(Locale.bottom, Settings.PLANAR_BOTTOM);
 		this.navigation.element.style.opacity = 0.5;
-		this.navigation.setOnChange(function () {
+		this.navigation.setOnChange(function ()
+		{
 			Editor.settings.editor.navigation = self.navigation.getValue();
 			self.updateCameraControls(Editor.settings.editor.navigation);
 		});
-		this.navigation.element.onmouseenter = function () {
+		this.navigation.element.onmouseenter = function ()
+		{
 			this.style.opacity = 1.0;
 		};
-		this.navigation.element.onmouseleave = function () {
+		this.navigation.element.onmouseleave = function ()
+		{
 			this.style.opacity = 0.5;
 		};
 
@@ -529,7 +584,8 @@ class SceneEditor extends TabComponent {
 		this.snapGridButton.updatePosition(Component.BOTTOM_RIGHT);
 		this.snapGridButton.element.style.borderRadius = "5px";
 		this.snapGridButton.updateSyles({ backgroundColor: "var(--panel-color)", opacity: 0.5 }, { backgroundColor: "var(--panel-color)", opacity: 1.0 });
-		this.snapGridButton.setOnClick(function () {
+		this.snapGridButton.setOnClick(function ()
+		{
 			Editor.settings.editor.snap = !Editor.settings.editor.snap;
 			self.transform.snap = Editor.settings.editor.snap;
 
@@ -552,13 +608,16 @@ class SceneEditor extends TabComponent {
 		this.cameraButton.updatePosition(Component.BOTTOM_RIGHT);
 		this.cameraButton.updateSyles({ backgroundColor: "var(--panel-color)", opacity: 0.5 }, { backgroundColor: "var(--panel-color)", opacity: 1.0 });
 		this.cameraButton.element.style.borderRadius = "5px";
-		this.cameraButton.setOnClick(function () {
+		this.cameraButton.setOnClick(function ()
+		{
 			self.setCameraMode();
 
-			if (self.cameraMode === SceneEditor.ORTHOGRAPHIC) {
+			if(self.cameraMode === SceneEditor.ORTHOGRAPHIC)
+			{
 				self.cameraButton.setImage(Global.FILE_PATH + "icons/misc/2d.png");
 			}
-			else if (self.cameraMode === SceneEditor.PERSPECTIVE) {
+			else if(self.cameraMode === SceneEditor.PERSPECTIVE)
+			{
 				self.cameraButton.setImage(Global.FILE_PATH + "icons/misc/3d.png");
 			}
 		});
@@ -579,36 +638,48 @@ class SceneEditor extends TabComponent {
 		 * @type {EventManager}
 		 */
 		this.manager = new EventManager();
-		this.manager.add(document.body, "keydown", function (event) {
+		this.manager.add(document.body, "keydown", function (event)
+		{
 			var key = event.keyCode;
 
-			if (event.ctrlKey) {
-				if (self.container.focused) {
-					if (key === Keyboard.NUM1) {
+			if(event.ctrlKey)
+			{
+				if(self.container.focused)
+				{
+					if(key === Keyboard.NUM1)
+					{
 						self.selectTool(SceneEditor.SELECT);
 					}
-					else if (key === Keyboard.NUM2) {
+					else if(key === Keyboard.NUM2)
+					{
 						self.selectTool(SceneEditor.MOVE);
 					}
-					else if (key === Keyboard.NUM3) {
+					else if(key === Keyboard.NUM3)
+					{
 						self.selectTool(SceneEditor.SCALE);
 					}
-					else if (key === Keyboard.NUM4) {
+					else if(key === Keyboard.NUM4)
+					{
 						self.selectTool(SceneEditor.ROTATE);
 					}
-					else if (key === Keyboard.NUM5) {
+					else if(key === Keyboard.NUM5)
+					{
 						self.selectTool(SceneEditor.MEASURE);
 					}
-					else if (key === Keyboard.F) {
+					else if(key === Keyboard.F)
+					{
 						self.focusObject();
 					}
-					else if (key === Keyboard.C) {
+					else if(key === Keyboard.C)
+					{
 						Editor.copyObject();
 					}
-					else if (key === Keyboard.V) {
+					else if(key === Keyboard.V)
+					{
 						Editor.pasteObject();
 					}
-					else if (key === Keyboard.X) {
+					else if(key === Keyboard.X)
+					{
 						Editor.cutObject();
 					}
 				}
@@ -620,32 +691,39 @@ class SceneEditor extends TabComponent {
 
 
 
-	updateMetadata() {
-		if (this.scene !== null) {
+	updateMetadata()
+	{
+		if(this.scene !== null)
+		{
 			this.setName(this.scene.name);
 
 			// Check if object has a parent
-			if (this.scene.parent === null) {
+			if(this.scene.parent === null)
+			{
 				this.close();
 				return;
 			}
 
 			// Check if object exists in parent
 			var children = this.scene.parent.children;
-			for (var i = 0; i < children.length; i++) {
-				if (this.scene.uuid === children[i].uuid) {
+			for(var i = 0; i < children.length; i++)
+			{
+				if(this.scene.uuid === children[i].uuid)
+				{
 					return;
 				}
 			}
 
 			// If not found close tab
-			if (i >= children.length) {
+			if(i >= children.length)
+			{
 				this.close();
 			}
 		}
 	}
 
-	activate() {
+	activate()
+	{
 		super.activate();
 
 		this.canvas.createRenderer();
@@ -659,7 +737,8 @@ class SceneEditor extends TabComponent {
 		this.selectTool(SceneEditor.SELECT);
 	}
 
-	deactivate() {
+	deactivate()
+	{
 		super.deactivate();
 
 		this.mouse.dispose();
@@ -668,39 +747,45 @@ class SceneEditor extends TabComponent {
 
 	/**
 	 * Update camera controller object.
-	 * 
+	 *
 	 * Select a new controls object based on the mode passed as argument and attach the editor camera to it.
 	 *
 	 * @method updateCameraControls
 	 * @param {number} mode Camera mode.
 	 */
-	updateCameraControls(mode) {
-		import { Settings } from "../../../Settings.js";
-		import { EditorFreeControls } from "./controls/EditorFreeControls.js";
-		import { EditorOrbitControls } from "./controls/EditorOrbitControls.js";
-		import { EditorPlanarControls } from "./controls/EditorPlanarControls.js";
+	updateCameraControls(mode)
+	{
+		const { Settings } = await import("../../../Settings.js");
+		const { EditorFreeControls } = await import("./controls/EditorFreeControls.js");
+		const { EditorOrbitControls } = await import("./controls/EditorOrbitControls.js");
+		const { EditorPlanarControls } = await import("./controls/EditorPlanarControls.js");
 
-		if (this.controlsMode === mode) {
+		if(this.controlsMode === mode)
+		{
 			return;
 		}
 
 		this.controlsMode = mode;
 
-		if (mode === Settings.FIRST_PERSON) {
+		if(mode === Settings.FIRST_PERSON)
+		{
 			this.controls = new EditorFreeControls();
 		}
-		else if (mode === Settings.ORBIT) {
+		else if(mode === Settings.ORBIT)
+		{
 			this.controls = new EditorOrbitControls();
 		}
-		else {
+		else
+		{
 			this.controls = new EditorPlanarControls(mode);
 		}
 
 		this.controls.attach(this.camera);
 	}
 
-	updateSettings() {
-		import { Editor } from "../../../Editor.js";
+	updateSettings()
+	{
+		const { Editor } = await import("../../../Editor.js");
 
 		// Grid
 		this.gridHelper.visible = Editor.settings.editor.gridEnabled;
@@ -727,7 +812,8 @@ class SceneEditor extends TabComponent {
 		this.transform.rotationSnap = Editor.settings.editor.snapAngle;
 	}
 
-	destroy() {
+	destroy()
+	{
 		super.destroy();
 
 		this.mouse.dispose();
@@ -739,11 +825,13 @@ class SceneEditor extends TabComponent {
 		this.canvas.forceContextLoss();
 	}
 
-	attach(scene) {
+	attach(scene)
+	{
 		this.scene = scene;
 		this.updateMetadata();
 
-		if (this.camera !== null) {
+		if(this.camera !== null)
+		{
 			this.scene.defaultCamera = this.camera;
 		}
 	}
@@ -754,7 +842,8 @@ class SceneEditor extends TabComponent {
 	 * @method isAttached
 	 * @param {Scene} scene Scene to verify if is attached to this tab.
 	 */
-	isAttached(scene) {
+	isAttached(scene)
+	{
 		return this.scene === scene;
 	}
 
@@ -763,14 +852,17 @@ class SceneEditor extends TabComponent {
 	 *
 	 * @method focusObject
 	 */
-	focusObject() {
-		import { Editor } from "../../../Editor.js";
-		import { Locale } from "../../../locale/LocaleManager.js";
+	focusObject()
+	{
+		const { Editor } = await import("../../../Editor.js");
+		const { Locale } = await import("../../../locale/LocaleManager.js");
 
-		if (Editor.selection.length > 0 && Editor.selection[0].isObject3D === true) {
+		if(Editor.selection.length > 0 && Editor.selection[0].isObject3D === true)
+		{
 			this.controls.focusObject(Editor.selection[0]);
 		}
-		else {
+		else
+		{
 			Editor.alert(Locale.selectObjectFirst);
 		}
 	}
@@ -780,10 +872,11 @@ class SceneEditor extends TabComponent {
 	 *
 	 * @method update
 	 */
-	update() {
-		import { Mouse } from "../../../../core/input/Mouse.js";
-		import { Editor } from "../../../Editor.js";
-		import { Nunu } from "../../../../core/Nunu.js";
+	update()
+	{
+		const { Mouse } = await import("../../../../core/input/Mouse.js");
+		const { Editor } = await import("../../../Editor.js");
+		const { Nunu } = await import("../../../../core/Nunu.js");
 
 		this.mouse.update();
 		this.keyboard.update();
@@ -791,65 +884,82 @@ class SceneEditor extends TabComponent {
 		var isEditingObject = this.transform.update();
 
 		// Check if mouse is inside canvas
-		if (this.mouse.insideCanvas()) {
-			if (this.mode === SceneEditor.MEASURE) {
+		if(this.mouse.insideCanvas())
+		{
+			if(this.mode === SceneEditor.MEASURE)
+			{
 				this.measurementPlane.constant = -this.gridHelper.position.y;
 				this.updateRaycasterFromMouse();
 
 				var hoverPoint = this.getMeasurementPoint();
 
-				if (this.mouse.buttonJustPressed(Mouse.RIGHT)) {
+				if(this.mouse.buttonJustPressed(Mouse.RIGHT))
+				{
 					this.measurementPoints.length = 0;
 					this.measurementPreview.visible = false;
 				}
 
-				if (this.measurementPoints.length === 1 && hoverPoint !== null) {
+				if(this.measurementPoints.length === 1 && hoverPoint !== null)
+				{
 					this.updateMeasurementPreview(this.measurementPoints[0], hoverPoint);
 				}
-				else {
+				else
+				{
 					this.measurementPreview.visible = false;
 				}
 
-				if (hoverPoint !== null && this.mouse.buttonJustPressed(Mouse.LEFT)) {
+				if(hoverPoint !== null && this.mouse.buttonJustPressed(Mouse.LEFT))
+				{
 					this.measurementPoints.push(hoverPoint.clone());
 
-					if (this.measurementPoints.length === 2) {
+					if(this.measurementPoints.length === 2)
+					{
 						this.createMeasurement(this.measurementPoints[0], this.measurementPoints[1]);
 						this.measurementPoints.length = 0;
 						this.measurementPreview.visible = false;
 					}
 				}
 
-				if (this.mouse.buttonDoubleClicked(Mouse.LEFT)) {
+				if(this.mouse.buttonDoubleClicked(Mouse.LEFT))
+				{
 					this.selectObjectWithMouse();
 				}
 			}
-			else if (this.mode === SceneEditor.SELECT) {
-				if (this.mouse.buttonJustPressed(Mouse.LEFT)) {
+			else if(this.mode === SceneEditor.SELECT)
+			{
+				if(this.mouse.buttonJustPressed(Mouse.LEFT))
+				{
 					this.selectObjectWithMouse();
 				}
 			}
-			else {
+			else
+			{
 				// If mouse double clicked select object
-				if (this.mouse.buttonDoubleClicked(Mouse.LEFT)) {
+				if(this.mouse.buttonDoubleClicked(Mouse.LEFT))
+				{
 					this.selectObjectWithMouse();
 				}
 			}
 
 			// Lock mouse when camera is moving
-			if (Editor.settings.editor.lockMouse && Nunu.runningOnDesktop()) {
-				if (!isEditingObject && (this.mouse.buttonJustPressed(Mouse.LEFT) || this.mouse.buttonJustPressed(Mouse.RIGHT) || this.mouse.buttonJustPressed(Mouse.MIDDLE))) {
+			if(Editor.settings.editor.lockMouse && Nunu.runningOnDesktop())
+			{
+				if(!isEditingObject && (this.mouse.buttonJustPressed(Mouse.LEFT) || this.mouse.buttonJustPressed(Mouse.RIGHT) || this.mouse.buttonJustPressed(Mouse.MIDDLE)))
+				{
 					this.mouse.setLock(true);
 				}
-				else if (this.mouse.buttonJustReleased(Mouse.LEFT) || this.mouse.buttonJustReleased(Mouse.RIGHT) || this.mouse.buttonJustReleased(Mouse.MIDDLE)) {
+				else if(this.mouse.buttonJustReleased(Mouse.LEFT) || this.mouse.buttonJustReleased(Mouse.RIGHT) || this.mouse.buttonJustReleased(Mouse.MIDDLE))
+				{
 					this.mouse.setLock(false);
 				}
 			}
 
-			if (isEditingObject) {
+			if(isEditingObject)
+			{
 				Editor.gui.inspector.updateValues();
 			}
-			else {
+			else
+			{
 				// Update controls
 				this.controls.update(this.mouse, this.keyboard);
 
@@ -860,16 +970,20 @@ class SceneEditor extends TabComponent {
 		}
 
 		// If has objects selected
-		if (Editor.hasObjectSelected()) {
+		if(Editor.hasObjectSelected())
+		{
 			// Update object transformation matrix
-			for (var i = 0; i < Editor.selection.length; i++) {
-				if (Editor.selection[i].matrixAutoUpdate === false) {
+			for(var i = 0; i < Editor.selection.length; i++)
+			{
+				if(Editor.selection[i].matrixAutoUpdate === false)
+				{
 					Editor.selection[i].updateMatrix();
 				}
 			}
 
 			// Update object helper
-			this.objectHelper.traverse(function (children) {
+			this.objectHelper.traverse(function (children)
+			{
 				children.update();
 			});
 		}
@@ -878,7 +992,8 @@ class SceneEditor extends TabComponent {
 
 	}
 
-	updateMeasurementPreview(start, end) {
+	updateMeasurementPreview(start, end)
+	{
 		var position = this.measurementPreview.geometry.attributes.position;
 		position.setXYZ(0, start.x, start.y, start.z);
 		position.setXYZ(1, end.x, end.y, end.z);
@@ -887,29 +1002,35 @@ class SceneEditor extends TabComponent {
 		this.measurementPreview.visible = true;
 	}
 
-	getMeasurementPoint() {
-		if (this.scene === null) {
+	getMeasurementPoint()
+	{
+		if(this.scene === null)
+		{
 			return null;
 		}
 
 		var intersects = this.raycaster.intersectObjects(this.scene.children, true);
 
-		if (intersects.length > 0) {
+		if(intersects.length > 0)
+		{
 			return intersects[0].point.clone();
 		}
 
-		if (this.raycaster.ray.intersectPlane(this.measurementPlane, this.measurementIntersection) !== null) {
+		if(this.raycaster.ray.intersectPlane(this.measurementPlane, this.measurementIntersection) !== null)
+		{
 			return this.measurementIntersection.clone();
 		}
 
 		return null;
 	}
 
-	createMeasurement(start, end) {
-		import { Measurement } from "../../../../core/objects/misc/Measurement.js";
-		import { Editor } from "../../../Editor.js";
+	createMeasurement(start, end)
+	{
+		const { Measurement } = await import("../../../../core/objects/misc/Measurement.js");
+		const { Editor } = await import("../../../Editor.js");
 
-		if (this.scene === null) {
+		if(this.scene === null)
+		{
 			return;
 		}
 
@@ -922,20 +1043,22 @@ class SceneEditor extends TabComponent {
 	 * Render all the editor scenes to the canvas using the renderer.
 	 *
 	 * Draws the attached scene/object after that it renders the helpers and tool scenes, the overlay orientation cube and then the camera previews.
-	 * 
+	 *
 	 * @method render
 	 */
-	render() {
-		import { Editor } from "../../../Editor.js";
-		import { Mouse } from "../../../../core/input/Mouse.js";
-		import { Viewport } from "../../../../core/objects/cameras/Viewport.js";
-		import { PerspectiveCamera } from "../../../../core/objects/cameras/PerspectiveCamera.js";
-		import { OrthographicCamera } from "../../../../core/objects/cameras/OrthographicCamera.js";
-		import { CubeCamera } from "../../../../core/objects/cameras/CubeCamera.js";
-		import { CubeTexture } from "../../../../core/texture/CubeTexture.js";
-		import { Vector2 } from "three";
+	render()
+	{
+		const { Editor } = await import("../../../Editor.js");
+		const { Mouse } = await import("../../../../core/input/Mouse.js");
+		const { Viewport } = await import("../../../../core/objects/cameras/Viewport.js");
+		const { PerspectiveCamera } = await import("../../../../core/objects/cameras/PerspectiveCamera.js");
+		const { OrthographicCamera } = await import("../../../../core/objects/cameras/OrthographicCamera.js");
+		const { CubeCamera } = await import("../../../../core/objects/cameras/CubeCamera.js");
+		const { CubeTexture } = await import("../../../../core/texture/CubeTexture.js");
+		const { Vector2 } = await import("three");
 
-		if (this.canvas.renderer === null) {
+		if(this.canvas.renderer === null)
+		{
 			console.warn("nunuStudio: SceneEditor renderer is null.", this);
 			return;
 		}
@@ -956,7 +1079,8 @@ class SceneEditor extends TabComponent {
 		// Render scene
 		renderer.render(this.scene, this.camera);
 
-		if (this.canvas.cssRenderer !== null) {
+		if(this.canvas.cssRenderer !== null)
+		{
 			this.canvas.cssRenderer.render(this.scene, this.camera);
 		}
 
@@ -964,10 +1088,12 @@ class SceneEditor extends TabComponent {
 		renderer.render(this.toolScene, this.camera);
 
 		// Draw camera cube
-		if (Editor.settings.editor.cameraRotationCube) {
+		if(Editor.settings.editor.cameraRotationCube)
+		{
 			var code = this.orientation.raycast(this.mouse, canvas);
 
-			if (code !== null && (this.mouse.buttonDoubleClicked(Mouse.LEFT) || this.mouse.buttonJustPressed(Mouse.MIDDLE))) {
+			if(code !== null && (this.mouse.buttonDoubleClicked(Mouse.LEFT) || this.mouse.buttonJustPressed(Mouse.MIDDLE)))
+			{
 				this.controls.setOrientation(code);
 			}
 
@@ -977,7 +1103,8 @@ class SceneEditor extends TabComponent {
 		}
 
 		// Camera preview
-		if (Editor.settings.editor.cameraPreviewEnabled) {
+		if(Editor.settings.editor.cameraPreviewEnabled)
+		{
 			renderer.setScissorTest(true);
 
 			var previewRatio = 16.0 / 9.0;
@@ -993,7 +1120,8 @@ class SceneEditor extends TabComponent {
 			viewport.enable(renderer);
 
 			// Preview camera
-			if (Editor.selection[0] instanceof PerspectiveCamera || Editor.selection[0] instanceof OrthographicCamera) {
+			if(Editor.selection[0] instanceof PerspectiveCamera || Editor.selection[0] instanceof OrthographicCamera)
+			{
 				renderer.clear(true, true, true);
 
 				var camera = Editor.selection[0];
@@ -1002,11 +1130,13 @@ class SceneEditor extends TabComponent {
 				camera.render(renderer, this.scene);
 			}
 			// Preview cube camera
-			else if (Editor.selection[0] instanceof CubeCamera) {
+			else if(Editor.selection[0] instanceof CubeCamera)
+			{
 				var cameras = Editor.selection[0].cameras;
 				var self = this;
 
-				function renderCamera(index, x, y, w, h) {
+				function renderCamera(index, x, y, w, h)
+				{
 					renderer.setViewport(x, y, w, h);
 					renderer.setScissor(x, y, w, h);
 					renderer.clear(true, true, true);
@@ -1031,10 +1161,12 @@ class SceneEditor extends TabComponent {
 				renderCamera(CubeTexture.BOTTOM, x + size, y + size * 2, size, size);
 			}
 			// Preview all cameras in use
-			else if (this.scene.cameras !== undefined && this.scene.cameras.length > 0) {
+			else if(this.scene.cameras !== undefined && this.scene.cameras.length > 0)
+			{
 				renderer.clear(true, true, true);
 
-				for (var i = 0; i < this.scene.cameras.length; i++) {
+				for(var i = 0; i < this.scene.cameras.length; i++)
+				{
 					var camera = this.scene.cameras[i];
 					camera.resize(width, height, viewport);
 					camera.setupRenderer(renderer);
@@ -1051,7 +1183,8 @@ class SceneEditor extends TabComponent {
 	 *
 	 * @method updateRaycasterFromMouse
 	 */
-	updateRaycasterFromMouse() {
+	updateRaycasterFromMouse()
+	{
 		this.normalized.set(this.mouse.position.x / this.canvas.size.x * 2 - 1, -(this.mouse.position.y / this.canvas.size.y) * 2 + 1);
 		this.raycaster.setFromCamera(this.normalized, this.camera);
 	}
@@ -1061,24 +1194,30 @@ class SceneEditor extends TabComponent {
 	 *
 	 * @method selectObjectWithMouse
 	 */
-	selectObjectWithMouse() {
-		import { Keyboard } from "../../../../core/input/Keyboard.js";
-		import { Editor } from "../../../Editor.js";
+	selectObjectWithMouse()
+	{
+		const { Keyboard } = await import("../../../../core/input/Keyboard.js");
+		const { Editor } = await import("../../../Editor.js");
 
 		this.updateRaycasterFromMouse();
 
 		var intersects = this.raycaster.intersectObjects(this.scene.children, true);
 
-		if (intersects.length > 0) {
-			if (this.keyboard.keyPressed(Keyboard.CTRL)) {
-				if (Editor.isSelected(intersects[0].object)) {
+		if(intersects.length > 0)
+		{
+			if(this.keyboard.keyPressed(Keyboard.CTRL))
+			{
+				if(Editor.isSelected(intersects[0].object))
+				{
 					Editor.unselectObject(intersects[0].object);
 				}
-				else {
+				else
+				{
 					Editor.addToSelection(intersects[0].object);
 				}
 			}
-			else {
+			else
+			{
 				Editor.selectObject(intersects[0].object);
 			}
 		}
@@ -1091,7 +1230,8 @@ class SceneEditor extends TabComponent {
 	 * @param {number} x
 	 * @param {number} y
 	 */
-	updateRaycaster(x, y) {
+	updateRaycaster(x, y)
+	{
 		this.normalized.set(x, y);
 		this.raycaster.setFromCamera(this.normalized, this.camera);
 	}
@@ -1102,15 +1242,18 @@ class SceneEditor extends TabComponent {
 	 * @method setCameraMode
 	 * @param {number} mode
 	 */
-	setCameraMode(mode) {
-		import { OrthographicCamera } from "../../../../core/objects/cameras/OrthographicCamera.js";
-		import { PerspectiveCamera } from "../../../../core/objects/cameras/PerspectiveCamera.js";
+	setCameraMode(mode)
+	{
+		const { OrthographicCamera } = await import("../../../../core/objects/cameras/OrthographicCamera.js");
+		const { PerspectiveCamera } = await import("../../../../core/objects/cameras/PerspectiveCamera.js");
 
-		if (mode === this.cameraMode) {
+		if(mode === this.cameraMode)
+		{
 			return;
 		}
 
-		if (mode === undefined) {
+		if(mode === undefined)
+		{
 			mode = this.cameraMode === SceneEditor.PERSPECTIVE ? SceneEditor.ORTHOGRAPHIC : SceneEditor.PERSPECTIVE;
 		}
 
@@ -1118,20 +1261,24 @@ class SceneEditor extends TabComponent {
 
 		var aspect = this.canvas !== null ? this.canvas.size.x / this.canvas.size.y : 1.0;
 
-		if (this.cameraMode === SceneEditor.ORTHOGRAPHIC) {
+		if(this.cameraMode === SceneEditor.ORTHOGRAPHIC)
+		{
 			this.camera = new OrthographicCamera(10, aspect, OrthographicCamera.RESIZE_HORIZONTAL);
 		}
-		else if (this.cameraMode === SceneEditor.PERSPECTIVE) {
+		else if(this.cameraMode === SceneEditor.PERSPECTIVE)
+		{
 			this.camera = new PerspectiveCamera(60, aspect);
 		}
 
-		if (this.scene !== null) {
+		if(this.scene !== null)
+		{
 			this.scene.defaultCamera = this.camera;
 		}
 
 		this.transform.camera = this.camera;
 
-		if (this.controls !== null) {
+		if(this.controls !== null)
+		{
 			this.controls.attach(this.camera);
 			this.controls.reset();
 		}
@@ -1146,46 +1293,56 @@ class SceneEditor extends TabComponent {
 	 * @param selectTool
 	 * @param {number} tool Tool to select.
 	 */
-	selectTool(tool) {
-		import { TransformControls } from "./transform/TransformControls.js";
-		import { Editor } from "../../../Editor.js";
-		import { Locale } from "../../../locale/LocaleManager.js";
+	selectTool(tool)
+	{
+		const { TransformControls } = await import("./transform/TransformControls.js");
+		const { Editor } = await import("../../../Editor.js");
+		const { Locale } = await import("../../../locale/LocaleManager.js");
 
 		var previousMode = this.mode;
 
-		if (tool !== undefined) {
+		if(tool !== undefined)
+		{
 			this.mode = tool;
 		}
 
-		if (this.mode === SceneEditor.MOVE) {
+		if(this.mode === SceneEditor.MOVE)
+		{
 			this.transform.setMode(TransformControls.TRANSLATE);
 			this.transform.space = Editor.settings.editor.transformationSpace;
 		}
-		else if (this.mode === SceneEditor.SCALE) {
+		else if(this.mode === SceneEditor.SCALE)
+		{
 			this.transform.setMode(TransformControls.SCALE);
 		}
-		else if (this.mode === SceneEditor.ROTATE) {
+		else if(this.mode === SceneEditor.ROTATE)
+		{
 			this.transform.setMode(TransformControls.ROTATE);
 			this.transform.space = Editor.settings.editor.transformationSpace;
 		}
-		else if (this.mode === SceneEditor.SELECT) {
+		else if(this.mode === SceneEditor.SELECT)
+		{
 			this.transform.setMode(TransformControls.NONE);
 		}
-		else if (this.mode === SceneEditor.MEASURE) {
+		else if(this.mode === SceneEditor.MEASURE)
+		{
 			this.transform.setMode(TransformControls.NONE);
 			this.measurementPoints.length = 0;
 			this.measurementPreview.visible = false;
 
-			if (tool === SceneEditor.MEASURE) {
+			if(tool === SceneEditor.MEASURE)
+			{
 				Editor.alert(Locale.selectMeasurementPoints);
 			}
 		}
-		else {
+		else
+		{
 			this.measurementPoints.length = 0;
 			this.measurementPreview.visible = false;
 		}
 
-		if (previousMode === SceneEditor.MEASURE && this.mode !== SceneEditor.MEASURE) {
+		if(previousMode === SceneEditor.MEASURE && this.mode !== SceneEditor.MEASURE)
+		{
 			this.measurementPoints.length = 0;
 			this.measurementPreview.visible = false;
 		}
@@ -1200,28 +1357,31 @@ class SceneEditor extends TabComponent {
 	 *
 	 * @method updateSelection
 	 */
-	updateSelection() {
-		import { Editor } from "../../../Editor.js";
-		import { Camera, CameraHelper, Light, DirectionalLight, DirectionalLightHelper, LightProbe, PointLight, PointLightHelper, RectAreaLight, SpotLight, SpotLightHelper, HemisphereLight, HemisphereLightHelper, SkinnedMesh, Bone, Mesh, Line, Points, BoxHelper } from "three";
-		import { ObjectIconHelper } from "./helpers/ObjectIconHelper.js";
-		import { Global } from "../../../Global.js";
-		import { LightProbeHelper } from "./helpers/LightProbeHelper.js";
-		import { RectAreaLightHelper } from "./helpers/RectAreaLightHelper.js";
-		import { ObjectIcons } from "../../../utils/ObjectIcons.js";
-		import { PhysicsObject } from "../../../../core/objects/physics/PhysicsObject.js";
-		import { PhysicsObjectHelper } from "./helpers/PhysicsObjectHelper.js";
-		import { LensFlare } from "../../../../core/objects/misc/LensFlare.js";
-		import { SkeletonHelper } from "./helpers/SkeletonHelper.js";
-		import { WireframeHelper } from "./helpers/WireframeHelper.js";
-		import { LineHelper } from "./helpers/LineHelper.js";
-		import { PointsHelper } from "./helpers/PointsHelper.js";
-		import { SpineAnimation } from "../../../../core/objects/spine/SpineAnimation.js";
-		import { Group } from "../../../../core/objects/misc/Group.js";
+	updateSelection()
+	{
+		const { Editor } = await import("../../../Editor.js");
+		const { Camera, CameraHelper, Light, DirectionalLight, DirectionalLightHelper, LightProbe, PointLight, PointLightHelper, RectAreaLight, SpotLight, SpotLightHelper, HemisphereLight, HemisphereLightHelper, SkinnedMesh, Bone, Mesh, Line, Points, BoxHelper } = await import("three");
+		const { ObjectIconHelper } = await import("./helpers/ObjectIconHelper.js");
+		const { Global } = await import("../../../Global.js");
+		const { LightProbeHelper } = await import("./helpers/LightProbeHelper.js");
+		const { RectAreaLightHelper } = await import("./helpers/RectAreaLightHelper.js");
+		const { ObjectIcons } = await import("../../../utils/ObjectIcons.js");
+		const { PhysicsObject } = await import("../../../../core/objects/physics/PhysicsObject.js");
+		const { PhysicsObjectHelper } = await import("./helpers/PhysicsObjectHelper.js");
+		const { LensFlare } = await import("../../../../core/objects/misc/LensFlare.js");
+		const { SkeletonHelper } = await import("./helpers/SkeletonHelper.js");
+		const { WireframeHelper } = await import("./helpers/WireframeHelper.js");
+		const { LineHelper } = await import("./helpers/LineHelper.js");
+		const { PointsHelper } = await import("./helpers/PointsHelper.js");
+		const { SpineAnimation } = await import("../../../../core/objects/spine/SpineAnimation.js");
+		const { Group } = await import("../../../../core/objects/misc/Group.js");
 
 		// Filter Object3D objects only (to exclude resources)
 		var selectedObjects = [];
-		for (var i = 0; i < Editor.selection.length; i++) {
-			if (Editor.selection[i].isObject3D === true) {
+		for(var i = 0; i < Editor.selection.length; i++)
+		{
+			if(Editor.selection[i].isObject3D === true)
+			{
 				selectedObjects.push(Editor.selection[i]);
 			}
 		}
@@ -1229,96 +1389,118 @@ class SceneEditor extends TabComponent {
 		this.transform.attach(selectedObjects);
 		this.objectHelper.removeAll();
 
-		for (var i = 0; i < selectedObjects.length; i++) {
+		for(var i = 0; i < selectedObjects.length; i++)
+		{
 			var object = selectedObjects[i];
 
 			// Camera
-			if (object instanceof Camera) {
+			if(object instanceof Camera)
+			{
 				this.objectHelper.add(new CameraHelper(object));
 				this.objectHelper.add(new ObjectIconHelper(object, Global.FILE_PATH + "icons/camera/camera.png"));
 			}
 			// Light
-			else if (object instanceof Light) {
+			else if(object instanceof Light)
+			{
 				// Directional light
-				if (object instanceof DirectionalLight) {
+				if(object instanceof DirectionalLight)
+				{
 					this.objectHelper.add(new DirectionalLightHelper(object, 1));
 				}
 				// Light probe
-				else if (object instanceof LightProbe) {
+				else if(object instanceof LightProbe)
+				{
 					this.objectHelper.add(new LightProbeHelper(object, 2));
 				}
 				// Point light
-				else if (object instanceof PointLight) {
+				else if(object instanceof PointLight)
+				{
 					this.objectHelper.add(new PointLightHelper(object, 1));
 				}
 				// RectArea light
-				else if (object instanceof RectAreaLight) {
+				else if(object instanceof RectAreaLight)
+				{
 					this.objectHelper.add(new RectAreaLightHelper(object));
 				}
 				// Spot light
-				else if (object instanceof SpotLight) {
+				else if(object instanceof SpotLight)
+				{
 					this.objectHelper.add(new SpotLightHelper(object));
 				}
 				// Hemisphere light
-				else if (object instanceof HemisphereLight) {
+				else if(object instanceof HemisphereLight)
+				{
 					this.objectHelper.add(new HemisphereLightHelper(object, 1));
 				}
 				// Ambient light
-				else {
+				else
+				{
 					this.objectHelper.add(new ObjectIconHelper(object, ObjectIcons.get(object.type)));
 				}
 			}
 			// Physics
-			else if (object instanceof PhysicsObject) {
+			else if(object instanceof PhysicsObject)
+			{
 				this.objectHelper.add(new PhysicsObjectHelper(object));
 			}
 			// LensFlare
-			else if (object instanceof LensFlare) {
+			else if(object instanceof LensFlare)
+			{
 				this.objectHelper.add(new ObjectIconHelper(object, ObjectIcons.get(object.type)));
 			}
 			// Skinned Mesh
-			else if (object instanceof SkinnedMesh) {
+			else if(object instanceof SkinnedMesh)
+			{
 				this.objectHelper.add(new SkeletonHelper(object.parent));
 				this.objectHelper.add(new WireframeHelper(object, 0xFFFF00));
 			}
 			// Bone
-			else if (object instanceof Bone) {
+			else if(object instanceof Bone)
+			{
 				this.objectHelper.add(new SkeletonHelper(object.parent));
 				this.objectHelper.add(new ObjectIconHelper(object, ObjectIcons.get(object.type)));
 			}
 			// Mesh
-			else if (object instanceof Mesh) {
+			else if(object instanceof Mesh)
+			{
 				this.objectHelper.add(new WireframeHelper(object, 0xFFFF00));
 			}
 			// Line
-			else if (object instanceof Line) {
+			else if(object instanceof Line)
+			{
 				this.objectHelper.add(new LineHelper(object, 0xFFFF00));
 			}
 			// Points
-			else if (object instanceof Points) {
+			else if(object instanceof Points)
+			{
 				this.objectHelper.add(new PointsHelper(object, 0xFFFF00));
 			}
 			// Spine animation
-			else if (object instanceof SpineAnimation) {
+			else if(object instanceof SpineAnimation)
+			{
 				this.objectHelper.add(new ObjectIconHelper(object, ObjectIcons.get(object.type)));
 			}
 			// Group
-			else if (object instanceof Group) {
+			else if(object instanceof Group)
+			{
 				this.objectHelper.add(new BoxHelper(object, 0xFFFF00));
 				this.objectHelper.add(new ObjectIconHelper(object, ObjectIcons.get(object.type)));
 			}
 			// Object 3D
-			else {
+			else
+			{
 				this.objectHelper.add(new ObjectIconHelper(object, ObjectIcons.get(object.type)));
 			}
 		}
 	}
 
-	updateVisibility() {
+	updateVisibility()
+	{
 		super.updateVisibility();
 	}
 
-	updateSize() {
+	updateSize()
+	{
 		super.updateSize();
 
 		this.sideBar.position.set(0, 0);
@@ -1335,7 +1517,8 @@ class SceneEditor extends TabComponent {
 		this.canvas.size.set(width, height);
 		this.canvas.updateInterface();
 
-		if (this.camera !== null) {
+		if(this.camera !== null)
+		{
 			this.camera.aspect = width / height;
 			this.camera.updateProjectionMatrix();
 		}

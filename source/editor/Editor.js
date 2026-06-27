@@ -1,3 +1,5 @@
+import { runningOnDesktop, isFullscreen } from "../core/utils/Environment.js";
+
 /**
  * Main editor entry point.
  *
@@ -15,19 +17,19 @@ function Editor() { }
  */
 Editor.initialize = async function ()
 {
-	import { Nunu } from "../core/Nunu.js";
-	import { Settings } from "./Settings.js";
-	import { FileSystem } from "../core/FileSystem.js";
-	import { Global } from "./Global.js";
-	import { VirtualClipboard } from "./utils/VirtualClipboard.js";
-	import { Keyboard } from "../core/input/Keyboard.js";
-	import { TextFile } from "../core/resources/TextFile.js";
-	import { Loaders } from "./Loaders.js";
-	import { Interface } from "./gui/Interface.js";
-	import { EventManager } from "../core/utils/EventManager.js";
-	import { CodeEditor } from "./gui/tab/code/CodeEditor.js";
-	import { Locale } from "./locale/LocaleManager.js";
-	import { AmbientLight } from "../core/objects/lights/AmbientLight";
+	const { Nunu } = await import("../core/Nunu.js");
+	const { Settings } = await import("./Settings.js");
+	const { FileSystem } = await import("../core/FileSystem.js");
+	const { Global } = await import("./Global.js");
+	const { VirtualClipboard } = await import("./utils/VirtualClipboard.js");
+	const { Keyboard } = await import("../core/input/Keyboard.js");
+	const { TextFile } = await import("../core/resources/TextFile.js");
+	const { Loaders } = await import("./Loaders.js");
+	const { Interface } = await import("./gui/Interface.js");
+	const { EventManager } = await import("../core/utils/EventManager.js");
+	const { CodeEditor } = await import("./gui/tab/code/CodeEditor.js");
+	const { Locale } = await import("./locale/LocaleManager.js");
+	const { AmbientLight } = await import("../core/objects/lights/AmbientLight");
 
 	// Check WebGL Support
 	if(!Nunu.webGLAvailable())
@@ -288,10 +290,10 @@ Editor.initialize = async function ()
  * @static
  * @method runProject
  */
-Editor.runProject = function ()
+Editor.runProject = async function ()
 {
-	import { RunProject } from "./gui/tab/run/RunProject.js";
-	import { Locale } from "./locale/LocaleManager.js";
+	const { RunProject } = await import("./gui/tab/run/RunProject.js");
+	const { Locale } = await import("./locale/LocaleManager.js");
 
 	var tab = Editor.gui.tab.getTab(RunProject, Editor.program);
 
@@ -433,9 +435,7 @@ Editor.isSelected = function (object)
  */
 Editor.resize = function ()
 {
-	import { Nunu } from "../core/Nunu.js";
-
-	if(!Nunu.isFullscreen())
+	if(!isFullscreen())
 	{
 		Editor.gui.updateInterface();
 	}
@@ -484,8 +484,6 @@ Editor.clearSelection = function ()
  */
 Editor.addAction = function (action)
 {
-	import { Action } from "./history/action/Action.js";
-
 	Editor.history.add(action);
 };
 
@@ -516,12 +514,12 @@ Editor.getScene = function ()
  * @param {Object3D} object Object to be added.
  * @param {Object3D} parent Parent object, if undefined the program scene is used.
  */
-Editor.addObject = function (object, parent)
+Editor.addObject = async function (object, parent)
 {
-	import { AddAction } from "./history/action/objects/AddAction.js";
-	import { ResourceCrawler } from "./history/ResourceCrawler.js";
-	import { AddResourceAction } from "./history/action/resources/AddResourceAction.js";
-	import { ActionBundle } from "./history/action/ActionBundle.js";
+	const { AddAction } = await import("./history/action/objects/AddAction.js");
+	const { ResourceCrawler } = await import("./history/ResourceCrawler.js");
+	const { AddResourceAction } = await import("./history/action/resources/AddResourceAction.js");
+	const { ActionBundle } = await import("./history/action/ActionBundle.js");
 
 	if(parent === undefined)
 	{
@@ -552,12 +550,12 @@ Editor.addObject = function (object, parent)
  * @param {Array} object Object to be added.
  * @param {Object3D} parent Parent object, if undefined the program scene is used.
  */
-Editor.addObjects = function (objects, parent)
+Editor.addObjects = async function (objects, parent)
 {
-	import { AddAction } from "./history/action/objects/AddAction.js";
-	import { ResourceCrawler } from "./history/ResourceCrawler.js";
-	import { AddResourceAction } from "./history/action/resources/AddResourceAction.js";
-	import { ActionBundle } from "./history/action/ActionBundle.js";
+	const { AddAction } = await import("./history/action/objects/AddAction.js");
+	const { ResourceCrawler } = await import("./history/ResourceCrawler.js");
+	const { AddResourceAction } = await import("./history/action/resources/AddResourceAction.js");
+	const { ActionBundle } = await import("./history/action/ActionBundle.js");
 
 	if(parent === undefined)
 	{
@@ -591,10 +589,10 @@ Editor.addObjects = function (objects, parent)
  * @method renameObject
  * @param {Object3D} object Object to be renamed.
  */
-Editor.renameObject = function (object)
+Editor.renameObject = async function (object)
 {
-	import { Locale } from "./locale/LocaleManager.js";
-	import { ChangeAction } from "./history/action/ChangeAction.js";
+	const { Locale } = await import("./locale/LocaleManager.js");
+	const { ChangeAction } = await import("./history/action/ChangeAction.js");
 
 	if(object === undefined)
 	{
@@ -624,17 +622,17 @@ Editor.renameObject = function (object)
  * @method deleteObject
  * @param {Array} objects List of objects.
  */
-Editor.deleteObject = function (object)
+Editor.deleteObject = async function (object)
 {
-	import { Program } from "../core/objects/Program.js";
-	import { RemoveAction } from "./history/action/objects/RemoveAction.js";
-	import { Material, Texture, BufferGeometry, Shape } from "three";
-	import { RemoveResourceAction } from "./history/action/resources/RemoveResourceAction.js";
-	import { Font } from "../core/resources/Font.js";
-	import { Audio } from "../core/resources/Audio.js";
-	import { Video } from "../core/resources/Video.js";
-	import { Resource } from "../core/resources/Resource.js";
-	import { ActionBundle } from "./history/action/ActionBundle.js";
+	const { Program } = await import("../core/objects/Program.js");
+	const { RemoveAction } = await import("./history/action/objects/RemoveAction.js");
+	const { Material, Texture, BufferGeometry, Shape } = await import("three");
+	const { RemoveResourceAction } = await import("./history/action/resources/RemoveResourceAction.js");
+	const { Font } = await import("../core/resources/Font.js");
+	const { Audio } = await import("../core/resources/Audio.js");
+	const { Video } = await import("../core/resources/Video.js");
+	const { Resource } = await import("../core/resources/Resource.js");
+	const { ActionBundle } = await import("./history/action/ActionBundle.js");
 
 	var selected = object === undefined ? Editor.selection : [object];
 
@@ -712,10 +710,10 @@ Editor.deleteObject = function (object)
  * @method copyObject
  * @param {Object3D} object Object to copy.
  */
-Editor.copyObject = function (object)
+Editor.copyObject = async function (object)
 {
-	import { Program } from "../core/objects/Program.js";
-	import { Scene } from "../core/objects/Scene.js";
+	const { Program } = await import("../core/objects/Program.js");
+	const { Scene } = await import("../core/objects/Scene.js");
 
 	var objects = object === undefined ? Editor.selection : [object];
 
@@ -751,8 +749,8 @@ Editor.copyObject = function (object)
  */
 Editor.cutObject = function (object)
 {
-	import { Program } from "../core/objects/Program.js";
-	import { Scene } from "../core/objects/Scene.js";
+	const { Program } = await import("../core/objects/Program.js");
+	const { Scene } = await import("../core/objects/Scene.js");
 
 	var objects = object === undefined ? Editor.selection : [object];
 
@@ -787,9 +785,9 @@ Editor.cutObject = function (object)
  */
 Editor.pasteObject = function (target)
 {
-	import { Locale } from "./locale/LocaleManager.js";
-	import { ObjectLoader } from "../core/loaders/ObjectLoader.js";
-	import { MathUtils } from "three";
+	const { Locale } = await import("./locale/LocaleManager.js");
+	const { ObjectLoader } = await import("../core/loaders/ObjectLoader.js");
+	const { MathUtils } = await import("three");
 
 	try
 	{
@@ -832,7 +830,7 @@ Editor.pasteObject = function (target)
  */
 Editor.redo = function ()
 {
-	import { Locale } from "./locale/LocaleManager.js";
+	const { Locale } = await import("./locale/LocaleManager.js");
 
 	if(Editor.history.redo())
 	{
@@ -851,7 +849,7 @@ Editor.redo = function ()
  */
 Editor.undo = function ()
 {
-	import { Locale } from "./locale/LocaleManager.js";
+	const { Locale } = await import("./locale/LocaleManager.js");
 
 	if(Editor.history.undo())
 	{
@@ -871,11 +869,11 @@ Editor.undo = function ()
  */
 Editor.createDefaultResouces = function ()
 {
-	import { Global } from "./Global.js";
-	import { Image } from "../core/resources/Image.js";
-	import { Font } from "../core/resources/Font.js";
-	import { Audio } from "../core/resources/Audio.js";
-	import { Texture, BoxGeometry, MeshStandardMaterial, SpriteMaterial } from "three";
+	const { Global } = await import("./Global.js");
+	const { Image } = await import("../core/resources/Image.js");
+	const { Font } = await import("../core/resources/Font.js");
+	const { Audio } = await import("../core/resources/Audio.js");
+	const { Texture, BoxGeometry, MeshStandardMaterial, SpriteMaterial } = await import("three");
 
 	Editor.defaultImage = new Image(Global.FILE_PATH + "uv_color.jpg");
 	Editor.defaultFont = new Font(Global.FILE_PATH + "default.json");
@@ -959,7 +957,7 @@ Editor.resetEditor = function ()
  */
 Editor.createNewProgram = function ()
 {
-	import { Program } from "../core/objects/Program.js";
+	const { Program } = await import("../core/objects/Program.js");
 
 	var program = new Program();
 
@@ -979,11 +977,11 @@ Editor.createNewProgram = function ()
  */
 Editor.addDefaultScene = function (material)
 {
-	import { MeshStandardMaterial, BoxGeometry } from "three";
-	import { Scene } from "../core/objects/Scene.js";
-	import { Sky } from "../core/objects/misc/Sky.js";
-	import { Mesh } from "../core/objects/mesh/Mesh.js";
-	import { SceneEditor } from "./gui/tab/scene-editor/SceneEditor.js";
+	const { MeshStandardMaterial, BoxGeometry } = await import("three");
+	const { Scene } = await import("../core/objects/Scene.js");
+	const { Sky } = await import("../core/objects/misc/Sky.js");
+	const { Mesh } = await import("../core/objects/mesh/Mesh.js");
+	const { SceneEditor } = await import("./gui/tab/scene-editor/SceneEditor.js");
 
 	if(material === undefined)
 	{
@@ -1030,9 +1028,9 @@ Editor.addDefaultScene = function (material)
  */
 Editor.saveProgramPath = function (path)
 {
-	import { StaticPair } from "@as-com/pson";
-	import { ResourceContainer } from "../core/resources/ResourceContainer.js";
-	import { FileSystem } from "../core/FileSystem.js";
+	const { StaticPair } = await import("@as-com/pson");
+	const { ResourceContainer } = await import("../core/resources/ResourceContainer.js");
+	const { FileSystem } = await import("../core/FileSystem.js");
 
 	var pson = new StaticPair();
 	var data = Editor.program.toJSON();
@@ -1077,9 +1075,9 @@ Editor.saveProgramPath = function (path)
  */
 Editor.saveProgram = function (fname, binary, keepDirectory, suppressMessage)
 {
-	import { StaticPair } from "@as-com/pson";
-	import { FileSystem } from "../core/FileSystem.js";
-	import { Locale } from "./locale/LocaleManager.js";
+	const { StaticPair } = await import("@as-com/pson");
+	const { FileSystem } = await import("../core/FileSystem.js");
+	const { Locale } = await import("./locale/LocaleManager.js");
 
 	try
 	{
@@ -1130,8 +1128,8 @@ Editor.saveProgram = function (fname, binary, keepDirectory, suppressMessage)
  */
 Editor.setProgram = function (program)
 {
-	import { History } from "./history/History.js";
-	import { SceneEditor } from "./gui/tab/scene-editor/SceneEditor.js";
+	const { History } = await import("./history/History.js");
+	const { SceneEditor } = await import("./gui/tab/scene-editor/SceneEditor.js");
 
 	if(Editor.program !== program)
 	{
@@ -1176,12 +1174,12 @@ Editor.setProgram = function (program)
  */
 Editor.loadProgram = async function (file, binary)
 {
-	import { LoadingModal } from "./components/modal/LoadingModal.js";
-	import { DocumentBody } from "./components/DocumentBody.js";
-	import { ObjectLoader } from "../core/loaders/ObjectLoader.js";
-	import { StaticPair } from "@as-com/pson";
-	import { Locale } from "./locale/LocaleManager.js";
-	import { FileSystem } from "../core/FileSystem.js";
+	const { LoadingModal } = await import("./components/modal/LoadingModal.js");
+	const { DocumentBody } = await import("./components/DocumentBody.js");
+	const { ObjectLoader } = await import("../core/loaders/ObjectLoader.js");
+	const { StaticPair } = await import("@as-com/pson");
+	const { Locale } = await import("./locale/LocaleManager.js");
+	const { FileSystem } = await import("../core/FileSystem.js");
 
 	var modal = new LoadingModal(DocumentBody);
 	modal.show();
@@ -1256,9 +1254,9 @@ Editor.loadProgram = async function (file, binary)
  * @method setOpenFile
  * @param {string} file Path of file currently open.
  */
-Editor.setOpenFile = function (file)
+Editor.setOpenFile = async function (file)
 {
-	import { Nunu } from "../core/Nunu.js";
+	const { Nunu } = await import("../core/Nunu.js");
 
 	if(file !== undefined && file !== null)
 	{
@@ -1336,8 +1334,8 @@ Editor.prompt = function (message, defaultValue)
  */
 Editor.updateNunu = async function (silent)
 {
-	import { FileSystem } from "../core/FileSystem.js";
-	import { Locale } from "./locale/LocaleManager.js";
+	const { FileSystem } = await import("../core/FileSystem.js");
+	const { Locale } = await import("./locale/LocaleManager.js");
 
 	if(silent === undefined)
 	{
@@ -1396,9 +1394,7 @@ Editor.getRendererConfig = function ()
  */
 Editor.exit = function ()
 {
-	import { Nunu } from "../core/Nunu.js";
-
-	if(Nunu.runningOnDesktop())
+	if(runningOnDesktop())
 	{
 		Editor.settings.store();
 

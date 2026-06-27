@@ -5,23 +5,25 @@
  *
  * @class Interface
  */
-class Interface {
-	constructor() {
-		import { TabContainer } from "../components/tabs/splittable/TabContainer.js";
-		import { DocumentBody } from "../components/DocumentBody.js";
-		import { TabGroupSplit } from "../components/tabs/splittable/TabGroupSplit.js";
-		import { TabGroup } from "../components/tabs/TabGroup.js";
-		import { AssetExplorer } from "./tab/asset/AssetExplorer.js";
-		import { ConsoleTab } from "./tab/console/ConsoleTab.js";
-		import { AnimationTab } from "./tab/animation/AnimationTab.js";
-		import { ProfilingTab } from "./tab/profiling/ProfilingTab.js";
-		import { TreeView } from "./tab/tree-view/TreeView.js";
-		import { InspectorContainer } from "./tab/inspector/InspectorContainer.js";
-		import { MainMenu } from "./MainMenu.js";
+class Interface
+{
+	constructor()
+	{
+		const { TabContainer } = await import("../components/tabs/splittable/TabContainer.js");
+		const { DocumentBody } = await import("../components/DocumentBody.js");
+		const { TabGroupSplit } = await import("../components/tabs/splittable/TabGroupSplit.js");
+		const { TabGroup } = await import("../components/tabs/TabGroup.js");
+		const { AssetExplorer } = await import("./tab/asset/AssetExplorer.js");
+		const { ConsoleTab } = await import("./tab/console/ConsoleTab.js");
+		const { AnimationTab } = await import("./tab/animation/AnimationTab.js");
+		const { ProfilingTab } = await import("./tab/profiling/ProfilingTab.js");
+		const { TreeView } = await import("./tab/tree-view/TreeView.js");
+		const { InspectorContainer } = await import("./tab/inspector/InspectorContainer.js");
+		const { MainMenu } = await import("./MainMenu.js");
 
 		/**
 		 * Main tab container that has all the interface tabs.
-		 * 
+		 *
 		 * @attribute tab
 		 * @type {TabContainer}
 		 */
@@ -45,7 +47,8 @@ class Interface {
 
 		this.animation = leftBottom.addTab(AnimationTab, false);
 
-		if (DEVELOPMENT) {
+		if(DEVELOPMENT)
+		{
 			leftBottom.addTab(ProfilingTab, false);
 		}
 
@@ -63,38 +66,47 @@ class Interface {
 	 *
 	 * @method saveProgram
 	 */
-	saveProgram() {
-		import { Nunu } from "../../core/Nunu.js";
-		import { FileSystem } from "../../core/FileSystem.js";
-		import { Editor } from "../Editor.js";
+	saveProgram()
+	{
+		const { Nunu } = await import("../../core/Nunu.js");
+		const { FileSystem } = await import("../../core/FileSystem.js");
+		const { Editor } = await import("../Editor.js");
 
-		if (Nunu.runningOnDesktop()) {
-			FileSystem.chooseFile(function (files) {
+		if(Nunu.runningOnDesktop())
+		{
+			FileSystem.chooseFile(function (files)
+			{
 				Editor.saveProgram(files[0].path, true);
 			}, ".nsp", true);
 		}
-		else {
-			FileSystem.chooseFileName(function (fname) {
+		else
+		{
+			FileSystem.chooseFileName(function (fname)
+			{
 				Editor.saveProgram(fname, true);
 			}, ".nsp", Editor.openFile !== null ? Editor.openFile : "file");
 		}
 	}
 
-	/** 
+	/**
 	 * Load new project from file.
 	 *
 	 * Creates the necessary GUI elements to select the file.
 	 *
 	 * @method loadProgram
 	 */
-	loadProgram() {
-		import { Editor } from "../Editor.js";
-		import { Locale } from "../locale/LocaleManager.js";
-		import { FileSystem } from "../../core/FileSystem.js";
+	loadProgram()
+	{
+		const { Editor } = await import("../Editor.js");
+		const { Locale } = await import("../locale/LocaleManager.js");
+		const { FileSystem } = await import("../../core/FileSystem.js");
 
-		if (Editor.confirm(Locale.changesWillBeLost + " " + Locale.loadProject)) {
-			FileSystem.chooseFile(function (files) {
-				if (files.length > 0) {
+		if(Editor.confirm(Locale.changesWillBeLost + " " + Locale.loadProject))
+		{
+			FileSystem.chooseFile(function (files)
+			{
+				if(files.length > 0)
+				{
 					Editor.loadProgram(files[0], files[0].name.endsWith(".nsp"));
 				}
 			}, ".isp, .nsp");
@@ -106,16 +118,19 @@ class Interface {
 	 *
 	 * @method newProgram
 	 */
-	newProgram() {
-		import { Editor } from "../Editor.js";
-		import { Locale } from "../locale/LocaleManager.js";
+	newProgram()
+	{
+		const { Editor } = await import("../Editor.js");
+		const { Locale } = await import("../locale/LocaleManager.js");
 
-		if (Editor.confirm(Locale.changesWillBeLost + " " + Locale.createProject)) {
+		if(Editor.confirm(Locale.changesWillBeLost + " " + Locale.createProject))
+		{
 			Editor.createNewProgram();
 		}
 	}
 
-	updateInterface() {
+	updateInterface()
+	{
 		var width = window.innerWidth;
 		var height = window.innerHeight;
 

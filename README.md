@@ -43,6 +43,13 @@ Loaders.loadSpineAnimation
 Loaders.loadModel
 ProjectExporters.exportWebProjectZip
 Settings.load
+Editor.runProject
+Editor.addObject
+Editor.addObjects
+Editor.renameObject
+Editor.deleteObject
+Editor.copyObject
+
 
 projectMenu.addOption(Locale.executeScript callback inside MainMenu FileSystem.chooseFile(async and FileSystem.chooseFile does NOT need async because fire and forget onLoad callback will still allow access to the chooser
 
