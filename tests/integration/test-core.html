@@ -1,0 +1,74 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <title>Nunu Core ES6 Smoke Test</title>
+    <script>
+        window.Nunu = {
+            runningOnDesktop: function () { return false; },
+            getPlatform: function () { return "Browser Test"; },
+            webAudioAvailable: function () { return true; },
+            getQueryParameters: function () { return {}; },
+            copyNamespace: function (src, dst) { Object.assign(dst, src); },
+            // Add any other simple configuration primitives your core setup calls
+        };
+        // Ensure legacy namespace lookups resolve here too
+        window.window.NunuStudio = window.Nunu; 
+    </script>
+    <link rel="icon" type="image/x-icon" href="../../files/icon.ico">
+    <script src="../../docs/editor/files/runtime/nunu.smoke.js"></script>
+</head>
+
+<body>
+    <script>
+        window.testResult = { success: false, errors: [] };
+
+        window.addEventListener('error', (event) => {
+            window.testResult.errors.push(event.message || event.error.toString());
+        });
+
+        try {
+            // Resolve the namespace from the custom smoke build target
+            const NunuNamespace = (typeof Nunu !== 'undefined') ? Nunu : (window.Nunu || window.NunuStudio);
+
+            if (!NunuNamespace) {
+                throw new Error('Nunu core namespace could not be resolved from the global context.');
+            }
+
+            const ProgramClass = NunuNamespace.Program;
+            const SceneClass = NunuNamespace.Scene;
+            const VideoStreamClass = NunuNamespace.VideoStream;
+
+            if (!ProgramClass || !SceneClass) {
+                throw new Error('Core constructors are missing from the compiled smoke bundle.');
+            }
+
+            console.log("Instantiating core ES6 classes in browser context...");
+
+            // 1. Validate instantiation of the base classes
+            const programInstance = new ProgramClass();
+            const sceneInstance = new SceneClass();
+
+            // 2. Validate the deep inheritance chain that was snapping the TDZ wrapper
+            const streamInstance = VideoStreamClass ? new VideoStreamClass("https://localhost/test.mp4") : null;
+
+            window.testResult = {
+                success: true,
+                programCreated: programInstance !== null,
+                sceneCreated: sceneInstance !== null,
+                streamCreated: streamInstance !== null,
+                formatCheck: streamInstance ? streamInstance.format : null,
+                errors: window.testResult.errors
+            };
+        } catch (error) {
+            window.testResult = {
+                success: false,
+                error: error.message || error.toString(),
+                errors: window.testResult.errors
+            };
+        }
+    </script>
+</body>
+
+</html>
