@@ -32,8 +32,10 @@ import { SettingsTab } from "./tab/settings/SettingsTab.js";
  * @class MainMenu
  * @extends {Component}
  */
-class MainMenu extends Component {
-	constructor(parent) {
+class MainMenu extends Component
+{
+	constructor(parent)
+	{
 		super(parent, "div");
 
 		this.element.style.overflow = "visible";
@@ -66,52 +68,66 @@ class MainMenu extends Component {
 		fileMenu.position.set(0, 0);
 
 		// New project
-		fileMenu.addOption(Locale.new, function () {
+		fileMenu.addOption(Locale.new, function ()
+		{
 			Editor.gui.newProgram();
 		}, Global.FILE_PATH + "icons/misc/new.png");
 
 		// Save project
-		fileMenu.addOption(Locale.save, function () {
-			if (Editor.openFile !== null) {
+		fileMenu.addOption(Locale.save, function ()
+		{
+			if(Editor.openFile !== null)
+			{
 				Editor.saveProgram(undefined, true);
 			}
-			else {
+			else
+			{
 				Editor.gui.saveProgram();
 			}
 		}, Global.FILE_PATH + "icons/misc/save.png");
 
 		// Save project
-		fileMenu.addOption(Locale.saveAs, function () {
+		fileMenu.addOption(Locale.saveAs, function ()
+		{
 			Editor.gui.saveProgram();
 		}, Global.FILE_PATH + "icons/misc/save.png").setAltText("CTRL+S");
 
 		// Save project to folder
-		if (DEVELOPMENT) {
-			fileMenu.addOption(Locale.saveTo, function () {
-				FileSystem.chooseDirectory().then(function (path) {
+		if(DEVELOPMENT)
+		{
+			fileMenu.addOption(Locale.saveTo, function ()
+			{
+				FileSystem.chooseDirectory().then(function (path)
+				{
 					Editor.saveProgramPath(path);
 				});
 			}, Global.FILE_PATH + "icons/misc/save.png");
 		}
 
 		// Save readable legacy format
-		if (DEVELOPMENT) {
-			fileMenu.addOption("Save ISP", function () {
-				FileSystem.chooseFile(function (files) {
+		if(DEVELOPMENT)
+		{
+			fileMenu.addOption("Save ISP", function ()
+			{
+				FileSystem.chooseFile(function (files)
+				{
 					Editor.saveProgram(files[0].path, false, true);
 				}, ".isp", true);
 			}, Global.FILE_PATH + "icons/misc/save.png");
 		}
 
 		// Load Project
-		fileMenu.addOption(Locale.load, function () {
+		fileMenu.addOption(Locale.load, function ()
+		{
 			Editor.gui.loadProgram();
 		}, Global.FILE_PATH + "icons/misc/load.png").setAltText("CTRL+L");
 
 		// Settings
-		fileMenu.addOption(Locale.settings, function () {
+		fileMenu.addOption(Locale.settings, function ()
+		{
 			var tab = Editor.gui.tab.getTab(SettingsTab);
-			if (tab === null) {
+			if(tab === null)
+			{
 				tab = Editor.gui.tab.addTab(SettingsTab, true);
 			}
 			tab.select();
@@ -120,40 +136,53 @@ class MainMenu extends Component {
 		// Publish
 		var publish = fileMenu.addMenu(Locale.publish, Global.FILE_PATH + "icons/misc/publish.png");
 
-		if (Nunu.runningOnDesktop()) {
+		if(Nunu.runningOnDesktop())
+		{
 			// Publish web
-			publish.addOption("Web", function () {
-				FileSystem.chooseFile(function (files) {
-					try {
+			publish.addOption("Web", function ()
+			{
+				FileSystem.chooseFile(function (files)
+				{
+					try
+					{
 						ProjectExporters.exportWebProject(files[0].path);
 						Editor.alert(Locale.projectExported);
 					}
-					catch (e) {
+					catch(e)
+					{
 						Editor.alert(Locale.errorExportingProject + "\n(" + e + ")");
 					}
 				}, "", Editor.program.name);
 			}, Global.FILE_PATH + "icons/platform/web.png");
 
 			// Android
-			if (DEVELOPMENT) {
+			if(DEVELOPMENT)
+			{
 				var android = publish.addMenu("Android", Global.FILE_PATH + "icons/platform/android.png");
 
-				android.addOption(Locale.run, function () {
-					try {
+				android.addOption(Locale.run, function ()
+				{
+					try
+					{
 						ProjectExporters.exportAndroid(ProjectExporters.ANDROID_RUN);
 					}
-					catch (e) {
+					catch(e)
+					{
 						console.error("nunuStudio: Error exporting android project.", e);
 						Editor.alert(Locale.errorExportingProject + "\n(" + e + ")");
 					}
 				});
 
-				android.addOption("Unsigned APK", function () {
-					FileSystem.chooseFile(function (files) {
-						try {
+				android.addOption("Unsigned APK", function ()
+				{
+					FileSystem.chooseFile(function (files)
+					{
+						try
+						{
 							ProjectExporters.exportAndroid(ProjectExporters.ANDROID_EXPORT_UNSIGNED, files[0].path);
 						}
-						catch (e) {
+						catch(e)
+						{
 							console.error("nunuStudio: Error exporting android project.", e);
 							Editor.alert(Locale.errorExportingProject + "\n(" + e + ")");
 						}
@@ -161,15 +190,20 @@ class MainMenu extends Component {
 				});
 			}
 
-			if (Nunu.runningOnDesktop()) {
+			if(Nunu.runningOnDesktop())
+			{
 				// Publish windows
-				publish.addOption("Windows", function () {
-					FileSystem.chooseFile(function (files) {
-						try {
+				publish.addOption("Windows", function ()
+				{
+					FileSystem.chooseFile(function (files)
+					{
+						try
+						{
 							ProjectExporters.exportWindows(files[0].path);
 							Editor.alert(Locale.projectExported);
 						}
-						catch (e) {
+						catch(e)
+						{
 							console.error("nunuStudio: Error exporting windows project.", e);
 							Editor.alert(Locale.errorExportingProject + "\n(" + e + ")");
 						}
@@ -177,13 +211,17 @@ class MainMenu extends Component {
 				}, Global.FILE_PATH + "icons/platform/windows.png");
 
 				// Publish linux
-				publish.addOption("Linux", function () {
-					FileSystem.chooseFile(function (files) {
-						try {
+				publish.addOption("Linux", function ()
+				{
+					FileSystem.chooseFile(function (files)
+					{
+						try
+						{
 							ProjectExporters.exportLinux(files[0].path);
 							Editor.alert(Locale.projectExported);
 						}
-						catch (e) {
+						catch(e)
+						{
 							console.error("nunuStudio: Error exporting linux project.", e);
 							Editor.alert(Locale.errorExportingProject + "\n(" + e + ")");
 						}
@@ -192,13 +230,17 @@ class MainMenu extends Component {
 
 
 				// Publish macos
-				publish.addOption("macOS", function () {
-					FileSystem.chooseFile(function (files) {
-						try {
+				publish.addOption("macOS", function ()
+				{
+					FileSystem.chooseFile(function (files)
+					{
+						try
+						{
 							ProjectExporters.exportMacOS(files[0].path);
 							Editor.alert(Locale.projectExported);
 						}
-						catch (e) {
+						catch(e)
+						{
 							console.error("nunuStudio: Error exporting macOS project.", e);
 							Editor.alert(Locale.errorExportingProject + "\n(" + e + ")");
 						}
@@ -207,14 +249,19 @@ class MainMenu extends Component {
 			}
 		}
 		// Running on web browser
-		else {
-			publish.addOption("Web", function () {
-				FileSystem.chooseFileName(function (fname) {
-					try {
+		else
+		{
+			publish.addOption("Web", function ()
+			{
+				FileSystem.chooseFileName(function (fname)
+				{
+					try
+					{
 						ProjectExporters.exportWebProjectZip(fname);
 						Editor.alert(Locale.projectExported);
 					}
-					catch (e) {
+					catch(e)
+					{
 						console.error("nunuStudio: Error exporting web project.", e);
 						Editor.alert(Locale.errorExportingProject + "\n(" + e + ")");
 					}
@@ -223,38 +270,47 @@ class MainMenu extends Component {
 		}
 
 		// Import
-		fileMenu.addOption(Locale.import, function () {
-			FileSystem.chooseFile(function (files) {
-				if (files.length > 0) {
+		fileMenu.addOption(Locale.import, function ()
+		{
+			FileSystem.chooseFile(function (files)
+			{
+				if(files.length > 0)
+				{
 					var file = files[0];
 					var binary = FileSystem.getFileExtension(file.name) !== "isp";
 
 					var loader = new ObjectLoader();
 					var reader = new FileReader();
 
-					reader.onload = function () {
-						if (binary) {
+					reader.onload = function ()
+					{
+						if(binary)
+						{
 							var pson = new StaticPair();
 							var data = pson.decode(reader.result);
 							var program = loader.parse(data);
 						}
-						else {
+						else
+						{
 							var program = loader.parse(JSON.parse(reader.result));
 						}
 
 						var actions = [];
 
-						for (var i = 0; i < program.children.length; i++) {
+						for(var i = 0; i < program.children.length; i++)
+						{
 							actions.push(new AddAction(program.children[i], Editor.program));
 						}
 
 						Editor.addAction(new ActionBundle(actions));
 					};
 
-					if (binary) {
+					if(binary)
+					{
 						reader.readAsArrayBuffer(file);
 					}
-					else {
+					else
+					{
 						reader.readAsText(file);
 					}
 				}
@@ -266,23 +322,28 @@ class MainMenu extends Component {
 		var exportMenu = fileMenu.addMenu(Locale.export, Global.FILE_PATH + "icons/misc/export.png");
 
 		// Export OBJ
-		exportMenu.addOption("OBJ", function () {
+		exportMenu.addOption("OBJ", function ()
+		{
 			Exporters.exportOBJ(Editor.getScene());
 		}, Global.FILE_PATH + "icons/misc/scene.png");
 
 		// Export GLTF
-		exportMenu.addOption("GLTF", function () {
+		exportMenu.addOption("GLTF", function ()
+		{
 			Exporters.exportGLTF(Editor.getScene(), false);
 		}, Global.FILE_PATH + "icons/gltf.png");
 
 		// Export GLB
-		exportMenu.addOption("GLB", function () {
+		exportMenu.addOption("GLB", function ()
+		{
 			Exporters.exportGLTF(Editor.getScene(), true);
 		}, Global.FILE_PATH + "icons/gltf.png");
 
 		// Export Google Draco
-		exportMenu.addOption("Draco", function () {
-			if (Editor.selection.length === 0 || Editor.selection[0].geometry === undefined) {
+		exportMenu.addOption("Draco", function ()
+		{
+			if(Editor.selection.length === 0 || Editor.selection[0].geometry === undefined)
+			{
 				Editor.alert(Locale.needsObjectGeometry);
 				return;
 			}
@@ -292,38 +353,47 @@ class MainMenu extends Component {
 		}, Global.FILE_PATH + "icons/misc/scene.png");
 
 		// Export Collada
-		exportMenu.addOption("Collada V1.4.1", function () {
+		exportMenu.addOption("Collada V1.4.1", function ()
+		{
 			Exporters.exportCollada(Editor.program, "1.4.1");
 		}, Global.FILE_PATH + "icons/misc/scene.png");
 
-		exportMenu.addOption("Collada V1.5", function () {
+		exportMenu.addOption("Collada V1.5", function ()
+		{
 			Exporters.exportCollada(Editor.program, "1.5.0");
 
 		}, Global.FILE_PATH + "icons/misc/scene.png");
 
 		// Export PLY
-		exportMenu.addOption("PLY", function () {
+		exportMenu.addOption("PLY", function ()
+		{
 			Exporters.exportPLY(Editor.getScene(), false);
 		}, Global.FILE_PATH + "icons/misc/scene.png");
 
-		exportMenu.addOption("PLY (" + Locale.binary + ")", function () {
+		exportMenu.addOption("PLY (" + Locale.binary + ")", function ()
+		{
 			Exporters.exportPLY(Editor.getScene(), true);
 		}, Global.FILE_PATH + "icons/misc/scene.png");
 
 		// Export STL
-		exportMenu.addOption("STL", function () {
+		exportMenu.addOption("STL", function ()
+		{
 			Exporters.exportSTL(Editor.program, false);
 		}, Global.FILE_PATH + "icons/misc/scene.png");
 
 		// Export Binary STL
-		exportMenu.addOption("STL (" + Locale.binary + ")", function () {
+		exportMenu.addOption("STL (" + Locale.binary + ")", function ()
+		{
 			Exporters.exportSTL(Editor.program, true);
 		}, Global.FILE_PATH + "icons/misc/scene.png");
 
 		// Exit
-		if (Nunu.runningOnDesktop()) {
-			fileMenu.addOption(Locale.exit, function () {
-				if (Editor.confirm(Locale.unsavedChangesExit)) {
+		if(Nunu.runningOnDesktop())
+		{
+			fileMenu.addOption(Locale.exit, function ()
+			{
+				if(Editor.confirm(Locale.unsavedChangesExit))
+				{
 					Editor.exit();
 				}
 			}, Global.FILE_PATH + "icons/misc/exit.png");
@@ -336,30 +406,38 @@ class MainMenu extends Component {
 		editMenu.size.set(100, this.size.y);
 		editMenu.position.set(120, 0);
 
-		editMenu.addOption(Locale.undo, function () {
+		editMenu.addOption(Locale.undo, function ()
+		{
 			Editor.undo();
 		}, Global.FILE_PATH + "icons/misc/undo.png");
 
-		editMenu.addOption(Locale.redo, function () {
+		editMenu.addOption(Locale.redo, function ()
+		{
 			Editor.redo();
 		}, Global.FILE_PATH + "icons/misc/redo.png");
 
-		editMenu.addOption(Locale.copy, function () {
+		editMenu.addOption(Locale.copy, function ()
+		{
 			Editor.copyObject();
 		}, Global.FILE_PATH + "icons/misc/copy.png");
 
-		editMenu.addOption(Locale.cut, function () {
+		editMenu.addOption(Locale.cut, function ()
+		{
 			Editor.cutObject();
 		}, Global.FILE_PATH + "icons/misc/cut.png");
 
-		editMenu.addOption(Locale.paste, function () {
+		editMenu.addOption(Locale.paste, function ()
+		{
 			Editor.pasteObject();
 		}, Global.FILE_PATH + "icons/misc/paste.png");
 
-		editMenu.addOption(Locale.delete, function () {
-			if (Editor.hasObjectSelected()) {
+		editMenu.addOption(Locale.delete, function ()
+		{
+			if(Editor.hasObjectSelected())
+			{
 				var del = Editor.confirm(Locale.deleteObjects);
-				if (del) {
+				if(del)
+				{
 					Editor.deleteObject();
 				}
 			}
@@ -368,13 +446,16 @@ class MainMenu extends Component {
 		var csg = editMenu.addMenu(Locale.csg, Global.FILE_PATH + "icons/models/figures.png");
 
 		// Create BSP for CSG operation
-		function createBSP(object) {
+		function createBSP(object)
+		{
 			var geometry = object.geometry;
 
-			if (geometry instanceof BufferGeometry) {
+			if(geometry instanceof BufferGeometry)
+			{
 				geometry = new Geometry().fromBufferGeometry(geometry);
 			}
-			else {
+			else
+			{
 				geometry = geometry.clone();
 			}
 
@@ -384,14 +465,18 @@ class MainMenu extends Component {
 		}
 
 		// Verify is CSG operation is possible
-		function verifyCSG() {
-			if (Editor.selection.length < 2) {
+		function verifyCSG()
+		{
+			if(Editor.selection.length < 2)
+			{
 				Editor.alert(Locale.needsTwoObjects);
 				return false;
 			}
 
-			for (var i = 0; i < 2; i++) {
-				if (Editor.selection[i].geometry === undefined) {
+			for(var i = 0; i < 2; i++)
+			{
+				if(Editor.selection[i].geometry === undefined)
+				{
 					Editor.alert(Locale.needsTwoObjectGeometry);
 					return false;
 				}
@@ -401,7 +486,8 @@ class MainMenu extends Component {
 		}
 
 		// Create CSG action
-		function createCSGAction(mesh, a, b) {
+		function createCSGAction(mesh, a, b)
+		{
 			mesh.material = Editor.defaultMaterial;
 			mesh.name = a.name;
 
@@ -413,8 +499,10 @@ class MainMenu extends Component {
 			Editor.addAction(new ActionBundle(actions));
 		}
 
-		csg.addOption(Locale.intersect, function () {
-			if (verifyCSG()) {
+		csg.addOption(Locale.intersect, function ()
+		{
+			if(verifyCSG())
+			{
 				var a = createBSP(Editor.selection[0]);
 				var b = createBSP(Editor.selection[1]);
 
@@ -422,8 +510,10 @@ class MainMenu extends Component {
 			}
 		}, Global.FILE_PATH + "icons/misc/intersect.png");
 
-		csg.addOption(Locale.subtract, function () {
-			if (verifyCSG()) {
+		csg.addOption(Locale.subtract, function ()
+		{
+			if(verifyCSG())
+			{
 				var a = createBSP(Editor.selection[0]);
 				var b = createBSP(Editor.selection[1]);
 
@@ -431,8 +521,10 @@ class MainMenu extends Component {
 			}
 		}, Global.FILE_PATH + "icons/misc/subtract.png");
 
-		csg.addOption(Locale.union, function () {
-			if (verifyCSG()) {
+		csg.addOption(Locale.union, function ()
+		{
+			if(verifyCSG())
+			{
 				var a = createBSP(Editor.selection[0]);
 				var b = createBSP(Editor.selection[1]);
 
@@ -442,8 +534,10 @@ class MainMenu extends Component {
 
 		var modifiers = editMenu.addMenu(Locale.modifiers, Global.FILE_PATH + "icons/models/figures.png");
 
-		modifiers.addOption(Locale.simplify, function () {
-			if (Editor.selection.length < 1 || Editor.selection[0].geometry === undefined) {
+		modifiers.addOption(Locale.simplify, function ()
+		{
+			if(Editor.selection.length < 1 || Editor.selection[0].geometry === undefined)
+			{
 				Editor.alert(Locale.needsObjectGeometry);
 				return;
 			}
@@ -451,17 +545,20 @@ class MainMenu extends Component {
 			var simplifier = new SimplifyModifier();
 
 			var level = parseFloat(Editor.prompt("Simplification level in %")) / 100;
-			if (isNaN(level) || level > 100 || level < 0) {
+			if(isNaN(level) || level > 100 || level < 0)
+			{
 				Editor.alert("Level has to be a numeric value");
 				return;
 			}
 
 			var original = Editor.selection[0].geometry;
 
-			if (original instanceof BufferGeometry) {
+			if(original instanceof BufferGeometry)
+			{
 				var vertices = original.getAttribute("position").array.length / 3;
 			}
-			else {
+			else
+			{
 				var vertices = original.vertices.length;
 			}
 
@@ -473,8 +570,10 @@ class MainMenu extends Component {
 
 		}, Global.FILE_PATH + "icons/models/triangle.png");
 
-		modifiers.addOption(Locale.subdivide, function () {
-			if (Editor.selection.length < 1 || Editor.selection[0].geometry === undefined) {
+		modifiers.addOption(Locale.subdivide, function ()
+		{
+			if(Editor.selection.length < 1 || Editor.selection[0].geometry === undefined)
+			{
 				Editor.alert(Locale.needsObjectGeometry);
 				return;
 			}
@@ -485,14 +584,17 @@ class MainMenu extends Component {
 			Editor.addObject(mesh);
 		}, Global.FILE_PATH + "icons/misc/subdivide.png");
 
-		modifiers.addOption(Locale.twist, function () {
-			if (Editor.selection.length < 1 || Editor.selection[0].geometry === undefined) {
+		modifiers.addOption(Locale.twist, function ()
+		{
+			if(Editor.selection.length < 1 || Editor.selection[0].geometry === undefined)
+			{
 				Editor.alert(Locale.needsObjectGeometry);
 				return;
 			}
 
 			var angle = parseFloat(Editor.prompt("Twist angle", UnitConverter.convert(Math.PI / 2, "r", Editor.settings.units.angle)));
-			if (isNaN(angle) || angle < 0) {
+			if(isNaN(angle) || angle < 0)
+			{
 				Editor.alert("Twist amount has to be a numeric value");
 				return;
 			}
@@ -502,7 +604,8 @@ class MainMenu extends Component {
 
 			var start = parseFloat(Editor.prompt("Start Point", 0));
 			var end = parseFloat(Editor.prompt("End Point", 1));
-			if (isNaN(start) || isNaN(end)) {
+			if(isNaN(start) || isNaN(end))
+			{
 				Editor.alert("Start and end has to be a numeric value");
 				return;
 			}
@@ -514,8 +617,10 @@ class MainMenu extends Component {
 		}, Global.FILE_PATH + "icons/models/twist.png");
 
 		// Compute mesh normals
-		editMenu.addOption(Locale.computeNormals, function () {
-			if (Editor.selection.length < 1) {
+		editMenu.addOption(Locale.computeNormals, function ()
+		{
+			if(Editor.selection.length < 1)
+			{
 				Editor.alert(Locale.needsObjectMesh);
 				return;
 			}
@@ -526,8 +631,10 @@ class MainMenu extends Component {
 		}, Global.FILE_PATH + "icons/misc/probe.png");
 
 		// Apply tranformation
-		editMenu.addOption(Locale.applyTransformation, function () {
-			if (Editor.selection.length < 1) {
+		editMenu.addOption(Locale.applyTransformation, function ()
+		{
+			if(Editor.selection.length < 1)
+			{
 				Editor.alert(Locale.needsObjectMesh);
 				return;
 			}
@@ -541,25 +648,31 @@ class MainMenu extends Component {
 		}, Global.FILE_PATH + "icons/tools/move.png");
 
 		// Merge geometries
-		editMenu.addOption(Locale.mergeGeometries, function () {
-			if (Editor.selection.length < 2) {
+		editMenu.addOption(Locale.mergeGeometries, function ()
+		{
+			if(Editor.selection.length < 2)
+			{
 				Editor.alert(Locale.needsTwoObjectMesh);
 				return;
 			}
 
 			var geometry = new Geometry();
 
-			for (var i = 0; i < Editor.selection.length; i++) {
+			for(var i = 0; i < Editor.selection.length; i++)
+			{
 				var obj = Editor.selection[i];
-				if (obj.geometry !== undefined) {
+				if(obj.geometry !== undefined)
+				{
 					// Convert to geometry and merge
-					if (obj.geometry instanceof BufferGeometry) {
+					if(obj.geometry instanceof BufferGeometry)
+					{
 						var converted = new Geometry();
 						converted.fromBufferGeometry(obj.geometry);
 						geometry.merge(converted, obj.matrixWorld);
 					}
 					// Merge geometry
-					else {
+					else
+					{
 						geometry.merge(obj.geometry, obj.matrixWorld);
 					}
 				}
@@ -579,20 +692,26 @@ class MainMenu extends Component {
 		projectMenu.size.set(100, this.size.y);
 		projectMenu.position.set(220, 0);
 
-		projectMenu.addOption(Locale.createScene, function () {
+		projectMenu.addOption(Locale.createScene, function ()
+		{
 			Editor.addDefaultScene();
 		}, Global.FILE_PATH + "icons/misc/add.png");
 
-		projectMenu.addOption(Locale.executeScript, function () {
-			FileSystem.chooseFile(function (files) {
-				try {
-					if (files.length > 0) {
-						var code = FileSystem.readFile(files[0].path);
+		projectMenu.addOption(Locale.executeScript, function ()
+		{
+			FileSystem.chooseFile(async function (files)
+			{
+				try
+				{
+					if(files.length > 0)
+					{
+						var code = await FileSystem.readFile(files[0].path);
 						var func = Function(code);
 						func();
 					}
 				}
-				catch (error) {
+				catch(error)
+				{
 					Editor.alert("Error: " + error);
 				}
 			}, ".js");
@@ -606,9 +725,11 @@ class MainMenu extends Component {
 		about.size.set(100, this.size.y);
 		about.position.set(320, 0);
 		about.updateInterface();
-		about.setOnClick(function () {
+		about.setOnClick(function ()
+		{
 			var tab = Editor.gui.tab.getTab(AboutTab);
-			if (tab === null) {
+			if(tab === null)
+			{
 				tab = Editor.gui.tab.addTab(AboutTab, true);
 			}
 			tab.select();
@@ -620,12 +741,14 @@ class MainMenu extends Component {
 		this.run.size.set(100, this.size.y);
 		this.run.position.set(420, 0);
 		this.run.updateInterface();
-		this.run.setOnClick(function () {
+		this.run.setOnClick(function ()
+		{
 			Editor.runProject();
 		});
 	}
 
-	updateInterface() {
+	updateInterface()
+	{
 		this.updateVisibility();
 	}
 

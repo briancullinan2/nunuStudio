@@ -60,7 +60,7 @@ class Image extends Resource
 			// Blob (Need to be read immediatly might be revoked to clean space).
 			else if(url.startsWith("blob"))
 			{
-				FileSystem.readFileArrayBuffer(url, true).then(arraybuffer =>
+				this.loading = FileSystem.readFileArrayBuffer(url, true).then(arraybuffer =>
 				{
 					this.loadArrayBufferData(arraybuffer);
 				})
@@ -285,10 +285,7 @@ class Image extends Resource
 
 		if(this.format === "url")
 		{
-			FileSystem.readFileArrayBuffer(this.data).then(arrayBuffer =>
-			{
-				this.loadArrayBufferData(arrayBuffer, this.encoding);
-			})
+			this.loadArrayBufferData(await FileSystem.readFileArrayBuffer(this.data), this.encoding);
 		}
 
 		data.width = this.width;

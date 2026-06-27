@@ -37,7 +37,7 @@ class Audio extends Resource
 			// URL
 			else
 			{
-				FileSystem.readFileArrayBuffer(url).then(data =>
+				this.loading = FileSystem.readFileArrayBuffer(url).then(data =>
 				{
 					this.data = data;
 					this.encoding = FileSystem.getFileExtension(url);

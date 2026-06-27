@@ -14,8 +14,9 @@ import { ParametricGeometry as TParametricBufferGeometry } from "three/examples/
  * @param {number} slices The count of slices to use for the parametric function.
  * @param {number} stacks The count of stacks to use for the parametric function.
  */
-function ParametricBufferGeometry(code, slices, stacks) {
-	var generator = this.compile(code);
+function ParametricBufferGeometry(code, slices, stacks)
+{
+	let generator = this.compile(code);
 
 	TParametricBufferGeometry.call(this, generator, slices, stacks);
 
@@ -36,15 +37,19 @@ ParametricBufferGeometry.prototype = Object.create(TParametricBufferGeometry.pro
  * @method compile
  * @return {Function} Compiled function to calculate the position of the vertex from (U, V) coordinates.
  */
-ParametricBufferGeometry.prototype.compile = function (code) {
-	try {
+ParametricBufferGeometry.prototype.compile = function (code)
+{
+	try
+	{
 		return new Function("u, v, target", "target = target || new Vector3();\n" + code);
 	}
-	catch (e) {
+	catch(e)
+	{
 		console.error("nunuStudio: Error occured while compiling ParametricBufferGeometry code.", e);
 	}
 
-	return function (u, v, target) {
+	return function (u, v, target)
+	{
 		return target || new Vector3();
 	};
 };

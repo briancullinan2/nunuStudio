@@ -1,14 +1,14 @@
-import {Key} from "./Key.js";
+import { Key } from "./Key.js";
 
 /**
  * Gamepad provides basic support for gamepads.
  *
  * Some gamepads require a button press to being detected.
- * 
+ *
  * Gamepad implementation across browsers is still fragmented, every browser implements it a bit differently, so test it on every target before deploying an application using it.
  *
  * For more information about the Gamepad API state take look at the W3C Gamepad API page https:// www.w3.org/TR/gamepad/.
- * 
+ *
  * @class Gamepad
  * @module Input
  */
@@ -37,7 +37,7 @@ function Gamepad()
 	 * @type {boolean}
 	 */
 	this.connected = false;
-	
+
 	this.gamepad = null;
 
 	/**
@@ -50,17 +50,17 @@ function Gamepad()
 	 */
 	this.buttons = [];
 
-	var gamepads = navigator.getGamepads();
-	for (var i = 0; i < gamepads.length; i++)
+	let gamepads = navigator.getGamepads();
+	for(let i = 0; i < gamepads.length; i++)
 	{
-		if (gamepads[i] !== null)
+		if(gamepads[i] !== null)
 		{
 			this.setGamepad(gamepads[i]);
 			break;
 		}
 	}
-	
-	if (this.gamepad === null)
+
+	if(this.gamepad === null)
 	{
 		console.warn("nunuStudio: No gamepad found");
 	}
@@ -73,13 +73,13 @@ Gamepad.prototype.constructor = Gamepad;
  * Set which gamepad should be used by this Gamepad instance.
  *
  * Can be used to override the gamepad attached to this object and enable multiple gamepad support.
- * 
+ *
  * @param {Object} Browser gamepad object.
  * @method setGamepad
  */
-Gamepad.prototype.setGamepad = function(gamepad)
-{	
-	if (gamepad !== undefined && gamepad !== null)
+Gamepad.prototype.setGamepad = function (gamepad)
+{
+	if(gamepad !== undefined && gamepad !== null)
 	{
 		// Store gamepad and its index
 		this.index = gamepad.index;
@@ -87,7 +87,7 @@ Gamepad.prototype.setGamepad = function(gamepad)
 
 		// Create and initialize buttons
 		this.buttons = [];
-		for (var i = 0; i < gamepad.buttons.length; i++)
+		for(let i = 0; i < gamepad.buttons.length; i++)
 		{
 			this.buttons.push(new Key());
 		}
@@ -105,10 +105,10 @@ Gamepad.prototype.setGamepad = function(gamepad)
 
 /**
  * Disconnect this gamepad object.
- * 
+ *
  * @method disconnect
  */
-Gamepad.prototype.disconnect = function()
+Gamepad.prototype.disconnect = function ()
 {
 	this.vendor = -1;
 	this.product = -1;
@@ -124,47 +124,47 @@ Gamepad.prototype.disconnect = function()
  * @method setProductVendor
  * @param {Object} gamepad Gamepad object.
  */
-Gamepad.prototype.setProductVendor = function(gamepad)
+Gamepad.prototype.setProductVendor = function (gamepad)
 {
 	// Chrome
 	try
 	{
-		var temp = gamepad.id.split(":");
+		let temp = gamepad.id.split(":");
 
 		this.vendor = temp[1].split(" ")[1];
 		this.product = temp[2].replace(" ", "").replace(")", "");
 
 		return;
 	}
-	catch (e) {}
+	catch(e) { }
 
 	// Firefox
 	try
 	{
-		var temp = gamepad.id.split("-");
+		let temp = gamepad.id.split("-");
 
 		this.vendor = temp[0];
 		this.product = temp[1];
 
 		return;
 	}
-	catch (e) {}
+	catch(e) { }
 };
 
 /**
  * Update the gamepad state.
  *
  * Should be called every frame before checking the buttons values.
- * 
+ *
  * @method update
  */
-Gamepad.prototype.update = function(delta)
+Gamepad.prototype.update = function (delta)
 {
 	this.gamepad = navigator.getGamepads()[this.index];
 
-	if (this.gamepad !== undefined)
+	if(this.gamepad !== undefined)
 	{
-		for (var i = 0; i < this.buttons.length; i++)
+		for(let i = 0; i < this.buttons.length; i++)
 		{
 			this.buttons[i].update(this.gamepad.buttons[i].pressed ? Key.DOWN : Key.UP);
 		}
@@ -180,7 +180,7 @@ Gamepad.prototype.update = function(delta)
  * @param {number} button Button to get analogue value from.
  * @return {number} Value between 0 and 1 depending how hard the button is pressed.
  */
-Gamepad.prototype.getAnalogueButton = function(button)
+Gamepad.prototype.getAnalogueButton = function (button)
 {
 	return button > this.buttons.length || button < 0 ? 0 : this.gamepad.buttons[button].value;
 };
@@ -192,55 +192,55 @@ Gamepad.prototype.getAnalogueButton = function(button)
  * @param {number} Axis to get value from.
  * @return {number} Value between -1 and 1 depending on the axis direction
  */
-Gamepad.prototype.getAxis = function(axis)
+Gamepad.prototype.getAxis = function (axis)
 {
 	return axis > this.gamepad.axes.length || axis < 0 ? 0 : this.gamepad.axes[axis];
 };
 
 /**
  * Check if a button exists in the connected Gamepad.
- * 
+ *
  * @method buttonExists
  * @param {number} button Button to check status of
  * @return {boolean} True if button exists in the connected gamepad.
  */
-Gamepad.prototype.buttonExists = function(button)
+Gamepad.prototype.buttonExists = function (button)
 {
 	return button >= 0 && button < this.buttons.length;
 };
 
 /**
  * Check if gamepad button is currently pressed.
- * 
+ *
  * @method buttonPressed
  * @param {number} button Button to check status of
  * @return {boolean} True if button is currently pressed
  */
-Gamepad.prototype.buttonPressed = function(button)
+Gamepad.prototype.buttonPressed = function (button)
 {
 	return this.buttons[button] ? this.buttons[button].pressed : false;
 };
 
 /**
  * Check if a gamepad button was just pressed.
- * 
+ *
  * @method buttonJustPressed
  * @param {number} button Button to check status of
  * @return {boolean} True if button was just pressed
  */
-Gamepad.prototype.buttonJustPressed = function(button)
+Gamepad.prototype.buttonJustPressed = function (button)
 {
 	return this.buttons[button] ? this.buttons[button].justPressed : false;
 };
 
 /**
  * Check if a gamepad button was just released.
- * 
+ *
  * @method buttonJustReleased
  * @param {number} button Button to check status of
  * @return {boolean} True if button was just released
  */
-Gamepad.prototype.buttonJustReleased = function(button)
+Gamepad.prototype.buttonJustReleased = function (button)
 {
 	return this.buttons[button] ? this.buttons[button].justReleased : false;
 };
@@ -477,4 +477,4 @@ Gamepad.RIGHT_ANALOGUE_HOR = 2;
  */
 Gamepad.RIGHT_ANALOGUE_VERT = 3;
 
-export {Gamepad};
+export { Gamepad };

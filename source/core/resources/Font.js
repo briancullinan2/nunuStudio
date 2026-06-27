@@ -63,7 +63,7 @@ class Font extends Resource
 
 				if(this.encoding === "json")
 				{
-					FileSystem.readFile(url).then(data =>
+					this.loading = FileSystem.readFile(url).then(data =>
 					{
 						this.data = JSON.parse(data);
 						this.format = "json";
@@ -72,7 +72,7 @@ class Font extends Resource
 				}
 				else if(this.encoding === "ttf" || this.encoding === "otf" || this.encoding === "ttc" || this.encoding === "otc")
 				{
-					FileSystem.readFileArrayBuffer(url).then(data =>
+					this.loading = FileSystem.readFileArrayBuffer(url).then(data =>
 					{
 						this.data = data;
 						this.format = "arraybuffer";

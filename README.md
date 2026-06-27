@@ -26,6 +26,30 @@
 ## Added by Brian (Me)
 
 
+### Fixing async call chain
+FileSytem.loadFile + variants
+App.loadProgram
+Script.compileCode will not work in SCP mode, needs my Void Zero interpreter
+new Audio()
+new Font() the thing that started this all because of Offline Mode
+new Image
+Image.toJSON
+Resource.export
+new Video
+Editor.initialize
+Editor.loadProgram
+Editor.updateNunu
+Loaders.loadSpineAnimation
+Loaders.loadModel
+ProjectExporters.exportWebProjectZip
+Settings.load
+
+projectMenu.addOption(Locale.executeScript callback inside MainMenu FileSystem.chooseFile(async and FileSystem.chooseFile does NOT need async because fire and forget onLoad callback will still allow access to the chooser
+
+text.addOption(Global.FILE_PATH + "icons/text/text.png", async function ()
+has a call to the font loader in SideBar.addOption (to be determined)
+
+
 
 This awesome auto package upgrader and a couple of automated tests/*.
 ### UPGRADE PIPELINE STATUS REPORT
