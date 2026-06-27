@@ -1,10 +1,9 @@
-import {Nunu} from "../../Nunu.js";
 
 // Serialization does not serialize any image data.
-THREE.Texture.prototype.toJSON = function(meta)
+THREE.Texture.prototype.toJSON = function (meta)
 {
 	// Check if this texture was already serialized
-	if (meta.textures[this.uuid] !== undefined)
+	if(meta.textures[this.uuid] !== undefined)
 	{
 		return meta.textures[this.uuid];
 	}
@@ -21,7 +20,7 @@ THREE.Texture.prototype.toJSON = function(meta)
 		uuid: this.uuid,
 		name: this.name,
 		category: this.category,
-		
+
 		mapping: this.mapping,
 
 		repeat: [this.repeat.x, this.repeat.y],
@@ -40,12 +39,12 @@ THREE.Texture.prototype.toJSON = function(meta)
 		anisotropy: this.anisotropy,
 
 		flipY: this.flipY,
-		
+
 		premultiplyAlpha: this.premultiplyAlpha,
 		unpackAlignment: this.unpackAlignment
 	};
 
 	meta.textures[this.uuid] = data;
-	
+
 	return data;
 };

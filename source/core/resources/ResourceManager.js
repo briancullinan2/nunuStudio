@@ -1,4 +1,5 @@
 import { Object3D, Material, MeshBasicMaterial, SpriteMaterial, Sprite, Texture } from "three";
+import { ResourceContainer } from "./ResourceContainer.js";
 
 /**
  * Resource manager is used to manage available resources used by objects
@@ -15,7 +16,6 @@ class ResourceManager extends Object3D
 {
 	constructor()
 	{
-		const { ResourceContainer } = await import("./ResourceContainer.js");
 		super();
 		ResourceContainer.call(this);
 	}
@@ -27,7 +27,6 @@ class ResourceManager extends Object3D
 	 */
 	async dispose()
 	{
-		const { ResourceContainer } = await import("./ResourceContainer.js");
 		for(var i = 0; i < ResourceContainer.libraries.length; i++)
 		{
 			var library = ResourceContainer.libraries[i];

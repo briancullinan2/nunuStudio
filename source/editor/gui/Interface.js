@@ -7,7 +7,7 @@
  */
 class Interface
 {
-	constructor()
+	async initialize()
 	{
 		const { TabContainer } = await import("../components/tabs/splittable/TabContainer.js");
 		const { DocumentBody } = await import("../components/DocumentBody.js");

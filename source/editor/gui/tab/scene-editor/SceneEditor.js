@@ -24,6 +24,12 @@ class SceneEditor extends TabComponent
 {
 	constructor(parent, closeable, container, index)
 	{
+		super(parent, closeable, container, index, "Scene", Global.FILE_PATH + "icons/misc/scene.png");
+
+	}
+
+	async initialize(parent, closeable, container, index)
+	{
 		const { Locale } = await import("../../../locale/LocaleManager.js");
 		const { Global } = await import("../../../Global.js");
 		const { ActionBundle } = await import("../../../history/action/ActionBundle.js");
@@ -54,7 +60,7 @@ class SceneEditor extends TabComponent
 		const { GridHelper } = await import("./helpers/GridHelper.js");
 		const { OrientationCube } = await import("./utils/OrientationCube.js");
 
-		super(parent, closeable, container, index, Locale.scene, Global.FILE_PATH + "icons/misc/scene.png");
+		await super.initialize(Locale.scene)
 
 		var self = this;
 

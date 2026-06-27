@@ -85,8 +85,6 @@ text.addOption(Global.FILE_PATH + "icons/text/text.png", async function ()
 has a call to the font loader in SideBar.addOption (to be determined)
 
 
-new ResourceManager
-extends ResourceManager
 ResourceManager.addResource
 ResourceManager.removeImage
 ResourceManager.removeVideo
@@ -94,9 +92,11 @@ ResourceManager.removeTexture
 ResourceManager.addFont
 ResourceManager.addAudio
 ResourceManager.removeAudio
+Program.receiveDataApp
+Program.clone
 
 
-\b(?:extends\s+(?:Object|TabComponent|Interface)|new\s+(?:Audio|Font|Image|Video|SceneEditor|TabComponent|Interface)|(?:loadFile|loadProgram|compileCode|toJSON|\.export|initialize|updateNunu|loadSpineAnimation|loadModel|exportWebProjectZip|load|runProject|addObject|addObjects|renameObject|deleteObject|copyObject|cutObject|pasteObject|redo|undo|createDefaultResouces|createNewProgram|saveProgramPath|saveProgram|setProgram|updateCameraControls|updateSettings|focusObject|update|createMeasurement|render|selectObjectWithMouse|setCameraMode|selectTool|updateSelection|newProgram|addOption|chooseFile))\b
+\b(?:extends\s+(?:Object|TabComponent|Interface|Audio|Video|SceneEditor)|new\s+(?:Audio|Font|Image|Video|SceneEditor|TabComponent|Interface)|(?:loadFile|loadProgram|compileCode|toJSON|\.export|initialize|updateNunu|loadSpineAnimation|loadModel|exportWebProjectZip|load|runProject|addObject|addObjects|renameObject|deleteObject|copyObject|cutObject|pasteObject|redo|undo|createDefaultResouces|createNewProgram|saveProgramPath|saveProgram|setProgram|updateCameraControls|updateSettings|focusObject|update|createMeasurement|render|selectObjectWithMouse|setCameraMode|selectTool|updateSelection|newProgram|addOption|chooseFile|addResource|removeImage|removeVideo|removeTexture|addFont|addAudio|removeAudio|receiveDataApp|clone))\b
 
 
 This awesome auto package upgrader and a couple of automated tests/*.

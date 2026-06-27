@@ -74,6 +74,11 @@ class TabComponent extends Component
 		this.active = false;
 	}
 
+	async initialize(title)
+	{
+		this.title = title;
+	}
+
 	/**
 	 * Update tab metadata (name, icon, ...)
 	 *
