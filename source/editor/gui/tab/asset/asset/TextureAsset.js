@@ -1,179 +1,182 @@
-import {MathUtils} from "three";
-import {Locale} from "../../../../locale/LocaleManager.js";
-import {VideoTexture} from "../../../../../core/texture/VideoTexture.js";
-import {SpriteSheetTexture} from "../../../../../core/texture/SpriteSheetTexture.js";
-import {CubeTexture} from "../../../../../core/texture/CubeTexture.js";
-import {CanvasTexture} from "../../../../../core/texture/CanvasTexture.js";
-import {TextureLoader} from "../../../../../core/loaders/TextureLoader.js";
-import {ObjectLoader} from "../../../../../core/loaders/ObjectLoader.js";
-import {RemoveResourceAction} from "../../../../history/action/resources/RemoveResourceAction.js";
-import {AddResourceAction} from "../../../../history/action/resources/AddResourceAction.js";
-import {ChangeAction} from "../../../../history/action/ChangeAction.js";
-import {VideoTextureEditor} from "../../texture/VideoTextureEditor.js";
-import {TextureEditor} from "../../texture/TextureEditor.js";
-import {SpriteSheetTextureEditor} from "../../texture/SpriteSheetTextureEditor.js";
-import {CubeTextureEditor} from "../../texture/CubeTextureEditor.js";
-import {CanvasTextureEditor} from "../../texture/CanvasTextureEditor.js";
-import {TextureRenderer} from "../../../preview/TextureRenderer.js";
-import {DragBuffer} from "../../../DragBuffer.js";
-import {Global} from "../../../../Global.js";
-import {Editor} from "../../../../Editor.js";
-import {ContextMenu} from "../../../../components/dropdown/ContextMenu.js";
-import {DocumentBody} from "../../../../components/DocumentBody.js";
-import {Asset} from "./Asset.js";
+import { MathUtils } from "three";
+import { Locale } from "../../../../locale/LocaleManager.js";
+import { VideoTexture } from "../../../../../core/texture/VideoTexture.js";
+import { SpriteSheetTexture } from "../../../../../core/texture/SpriteSheetTexture.js";
+import { CubeTexture } from "../../../../../core/texture/CubeTexture.js";
+import { CanvasTexture } from "../../../../../core/texture/CanvasTexture.js";
+import { TextureLoader } from "../../../../../core/loaders/TextureLoader.js";
+import { ObjectLoader } from "../../../../../core/loaders/ObjectLoader.js";
+import { RemoveResourceAction } from "../../../../history/action/resources/RemoveResourceAction.js";
+import { AddResourceAction } from "../../../../history/action/resources/AddResourceAction.js";
+import { ChangeAction } from "../../../../history/action/ChangeAction.js";
+import { VideoTextureEditor } from "../../texture/VideoTextureEditor.js";
+import { TextureEditor } from "../../texture/TextureEditor.js";
+import { SpriteSheetTextureEditor } from "../../texture/SpriteSheetTextureEditor.js";
+import { CubeTextureEditor } from "../../texture/CubeTextureEditor.js";
+import { CanvasTextureEditor } from "../../texture/CanvasTextureEditor.js";
+import { TextureRenderer } from "../../../preview/TextureRenderer.js";
+import { DragBuffer } from "../../../DragBuffer.js";
+import { Global } from "../../../../Global.js";
+import { Editor } from "../../../../Editor.js";
+import { ContextMenu } from "../../../../components/dropdown/ContextMenu.js";
+import { DocumentBody } from "../../../../components/DocumentBody.js";
+import { Asset } from "./Asset.js";
 
-class TextureAsset extends Asset {
-	constructor(parent) {
-	super(parent);
-
-	this.setIcon(Global.FILE_PATH + "icons/misc/texture.png");
-
-	var self = this;
-
-	this.element.ondblclick = function()
+class TextureAsset extends Asset
+{
+	constructor(parent)
 	{
-		var Constructor = TextureEditor;
+		super(parent);
 
-		if (self.asset instanceof VideoTexture)
-		{
-			Constructor = VideoTextureEditor;
-		}
-		else if (self.asset instanceof CanvasTexture)
-		{
-			Constructor = CanvasTextureEditor;
-		}
-		else if (self.asset instanceof CubeTexture)
-		{
-			Constructor = CubeTextureEditor;
-		}
-		else if (self.asset instanceof SpriteSheetTexture)
-		{
-			Constructor = SpriteSheetTextureEditor;
-		}
+		this.setIcon(Global.FILE_PATH + "icons/misc/texture.png");
 
-		var tab = Editor.gui.tab.getTab(Constructor, self.asset);
-		
-		if (tab === null)
-		{
-			tab = Editor.gui.tab.addTab(Constructor, true);
-			tab.attach(self.asset);
-		}
+		var self = this;
 
-		tab.select();
-	};
-
-	// Context menu event
-	this.element.oncontextmenu = function(event)
-	{
-		var context = new ContextMenu(DocumentBody);
-		context.size.set(130, 20);
-		context.position.set(event.clientX, event.clientY);
-		
-		context.addOption(Locale.rename, function()
+		this.element.ondblclick = async function ()
 		{
-			if (self.asset !== null)
+			var Constructor = TextureEditor;
+
+			if(self.asset instanceof VideoTexture)
 			{
-				Editor.addAction(new ChangeAction(self.asset, "name", Editor.prompt(Locale.renameTexture, self.asset.name)));
+				Constructor = VideoTextureEditor;
 			}
-		});
-		
-		context.addOption(Locale.delete, function()
-		{
-			if (self.asset !== null && Editor.confirm(Locale.deleteTexture))
+			else if(self.asset instanceof CanvasTexture)
 			{
-				self.asset.dispose();
-				Editor.addAction(new RemoveResourceAction(self.asset, Editor.program, "textures"));
+				Constructor = CanvasTextureEditor;
 			}
-		});
+			else if(self.asset instanceof CubeTexture)
+			{
+				Constructor = CubeTextureEditor;
+			}
+			else if(self.asset instanceof SpriteSheetTexture)
+			{
+				Constructor = SpriteSheetTextureEditor;
+			}
 
-		context.addOption(Locale.copy, function()
-		{
-			if (self.asset !== null)
-			{
-				Editor.clipboard.set(JSON.stringify(self.asset.toJSON()), "text");
-			}
-		});
-		
-		context.addOption(Locale.cut, function()
-		{
-			if (self.asset !== null)
-			{
-				Editor.clipboard.set(JSON.stringify(self.asset.toJSON()), "text");
-				Editor.addAction(new RemoveResourceAction(self.asset, Editor.program, "textures"));
-			}
-		});
+			var tab = Editor.gui.tab.getTab(Constructor, self.asset);
 
-		context.addOption(Locale.duplicate, function()
-		{
-			try
+			if(tab === null)
 			{
-				var resources =
+				tab = await Editor.gui.tab.addTab(Constructor, true);
+				tab.attach(self.asset);
+			}
+
+			tab.select();
+		};
+
+		// Context menu event
+		this.element.oncontextmenu = function (event)
+		{
+			var context = new ContextMenu(DocumentBody);
+			context.size.set(130, 20);
+			context.position.set(event.clientX, event.clientY);
+
+			context.addOption(Locale.rename, function ()
+			{
+				if(self.asset !== null)
 				{
-					videos: {},
-					images: {},
-					fonts: {},
-					textures: {}
-				};
+					Editor.addAction(new ChangeAction(self.asset, "name", Editor.prompt(Locale.renameTexture, self.asset.name)));
+				}
+			});
 
-				// Serialize
-				var json = self.asset.toJSON(resources);
-				var images = ObjectLoader.prototype.parseImages.call(this, resources.images);
-				var videos = ObjectLoader.prototype.parseVideos.call(this, resources.videos);
-
-				// Loader
-				var loader = new TextureLoader();
-				loader.setImages(images);
-				loader.setVideos(videos);
-
-				// Load
-				var texture = loader.parse(json); 
-				texture.uuid = MathUtils.generateUUID();
-				texture.name += "*";
-				
-				Editor.addAction(new AddResourceAction(texture, Editor.program, "textures"));
-			}
-			catch (e)
+			context.addOption(Locale.delete, function ()
 			{
-				Editor.alert("Texture duplication failed.\n" + e.stack);
-			}
-		});
-		context.updateInterface();
-	};
+				if(self.asset !== null && Editor.confirm(Locale.deleteTexture))
+				{
+					self.asset.dispose();
+					Editor.addAction(new RemoveResourceAction(self.asset, Editor.program, "textures"));
+				}
+			});
 
-	// Drag start
-	this.element.ondragstart = function(event)
-	{
-		// Insert into drag buffer
-		if (self.asset !== null)
+			context.addOption(Locale.copy, function ()
+			{
+				if(self.asset !== null)
+				{
+					Editor.clipboard.set(JSON.stringify(self.asset.toJSON()), "text");
+				}
+			});
+
+			context.addOption(Locale.cut, function ()
+			{
+				if(self.asset !== null)
+				{
+					Editor.clipboard.set(JSON.stringify(self.asset.toJSON()), "text");
+					Editor.addAction(new RemoveResourceAction(self.asset, Editor.program, "textures"));
+				}
+			});
+
+			context.addOption(Locale.duplicate, function ()
+			{
+				try
+				{
+					var resources =
+					{
+						videos: {},
+						images: {},
+						fonts: {},
+						textures: {}
+					};
+
+					// Serialize
+					var json = self.asset.toJSON(resources);
+					var images = ObjectLoader.prototype.parseImages.call(this, resources.images);
+					var videos = ObjectLoader.prototype.parseVideos.call(this, resources.videos);
+
+					// Loader
+					var loader = new TextureLoader();
+					loader.setImages(images);
+					loader.setVideos(videos);
+
+					// Load
+					var texture = loader.parse(json);
+					texture.uuid = MathUtils.generateUUID();
+					texture.name += "*";
+
+					Editor.addAction(new AddResourceAction(texture, Editor.program, "textures"));
+				}
+				catch(e)
+				{
+					Editor.alert("Texture duplication failed.\n" + e.stack);
+				}
+			});
+			context.updateInterface();
+		};
+
+		// Drag start
+		this.element.ondragstart = function (event)
 		{
-			event.dataTransfer.setData("uuid", self.asset.uuid);
-			DragBuffer.push(self.asset);
-		}
-	};
+			// Insert into drag buffer
+			if(self.asset !== null)
+			{
+				event.dataTransfer.setData("uuid", self.asset.uuid);
+				DragBuffer.push(self.asset);
+			}
+		};
 
-	// Drag end (called after of ondrop)
-	this.element.ondragend = function()
+		// Drag end (called after of ondrop)
+		this.element.ondragend = function ()
+		{
+			DragBuffer.pop(self.asset.uuid);
+		};
+	}
+
+	attach(asset)
 	{
-		DragBuffer.pop(self.asset.uuid);
-	};
-	}
+		super.attach(asset);
 
-	attach(asset) {
-	super.attach(asset);
+		this.preview = TextureRenderer.generateElement(asset);
 
-	this.preview = TextureRenderer.generateElement(asset);
-
-        if (this.preview !== null)
-        {
-                this.preview.draggable = false;
-		this.preview.style.position = "absolute";
-		this.preview.style.top = "5%";
-		this.preview.style.left = "17%";
-		this.preview.style.width = "66%";
-		this.preview.style.height = "66%";
-		this.element.appendChild(this.preview);	
-	}
+		if(this.preview !== null)
+		{
+			this.preview.draggable = false;
+			this.preview.style.position = "absolute";
+			this.preview.style.top = "5%";
+			this.preview.style.left = "17%";
+			this.preview.style.width = "66%";
+			this.preview.style.height = "66%";
+			this.element.appendChild(this.preview);
+		}
 	}
 
 }
-export {TextureAsset};
+export { TextureAsset };

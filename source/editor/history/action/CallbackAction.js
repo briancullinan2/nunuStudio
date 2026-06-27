@@ -1,4 +1,4 @@
-import {Action} from "./Action.js";
+import { Action } from "./Action.js";
 
 /**
  * Contains an action and a callback function called when the action is applied or reverted.
@@ -9,24 +9,28 @@ import {Action} from "./Action.js";
  * @param {Action} action Base action.
  * @param {Function} callback Callback function.
  */
-class CallbackAction {
-	constructor(action, callback) {
-	Action.call(this);
+class CallbackAction extends Action
+{
+	constructor(action, callback)
+	{
+		super();
 
-	this.action = action;
-	this.callback = callback;
+		this.action = action;
+		this.callback = callback;
 	}
 
-	apply() {
-	this.action.apply();
-	this.callback();
+	apply()
+	{
+		this.action.apply();
+		this.callback();
 	}
 
-	revert() {
-	this.action.revert();
-	this.callback();
+	revert()
+	{
+		this.action.revert();
+		this.callback();
 	}
 
 }
 
-export {CallbackAction};
+export { CallbackAction };

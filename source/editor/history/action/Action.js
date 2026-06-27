@@ -7,6 +7,9 @@
  */
 class Action
 {
+
+	static _id = 1;
+
 	constructor()
 	{
 		this.id = Action._id++;
@@ -33,6 +36,5 @@ class Action
 
 }
 
-Action._id = 1;
 
 export { Action };

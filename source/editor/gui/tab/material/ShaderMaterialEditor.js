@@ -22,7 +22,11 @@ class ShaderMaterialEditor extends MaterialEditor
 	constructor(parent, closeable, container, index)
 	{
 		TabComponent.call(this, parent, closeable, container, index, Locale.material, Global.FILE_PATH + "icons/misc/material.png");
+		this.loading = this.initialize(parent, closeable, container, index)
+	}
 
+	async initialize(parent, closeable, container, index)
+	{
 		var self = this;
 
 		// Preview configuration
@@ -153,7 +157,7 @@ class ShaderMaterialEditor extends MaterialEditor
 		this.previewForm.nextRow();
 
 		// General
-		this.general = this.tab.addTab(TabComponent, false);
+		this.general = await this.tab.addTab(TabComponent, false);
 		this.general.setIcon(Global.FILE_PATH + "icons/misc/material.png");
 		this.general.setName(Locale.material);
 
@@ -254,7 +258,7 @@ class ShaderMaterialEditor extends MaterialEditor
 		this.form.nextRow();
 
 		// Fragment tab
-		this.fragmentShader = this.tab.addTab(CodeEditor, false);
+		this.fragmentShader = await this.tab.addTab(CodeEditor, false);
 		this.fragmentShader.setName(Locale.fragment);
 		this.fragmentShader.setLanguage("glsl");
 		this.fragmentShader.setOnChange(function ()
@@ -264,7 +268,7 @@ class ShaderMaterialEditor extends MaterialEditor
 		});
 
 		// Vertex tab
-		this.vertexShader = this.tab.addTab(CodeEditor, false);
+		this.vertexShader = await this.tab.addTab(CodeEditor, false);
 		this.vertexShader.setName(Locale.vertex);
 		this.vertexShader.setLanguage("glsl");
 		this.vertexShader.setOnChange(function ()

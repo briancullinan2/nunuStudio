@@ -15,11 +15,11 @@ import { Editor } from "../../../Editor.js";
  * @param {Object3D} newParent New parent of the object.
  * @param {number} newIndex Index to insert the object.
  */
-class MoveAction
+class MoveAction extends Action
 {
 	constructor(object, newParent, newIndex, keepGlobalPose)
 	{
-		Action.call(this);
+		super();
 
 		this.object = object;
 

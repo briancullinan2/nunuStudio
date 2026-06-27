@@ -10,11 +10,11 @@ import { Editor } from "../../../Editor.js";
  * @param {Object3D} object
  * @param {Object3D} parent Optional.
  */
-class RemoveAction
+class RemoveAction extends Action
 {
 	constructor(object, parent)
 	{
-		Action.call(this);
+		super();
 
 		this.object = object;
 

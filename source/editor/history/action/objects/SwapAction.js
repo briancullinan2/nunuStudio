@@ -14,11 +14,11 @@ import { AddAction } from "./AddAction.js";
  * @param {Object3D} newObject Object to take place of the old one.
  * @param {boolean} moveChildren If true move the children from the original object to the new.
  */
-class SwapAction
+class SwapAction extends Action
 {
 	constructor(originalObject, newObject, moveChildren)
 	{
-		Action.call(this);
+		super();
 
 		this.originalObject = originalObject;
 		this.newObject = newObject;

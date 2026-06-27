@@ -123,12 +123,12 @@ class MainMenu extends Component
 		}, Global.FILE_PATH + "icons/misc/load.png").setAltText("CTRL+L");
 
 		// Settings
-		fileMenu.addOption(Locale.settings, function ()
+		fileMenu.addOption(Locale.settings, async function ()
 		{
 			var tab = Editor.gui.tab.getTab(SettingsTab);
 			if(tab === null)
 			{
-				tab = Editor.gui.tab.addTab(SettingsTab, true);
+				tab = await Editor.gui.tab.addTab(SettingsTab, true);
 			}
 			tab.select();
 		}, Global.FILE_PATH + "icons/misc/settings.png");
@@ -717,12 +717,12 @@ class MainMenu extends Component
 		about.size.set(100, this.size.y);
 		about.position.set(320, 0);
 		about.updateInterface();
-		about.setOnClick(function ()
+		about.setOnClick(async function ()
 		{
 			var tab = Editor.gui.tab.getTab(AboutTab);
 			if(tab === null)
 			{
-				tab = Editor.gui.tab.addTab(AboutTab, true);
+				tab = await Editor.gui.tab.addTab(AboutTab, true);
 			}
 			tab.select();
 		});

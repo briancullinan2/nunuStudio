@@ -46,22 +46,23 @@ class Interface
 		var rightTop = right.elementA;
 		var rightBottom = right.elementB;
 
-		this.assetExplorer = leftBottom.addTab(AssetExplorer, false);
+		this.assetExplorer = await leftBottom.addTab(AssetExplorer, false);
 
-		this.console = leftBottom.addTab(ConsoleTab, false);
+		this.console = await leftBottom.addTab(ConsoleTab, false);
 
-		this.animation = leftBottom.addTab(AnimationTab, false);
+		this.animation = await leftBottom.addTab(AnimationTab, false);
 
 		if(DEVELOPMENT)
 		{
-			leftBottom.addTab(ProfilingTab, false);
+			await leftBottom.addTab(ProfilingTab, false);
 		}
 
 		this.tree = await rightTop.addTab(TreeView, false);
 
-		this.inspector = rightBottom.addTab(InspectorContainer, false);
+		this.inspector = await rightBottom.addTab(InspectorContainer, false);
 
 		this.menuBar = new MainMenu(DocumentBody);
+		await this.menuBar.loading
 	}
 
 	/**

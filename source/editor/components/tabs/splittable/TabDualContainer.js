@@ -180,12 +180,12 @@ class TabDualContainer extends DualContainer
 	 * @param {Constructor} TabConstructor Constructor if the TabComponent to be added to the container.
 	 * @param {boolean} closeable Indicates if the tab can be closed.
 	 */
-	addTab(TabConstructor, closeable)
+	async addTab(TabConstructor, closeable)
 	{
-		let tab = this.elementA.addTab(TabConstructor, closeable);
+		let tab = await this.elementA.addTab(TabConstructor, closeable);
 		if(tab === null)
 		{
-			tab = this.elementB.addTab(TabConstructor, closeable);
+			tab = await this.elementB.addTab(TabConstructor, closeable);
 		}
 
 		return tab;

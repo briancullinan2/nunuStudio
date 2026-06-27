@@ -305,7 +305,7 @@ Editor.runProject = async function ()
 
 	if(tab === null)
 	{
-		tab = Editor.gui.tab.addTab(RunProject, true);
+		tab = await Editor.gui.tab.addTab(RunProject, true);
 		tab.select();
 		Editor.gui.menuBar.run.setText(Locale.stop);
 	}
@@ -1017,7 +1017,7 @@ Editor.addDefaultScene = async function (material)
 	Editor.addObject(scene, Editor.program);
 
 	// Open scene
-	var tab = Editor.gui.tab.addTab(SceneEditor, true);
+	var tab = await Editor.gui.tab.addTab(SceneEditor, true);
 	tab.attach(scene);
 };
 
@@ -1158,7 +1158,7 @@ Editor.setProgram = async function (program)
 		// Add new scene tab to interface
 		if(program.children.length > 0)
 		{
-			var scene = Editor.gui.tab.addTab(SceneEditor, true);
+			var scene = await Editor.gui.tab.addTab(SceneEditor, true);
 			scene.attach(program.children[0]);
 		}
 	}

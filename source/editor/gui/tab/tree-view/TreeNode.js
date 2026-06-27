@@ -713,12 +713,12 @@ class TreeNode extends Component
 		};
 
 		// Auxiliary method to open a new tab and attach a object to it.
-		function openTab(Constructor, object)
+		async function openTab(Constructor, object)
 		{
 			var tab = Editor.gui.tab.getTab(Constructor, object);
 			if(tab === null)
 			{
-				tab = Editor.gui.tab.addTab(Constructor, true);
+				tab = await Editor.gui.tab.addTab(Constructor, true);
 				tab.attach(self.object);
 			}
 			tab.select();
