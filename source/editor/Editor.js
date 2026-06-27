@@ -1,43 +1,3 @@
-import {Object3D, Material, Texture, BufferGeometry, Shape, MathUtils, BoxGeometry, MeshStandardMaterial, SpriteMaterial} from "three";
-import {StaticPair} from "@as-com/pson";
-import {EventManager} from "../core/utils/EventManager.js";
-import {Video} from "../core/resources/Video.js";
-import {TextFile} from "../core/resources/TextFile.js";
-import {Resource} from "../core/resources/Resource.js";
-import {Image} from "../core/resources/Image.js";
-import {Font} from "../core/resources/Font.js";
-import {Audio} from "../core/resources/Audio.js";
-import {Scene} from "../core/objects/Scene.js";
-import {Program} from "../core/objects/Program.js";
-import {Sky} from "../core/objects/misc/Sky.js";
-import {Mesh} from "../core/objects/mesh/Mesh.js";
-import {Nunu} from "../core/Nunu.js";
-import {ObjectLoader} from "../core/loaders/ObjectLoader.js";
-import {Keyboard} from "../core/input/Keyboard.js";
-import {FileSystem} from "../core/FileSystem.js";
-import {ResourceContainer} from "../core/resources/ResourceContainer.js";
-import {AmbientLight} from "../core/objects/lights/AmbientLight";
-import {Locale} from "./locale/LocaleManager.js";
-import {VirtualClipboard} from "./utils/VirtualClipboard.js";
-import {Settings} from "./Settings.js";
-import {Loaders} from "./Loaders.js";
-import {ResourceCrawler} from "./history/ResourceCrawler.js";
-import {History} from "./history/History.js";
-import {RemoveResourceAction} from "./history/action/resources/RemoveResourceAction.js";
-import {AddResourceAction} from "./history/action/resources/AddResourceAction.js";
-import {RemoveAction} from "./history/action/objects/RemoveAction.js";
-import {AddAction} from "./history/action/objects/AddAction.js";
-import {ChangeAction} from "./history/action/ChangeAction.js";
-import {ActionBundle} from "./history/action/ActionBundle.js";
-import {Action} from "./history/action/Action.js";
-import {SceneEditor} from "./gui/tab/scene-editor/SceneEditor.js";
-import {RunProject} from "./gui/tab/run/RunProject.js";
-import {CodeEditor} from "./gui/tab/code/CodeEditor.js";
-import {Interface} from "./gui/Interface.js";
-import {Global} from "./Global.js";
-import {LoadingModal} from "./components/modal/LoadingModal.js";
-import {DocumentBody} from "./components/DocumentBody.js";
-
 /**
  * Main editor entry point.
  *
@@ -55,6 +15,20 @@ function Editor() {}
  */
 Editor.initialize = function()
 {
+	import {Nunu} from "../core/Nunu.js";
+	import {Settings} from "./Settings.js";
+	import {FileSystem} from "../core/FileSystem.js";
+	import {Global} from "./Global.js";
+	import {VirtualClipboard} from "./utils/VirtualClipboard.js";
+	import {Keyboard} from "../core/input/Keyboard.js";
+	import {TextFile} from "../core/resources/TextFile.js";
+	import {Loaders} from "./Loaders.js";
+	import {Interface} from "./gui/Interface.js";
+	import {EventManager} from "../core/utils/EventManager.js";
+	import {CodeEditor} from "./gui/tab/code/CodeEditor.js";
+	import {Locale} from "./locale/LocaleManager.js";
+	import {AmbientLight} from "../core/objects/lights/AmbientLight";
+
 	// Check WebGL Support
 	if (!Nunu.webGLAvailable())
 	{
@@ -316,6 +290,9 @@ Editor.initialize = function()
  */
 Editor.runProject = function()
 {
+	import {RunProject} from "./gui/tab/run/RunProject.js";
+	import {Locale} from "./locale/LocaleManager.js";
+
 	var tab = Editor.gui.tab.getTab(RunProject, Editor.program);
 
 	if (tab === null)
@@ -456,6 +433,8 @@ Editor.isSelected = function(object)
  */
 Editor.resize = function()
 {
+	import {Nunu} from "../core/Nunu.js";
+
 	if (!Nunu.isFullscreen())
 	{
 		Editor.gui.updateInterface();
@@ -505,6 +484,8 @@ Editor.clearSelection = function()
  */
 Editor.addAction = function(action)
 {
+	import {Action} from "./history/action/Action.js";
+
 	Editor.history.add(action);
 };
 
@@ -537,6 +518,11 @@ Editor.getScene = function()
  */
 Editor.addObject = function(object, parent)
 {
+	import {AddAction} from "./history/action/objects/AddAction.js";
+	import {ResourceCrawler} from "./history/ResourceCrawler.js";
+	import {AddResourceAction} from "./history/action/resources/AddResourceAction.js";
+	import {ActionBundle} from "./history/action/ActionBundle.js";
+
 	if (parent === undefined)
 	{
 		parent = Editor.getScene();
@@ -568,6 +554,11 @@ Editor.addObject = function(object, parent)
  */
 Editor.addObjects = function(objects, parent) 
 {
+	import {AddAction} from "./history/action/objects/AddAction.js";
+	import {ResourceCrawler} from "./history/ResourceCrawler.js";
+	import {AddResourceAction} from "./history/action/resources/AddResourceAction.js";
+	import {ActionBundle} from "./history/action/ActionBundle.js";
+
 	if (parent === undefined) 
 	{
 		parent = Editor.getScene();
@@ -602,6 +593,9 @@ Editor.addObjects = function(objects, parent)
  */
 Editor.renameObject = function(object)
 {
+	import {Locale} from "./locale/LocaleManager.js";
+	import {ChangeAction} from "./history/action/ChangeAction.js";
+
 	if (object === undefined)
 	{
 		if (Editor.hasObjectSelected())
@@ -632,6 +626,16 @@ Editor.renameObject = function(object)
  */
 Editor.deleteObject = function(object)
 {
+	import {Program} from "../core/objects/Program.js";
+	import {RemoveAction} from "./history/action/objects/RemoveAction.js";
+	import {Material, Texture, BufferGeometry, Shape} from "three";
+	import {RemoveResourceAction} from "./history/action/resources/RemoveResourceAction.js";
+	import {Font} from "../core/resources/Font.js";
+	import {Audio} from "../core/resources/Audio.js";
+	import {Video} from "../core/resources/Video.js";
+	import {Resource} from "../core/resources/Resource.js";
+	import {ActionBundle} from "./history/action/ActionBundle.js";
+
 	var selected = object === undefined ? Editor.selection : [object];
 
 	// List of delete actions
@@ -710,6 +714,9 @@ Editor.deleteObject = function(object)
  */
 Editor.copyObject = function(object) 
 {
+	import {Program} from "../core/objects/Program.js";
+	import {Scene} from "../core/objects/Scene.js";
+
 	var objects = object === undefined ? Editor.selection : [object];
 
 	// filter out locked objects and program/scene
@@ -744,6 +751,9 @@ Editor.copyObject = function(object)
  */
 Editor.cutObject = function(object) 
 {
+	import {Program} from "../core/objects/Program.js";
+	import {Scene} from "../core/objects/Scene.js";
+
 	var objects = object === undefined ? Editor.selection : [object];
 
 	// filter out locked objects and program/scene
@@ -777,6 +787,10 @@ Editor.cutObject = function(object)
  */
 Editor.pasteObject = function(target) 
 {
+	import {Locale} from "./locale/LocaleManager.js";
+	import {ObjectLoader} from "../core/loaders/ObjectLoader.js";
+	import {MathUtils} from "three";
+
 	try 
 	{
 		var content = Editor.clipboard.get("text");
@@ -818,6 +832,8 @@ Editor.pasteObject = function(target)
  */
 Editor.redo = function()
 {
+	import {Locale} from "./locale/LocaleManager.js";
+
 	if (Editor.history.redo())
 	{
 		Editor.updateObjectsViewsGUI();
@@ -835,6 +851,8 @@ Editor.redo = function()
  */
 Editor.undo = function()
 {
+	import {Locale} from "./locale/LocaleManager.js";
+
 	if (Editor.history.undo())
 	{
 		Editor.updateObjectsViewsGUI();
@@ -853,6 +871,12 @@ Editor.undo = function()
  */
 Editor.createDefaultResouces = function()
 {
+	import {Global} from "./Global.js";
+	import {Image} from "../core/resources/Image.js";
+	import {Font} from "../core/resources/Font.js";
+	import {Audio} from "../core/resources/Audio.js";
+	import {Texture, BoxGeometry, MeshStandardMaterial, SpriteMaterial} from "three";
+
 	Editor.defaultImage = new Image(Global.FILE_PATH + "uv_color.jpg");
 	Editor.defaultFont = new Font(Global.FILE_PATH + "default.json");
 	Editor.defaultAudio = new Audio(Global.FILE_PATH + "default.mp3");
@@ -935,6 +959,8 @@ Editor.resetEditor = function()
  */
 Editor.createNewProgram = function()
 {
+	import {Program} from "../core/objects/Program.js";
+
 	var program = new Program();
 
 	Editor.createDefaultResouces();
@@ -953,6 +979,12 @@ Editor.createNewProgram = function()
  */
 Editor.addDefaultScene = function(material)
 {
+	import {MeshStandardMaterial, BoxGeometry} from "three";
+	import {Scene} from "../core/objects/Scene.js";
+	import {Sky} from "../core/objects/misc/Sky.js";
+	import {Mesh} from "../core/objects/mesh/Mesh.js";
+	import {SceneEditor} from "./gui/tab/scene-editor/SceneEditor.js";
+
 	if (material === undefined)
 	{
 		material = new MeshStandardMaterial({roughness: 0.6, metalness: 0.2});
@@ -998,6 +1030,10 @@ Editor.addDefaultScene = function(material)
  */
 Editor.saveProgramPath = function(path)
 {
+	import {StaticPair} from "@as-com/pson";
+	import {ResourceContainer} from "../core/resources/ResourceContainer.js";
+	import {FileSystem} from "../core/FileSystem.js";
+
 	var pson = new StaticPair();
 	var data = Editor.program.toJSON();
 
@@ -1041,6 +1077,10 @@ Editor.saveProgramPath = function(path)
  */
 Editor.saveProgram = function(fname, binary, keepDirectory, suppressMessage)
 {
+	import {StaticPair} from "@as-com/pson";
+	import {FileSystem} from "../core/FileSystem.js";
+	import {Locale} from "./locale/LocaleManager.js";
+
 	try
 	{
 		if (fname === undefined && Editor.openFile !== null)
@@ -1090,6 +1130,9 @@ Editor.saveProgram = function(fname, binary, keepDirectory, suppressMessage)
  */
 Editor.setProgram = function(program)
 {
+	import {History} from "./history/History.js";
+	import {SceneEditor} from "./gui/tab/scene-editor/SceneEditor.js";
+
 	if (Editor.program !== program)
 	{
 		if (Editor.program !== null)
@@ -1133,6 +1176,13 @@ Editor.setProgram = function(program)
  */
 Editor.loadProgram = function(file, binary)
 {
+	import {LoadingModal} from "./components/modal/LoadingModal.js";
+	import {DocumentBody} from "./components/DocumentBody.js";
+	import {ObjectLoader} from "../core/loaders/ObjectLoader.js";
+	import {StaticPair} from "@as-com/pson";
+	import {Locale} from "./locale/LocaleManager.js";
+	import {FileSystem} from "../core/FileSystem.js";
+
 	var modal = new LoadingModal(DocumentBody);
 	modal.show();
 
@@ -1208,6 +1258,8 @@ Editor.loadProgram = function(file, binary)
  */
 Editor.setOpenFile = function(file)
 {
+	import {Nunu} from "../core/Nunu.js";
+
 	if (file !== undefined && file !== null)
 	{
 		if (file instanceof window.File)
@@ -1284,6 +1336,9 @@ Editor.prompt = function(message, defaultValue)
  */
 Editor.updateNunu = function(silent)
 {
+	import {FileSystem} from "../core/FileSystem.js";
+	import {Locale} from "./locale/LocaleManager.js";
+
 	if (silent === undefined)
 	{
 		silent = true;
@@ -1343,6 +1398,8 @@ Editor.getRendererConfig = function()
  */
 Editor.exit = function()
 {
+	import {Nunu} from "../core/Nunu.js";
+
 	if (Nunu.runningOnDesktop())
 	{
 		Editor.settings.store();
