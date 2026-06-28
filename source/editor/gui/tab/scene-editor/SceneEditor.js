@@ -76,6 +76,7 @@ class SceneEditor extends TabComponent {
 
 			self.transform.setCanvas(this.canvas);
 			self.mouse.setCanvas(this.canvas);
+			self.fpsGraph.setCanvas(this.canvas);
 
 			this.canvas.ondragover = Component.preventDefault;
 			this.canvas.ondrop = async function (event) {
@@ -271,6 +272,9 @@ class SceneEditor extends TabComponent {
 
 			};
 		};
+
+		const { PerformanceGraph } = await import("./PerfGraph.js");
+		this.fpsGraph = new PerformanceGraph(this);
 
 		/**
 		 * Keyboard input object.
@@ -738,6 +742,8 @@ class SceneEditor extends TabComponent {
 		this.transform.snap = Editor.settings.editor.snap;
 		this.transform.translationSnap = Editor.settings.editor.gridSpacing;
 		this.transform.rotationSnap = Editor.settings.editor.snapAngle;
+
+
 	}
 
 	destroy() {
@@ -1090,6 +1096,9 @@ class SceneEditor extends TabComponent {
 		}
 
 		renderer.setScissorTest(false);
+		if(this.fpsGraph) {
+			this.fpsGraph.render(renderer);
+		}
 	}
 
 	/**

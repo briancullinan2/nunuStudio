@@ -11,10 +11,8 @@ import { ButtonIcon } from "./ButtonIcon.js";
  * @extends {ButtonIcon}
  * @param {Component} parent Parent element.
  */
-class ButtonDrawer extends ButtonIcon
-{
-	constructor(parent)
-	{
+class ButtonDrawer extends ButtonIcon {
+	constructor(parent) {
 		super(parent);
 
 		this.element.style.zIndex = "200";
@@ -68,34 +66,27 @@ class ButtonDrawer extends ButtonIcon
 
 		var self = this;
 
-		this.addEvent("mouseenter", function ()
-		{
-			if(self.disabled === false)
-			{
+		this.addEvent("mouseenter", function () {
+			if(self.disabled === false) {
 				self.setExpanded(true);
 			}
 		});
 
-		this.addEvent("mouseleave", function ()
-		{
+		this.addEvent("mouseleave", function () {
 			self.setExpanded(false);
 		});
 
-		this.panel.addEvent("mouseenter", function ()
-		{
+		this.panel.addEvent("mouseenter", function () {
 			self.setExpanded(true);
 		});
 
-		this.panel.addEvent("mouseleave", function ()
-		{
+		this.panel.addEvent("mouseleave", function () {
 			self.setExpanded(false);
 		});
 	}
 
-	clear()
-	{
-		for(var i = 0; i < this.options.length; i++)
-		{
+	clear() {
+		for(var i = 0; i < this.options.length; i++) {
 			this.options[i].destroy();
 		}
 
@@ -108,8 +99,7 @@ class ButtonDrawer extends ButtonIcon
 	 * @method setExpanded
 	 * @param {boolean} expanded
 	 */
-	setExpanded(expanded)
-	{
+	setExpanded(expanded) {
 		this.expanded = expanded;
 		this.panel.element.style.display = this.expanded ? "block" : "none";
 	}
@@ -120,8 +110,7 @@ class ButtonDrawer extends ButtonIcon
 	 * @method insertOption
 	 * @param {Component} Element of the option to be inserted in the drawer
 	 */
-	insertOption(element)
-	{
+	insertOption(element) {
 		element.attachTo(this.panel);
 		this.options.push(element);
 	}
@@ -134,21 +123,18 @@ class ButtonDrawer extends ButtonIcon
 	 * @param {Function} callback
 	 * @param {string} altText
 	 */
-	addOption(image, callback, altText)
-	{
+	addOption(image, callback, altText) {
 		var self = this;
 
 		var button = new ButtonIcon(this.panel);
 		button.setImage(image);
-		button.setOnClick(function ()
-		{
+		button.setOnClick(function () {
 			callback();
 			self.expanded = false;
 			self.updateInterface();
 		});
 
-		if(altText !== undefined)
-		{
+		if(altText !== undefined) {
 			button.setAltText(altText);
 		}
 
@@ -161,10 +147,8 @@ class ButtonDrawer extends ButtonIcon
 	 * @method removeOption
 	 * @param {number} index
 	 */
-	removeOption(index)
-	{
-		if(index >= 0 && index < this.options.length)
-		{
+	removeOption(index) {
+		if(index >= 0 && index < this.options.length) {
 			this.options[index].destroy();
 			this.options.splice(index, 1);
 		}
@@ -175,8 +159,7 @@ class ButtonDrawer extends ButtonIcon
 	 *
 	 * @method updatePanelSize
 	 */
-	updatePanelSize()
-	{
+	updatePanelSize() {
 		var optionsPerLine = this.options.length < this.optionsPerLine ? this.options.length : this.optionsPerLine;
 
 		this.panel.size.x = this.optionsSize.x * optionsPerLine;
@@ -194,14 +177,12 @@ class ButtonDrawer extends ButtonIcon
 	 *
 	 * @method updateOptions
 	 */
-	updateOptions()
-	{
+	updateOptions() {
 		this.updatePanelSize();
 
 		var optionsPerLine = this.options.length < this.optionsPerLine ? this.options.length : this.optionsPerLine;
 
-		for(var i = 0; i < this.options.length; i++)
-		{
+		for(var i = 0; i < this.options.length; i++) {
 			this.options[i].size.set(this.optionsSize.x, this.optionsSize.y);
 			this.options[i].position.x = this.optionsSize.x * (i % optionsPerLine);
 			this.options[i].position.y = this.optionsSize.y * Math.floor(i / optionsPerLine);
@@ -209,8 +190,7 @@ class ButtonDrawer extends ButtonIcon
 		}
 	}
 
-	updateVisibility()
-	{
+	updateVisibility() {
 		this.element.style.display = this.visible ? "block" : "none";
 	}
 
