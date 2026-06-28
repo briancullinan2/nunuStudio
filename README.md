@@ -37,7 +37,7 @@ Throttling UI updates when loading large models into the scene and the project e
 Remove the use of canvas.size to prevent layout recalculations when adding elements even though the window size hasn't changed. This causes speed problems when loading a model with thousands of vertices, like an entire Quake 3 map.
 Expose the loadObject() function externally to load external assets that users can double-click to add or clone to the scene.
 Most excitingly, I'm attaching my Objaverse-XL pipeline to the asset search bar, allowing anyone to add any object they search for out of 9 million models streamed from GitHub and Sketchfab!
-
+Add mobile/responsive support.
 
 
 

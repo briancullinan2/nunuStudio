@@ -1127,7 +1127,7 @@ Loaders.loadModel = async function (file, parent)
 				}
 				catch(e)
 				{
-					Editor.alert(Locale.errorLoadingFile + "\n(" + e + ")");
+					Editor.alert(Locale.errorLoadingFile + ':' + name + "\n(" + e + ")");
 					console.error("nunuStudio: Error loading file", e);
 				}
 			};
@@ -1136,14 +1136,14 @@ Loaders.loadModel = async function (file, parent)
 		else
 		{
 			modal.destroy();
-			Editor.alert(Locale.unknownFileFormat);
+			Editor.alert(Locale.unknownFileFormat + ':' + name);
 			console.warn("nunuStudio: Unknown file format");
 		}
 	}
 	catch(e)
 	{
 		modal.destroy();
-		Editor.alert(Locale.errorLoadingFile + "\n(" + e + ")");
+		Editor.alert(Locale.errorLoadingFile + ':' + name + "\n(" + e + ")");
 		console.error("nunuStudio: Error loading file", e);
 	}
 };
