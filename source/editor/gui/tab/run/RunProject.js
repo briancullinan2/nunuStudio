@@ -1,13 +1,13 @@
-import {Locale} from "../../../locale/LocaleManager.js";
-import {Program} from "../../../../core/objects/Program.js";
-import {PerspectiveCamera} from "../../../../core/objects/cameras/PerspectiveCamera.js";
-import {Nunu} from "../../../../core/Nunu.js";
-import {Global} from "../../../Global.js";
-import {Editor} from "../../../Editor.js";
-import {TabComponent} from "../../../components/tabs/TabComponent.js";
-import {RendererCanvas} from "../../../components/RendererCanvas.js";
-import {Component} from "../../../components/Component.js";
-import {ButtonIcon} from "../../../components/buttons/ButtonIcon.js";
+import { Locale } from "../../../locale/LocaleManager.js";
+import { Program } from "../../../../core/objects/Program.js";
+import { PerspectiveCamera } from "../../../../core/objects/cameras/PerspectiveCamera.js";
+import { Nunu } from "../../../../core/Nunu.js";
+import { Global } from "../../../Global.js";
+import { Editor } from "../../../Editor.js";
+import { TabComponent } from "../../../components/tabs/TabComponent.js";
+import { RendererCanvas } from "../../../components/RendererCanvas.js";
+import { Component } from "../../../components/Component.js";
+import { ButtonIcon } from "../../../components/buttons/ButtonIcon.js";
 
 /**
  * Tab used to preview a project running.
@@ -17,318 +17,331 @@ import {ButtonIcon} from "../../../components/buttons/ButtonIcon.js";
  * @class RunProject
  * @extends {TabComponent}
  */
-class RunProject extends TabComponent {
-	constructor(parent, closeable, container, index) {
-	super(parent, closeable, container, index, Locale.run, Global.FILE_PATH + "icons/misc/play.png");
-
-	var self = this;
-
-	/**
-	 * Rendering canvas element where the program is presented.
-	 *
-	 * @attribute canvas
-	 * @type {RendererCanvas}
-	 */
-	this.canvas = new RendererCanvas(this, Editor.program.rendererConfig);
-	this.canvas.onResize = function(width, height)
+class RunProject extends TabComponent
+{
+	constructor(parent, closeable, container, index)
 	{
-		if (self.program !== null)
+		super(parent, closeable, container, index, Locale.run, Global.FILE_PATH + "icons/misc/play.png");
+
+		var self = this;
+
+		/**
+		 * Rendering canvas element where the program is presented.
+		 *
+		 * @attribute canvas
+		 * @type {RendererCanvas}
+		 */
+		this.canvas = new RendererCanvas(this, Editor.program.rendererConfig);
+		this.canvas.onResize = function (width, height)
 		{
-			self.program.resize(width, height);
-		}
-	};
+			if(self.program !== null)
+			{
+				self.program.resize(width, height);
+			}
+		};
 
-	/**
-	 * Program being run on this tab.
-	 *
-	 * @attribute program
-	 * @type {Program}
-	 */
-	this.program = null;
+		/**
+		 * Program being run on this tab.
+		 *
+		 * @attribute program
+		 * @type {Program}
+		 */
+		this.program = null;
 
-	/**
-	 * Fullscreen button used to toggle fullscreen mode.
-	 *
-	 * @attribute fullscreenButton
-	 * @type {ButtonIcon}
-	 */
-	this.fullscreenButton = new ButtonIcon(this);
-	this.fullscreenButton.position.set(5, 5);
-	this.fullscreenButton.size.set(30, 30);
-	this.fullscreenButton.setImage(Global.FILE_PATH + "icons/misc/fullscreen.png");
-	this.fullscreenButton.setAltText(Locale.toggleFullscreen);
-	this.fullscreenButton.setImageScale(0.8, 0.8);
-	this.fullscreenButton.updateSize();
-	this.fullscreenButton.updatePosition(Component.BOTTOM_RIGHT);
-	this.fullscreenButton.setStyle("borderRadius", "5px");
-	this.fullscreenButton.setVisibility(true);
-	this.fullscreenButton.updateSyles({backgroundColor: "var(--panel-color)", opacity: 0.5}, {backgroundColor: "var(--panel-color)", opacity: 1.0});
+		/**
+		 * Fullscreen button used to toggle fullscreen mode.
+		 *
+		 * @attribute fullscreenButton
+		 * @type {ButtonIcon}
+		 */
+		this.fullscreenButton = new ButtonIcon(this);
+		this.fullscreenButton.position.set(5, 5);
+		this.fullscreenButton.size.set(30, 30);
+		this.fullscreenButton.setImage(Global.FILE_PATH + "icons/misc/fullscreen.png");
+		this.fullscreenButton.setAltText(Locale.toggleFullscreen);
+		this.fullscreenButton.setImageScale(0.8, 0.8);
+		this.fullscreenButton.updateSize();
+		this.fullscreenButton.updatePosition(Component.BOTTOM_RIGHT);
+		this.fullscreenButton.setStyle("borderRadius", "5px");
+		this.fullscreenButton.setVisibility(true);
+		this.fullscreenButton.updateSyles({ backgroundColor: "var(--panel-color)", opacity: 0.5 }, { backgroundColor: "var(--panel-color)", opacity: 1.0 });
 
-	var fullscreen = true;
-	this.fullscreenButton.setOnClick(function()
-	{
-		self.setFullscreen(fullscreen);
-		fullscreen = !fullscreen;
-	});
+		var fullscreen = true;
+		this.fullscreenButton.setOnClick(function ()
+		{
+			self.setFullscreen(fullscreen);
+			fullscreen = !fullscreen;
+		});
 
-	/**
-	 * VR button used to toggle vr mode.
-	 *
-	 * It is only displayed when VR is available.
-	 *
-	 * @attribute vrButton
-	 * @type {ButtonIcon}
-	 */
-	this.vrButton = new ButtonIcon(this);
-	this.vrButton.size.set(30, 30);
-	this.vrButton.position.set(40, 5);
-	this.vrButton.setImage(Global.FILE_PATH + "icons/misc/vr.png");
-	this.vrButton.setAltText(Locale.toggleVR);
-	this.vrButton.setImageScale(0.8, 0.8);
-	this.vrButton.updateSize();
-	this.vrButton.updatePosition(Component.BOTTOM_RIGHT);
-	this.vrButton.setVisibility(false);
-	this.vrButton.setStyle("borderRadius", "5px");
-	this.vrButton.updateSyles({backgroundColor: "var(--panel-color)", opacity: 0.5}, {backgroundColor: "var(--panel-color)", opacity: 1.0});
+		/**
+		 * VR button used to toggle vr mode.
+		 *
+		 * It is only displayed when VR is available.
+		 *
+		 * @attribute vrButton
+		 * @type {ButtonIcon}
+		 */
+		this.vrButton = new ButtonIcon(this);
+		this.vrButton.size.set(30, 30);
+		this.vrButton.position.set(40, 5);
+		this.vrButton.setImage(Global.FILE_PATH + "icons/misc/vr.png");
+		this.vrButton.setAltText(Locale.toggleVR);
+		this.vrButton.setImageScale(0.8, 0.8);
+		this.vrButton.updateSize();
+		this.vrButton.updatePosition(Component.BOTTOM_RIGHT);
+		this.vrButton.setVisibility(false);
+		this.vrButton.setStyle("borderRadius", "5px");
+		this.vrButton.updateSyles({ backgroundColor: "var(--panel-color)", opacity: 0.5 }, { backgroundColor: "var(--panel-color)", opacity: 1.0 });
 
-	/**
-	 * AR button used to toggle ar mode.
-	 *
-	 * It is only displayed when AR is available.
-	 *
-	 * @attribute arButton
-	 * @type {ButtonIcon}
-	 */
-	this.arButton = new ButtonIcon(this);
-	this.arButton.size.set(30, 30);
-	this.arButton.position.set(75, 5);
-	this.arButton.setImage(Global.FILE_PATH + "icons/misc/ar.png");
-	this.arButton.setAltText(Locale.toggleAR);
-	this.arButton.setImageScale(0.8, 0.8);
-	this.arButton.updateSize();
-	this.arButton.updatePosition(Component.BOTTOM_RIGHT);
-	this.arButton.setVisibility(false);
-	this.arButton.setStyle("borderRadius", "5px");
-	this.arButton.updateSyles({backgroundColor: "var(--panel-color)", opacity: 0.5}, {backgroundColor: "var(--panel-color)", opacity: 1.0});
+		/**
+		 * AR button used to toggle ar mode.
+		 *
+		 * It is only displayed when AR is available.
+		 *
+		 * @attribute arButton
+		 * @type {ButtonIcon}
+		 */
+		this.arButton = new ButtonIcon(this);
+		this.arButton.size.set(30, 30);
+		this.arButton.position.set(75, 5);
+		this.arButton.setImage(Global.FILE_PATH + "icons/misc/ar.png");
+		this.arButton.setAltText(Locale.toggleAR);
+		this.arButton.setImageScale(0.8, 0.8);
+		this.arButton.updateSize();
+		this.arButton.updatePosition(Component.BOTTOM_RIGHT);
+		this.arButton.setVisibility(false);
+		this.arButton.setStyle("borderRadius", "5px");
+		this.arButton.updateSyles({ backgroundColor: "var(--panel-color)", opacity: 0.5 }, { backgroundColor: "var(--panel-color)", opacity: 1.0 });
 	}
 
-	activate() {
-	this.canvas.createRenderer();
-	this.updateSettings();
-
-	if (this.program === null)
+	async activate()
 	{
-		this.getProgram();
+		this.canvas.createRenderer();
+		this.updateSettings();
+
+		if(this.program === null)
+		{
+			await this.getProgram();
+			this.runProgram();
+		}
+
+		Editor.gui.menuBar.run.setText(Locale.stop);
+
+		super.activate();
+	}
+
+	deactivate()
+	{
+		super.deactivate();
+
+		Editor.gui.menuBar.run.setText(Locale.run);
+	}
+
+	isAttached(program)
+	{
+		return program === Editor.program;
+	}
+
+	destroy()
+	{
+		super.destroy();
+
+		this.stopProgram();
+
+		this.canvas.forceContextLoss();
+	}
+
+	/**
+	 * Set fullscreen mode of the tab canvas.
+	 *
+	 * @method setFullscreen
+	 * @param {boolean} fullscreen If true enters fullscreen if false exits fullscreen.
+	 */
+	setFullscreen(fullscreen)
+	{
+		if(fullscreen)
+		{
+			Nunu.setFullscreen(true, this.element);
+
+			this.position.set(0, 0);
+			this.size.set(window.screen.width, window.screen.height);
+			this.updateInterface();
+		}
+		else
+		{
+			Nunu.setFullscreen(false);
+			Editor.gui.updateInterface();
+		}
+	}
+
+	/**
+	 * Dispose runnning program.
+	 *
+	 * @method stopProgram
+	 */
+	stopProgram()
+	{
+		this.setFullscreen(false);
+
+		if(this.program !== null)
+		{
+			this.program.dispose();
+			this.program = null;
+		}
+
+		this.canvas.renderer.setAnimationLoop(null);
+	}
+
+	resetCanvas()
+	{
+		RendererCanvas.prototype.resetCanvas.call(this);
+
+		if(this.program !== null && this.program.mouse !== null)
+		{
+			this.program.mouse.setCanvas(this.canvas.canvas);
+		}
+	}
+
+	/**
+	 * Get the Editor.program object to be run in this tab.
+	 *
+	 * @method getProgram
+	 */
+	async getProgram()
+	{
+		// Run the program directly all changed made with code are kept
+		if(Editor.settings.general.immediateMode)
+		{
+			this.program = Editor.program;
+		}
+		// Run a copy of the program
+		else
+		{
+			this.program = await Editor.program.clone();
+		}
+	}
+
+	/**
+	 * Prepare the program to be run, create a default camera.
+	 *
+	 * Run the initialization scripts from the object and set the renderer size.
+	 *
+	 * @method runProgram
+	 */
+	runProgram()
+	{
+		try
+		{
+			// Create a default camera for program (same as runtime).
+			this.program.defaultCamera = new PerspectiveCamera(60, 1, 0.1, 1e5);
+			this.program.defaultCamera.position.set(0, 5, -5);
+
+			// Set runtime variables
+			this.program.setRenderer(this.canvas.renderer);
+			this.program.initialize();
+			this.program.resize(this.canvas.canvas.width, this.canvas.canvas.height);
+		}
+		catch(error)
+		{
+			Editor.alert(Locale.errorRunInitialize + "\n(" + error + ")");
+			console.warn("nunuStudio: Error while initializing program.", error);
+			this.close();
+			return;
+		}
+
+		var self = this;
+
+		// If program uses VR set button
+		if(this.program.vrAvailable())
+		{
+			// Show VR button
+			this.vrButton.setVisibility(true);
+			this.vrButton.position.set(40, 5);
+
+			// Create VR switch callback
+			this.vrButton.setOnClick(function ()
+			{
+				if(self.program.xrEnabled)
+				{
+					self.program.exitVR();
+				}
+				else
+				{
+					self.program.enterVR();
+				}
+			});
+		}
+
+		if(this.program.arAvailable())
+		{
+			// Show AR button
+			this.arButton.setVisibility(true);
+			this.arButton.position.set(this.program.vrAvailable() ? 75 : 40, 5);
+			this.arButton.setOnClick(function ()
+			{
+				if(self.program.xrEnabled)
+				{
+					self.program.exitAR();
+				}
+				else
+				{
+					self.program.enterAR();
+				}
+			});
+		}
+
+		// Update the program logic and render the program to the canvas using the renderer.
+		this.canvas.renderer.setAnimationLoop(function ()
+		{
+			if(self.program === null)
+			{
+				return;
+			}
+
+			try
+			{
+				self.program.update();
+			}
+			catch(error)
+			{
+				Editor.alert(Locale.errorRunRender + "\n(" + error + ")");
+				console.warn("nunuStudio: Error while running program.", error);
+				self.close();
+				return;
+			}
+
+			try
+			{
+				self.program.render(self.canvas.renderer);
+			}
+			catch(error)
+			{
+				Editor.alert(Locale.errorRunRender + "\n(" + error + ")");
+				console.warn("nunuStudio: Error while rendering program.", error);
+				self.close();
+				return;
+			}
+		});
+	}
+
+	/**
+	 * Restart the program running in the tab.
+	 *
+	 * @method restartProgram
+	 */
+	async restartProgram()
+	{
+		this.stopProgram();
+		await this.getProgram();
 		this.runProgram();
 	}
 
-	Editor.gui.menuBar.run.setText(Locale.stop);
-
-	super.activate();
-	}
-
-	deactivate() {
-	super.deactivate();
-
-	Editor.gui.menuBar.run.setText(Locale.run);
-	}
-
-	isAttached(program) {
-	return program === Editor.program;
-	}
-
-	destroy() {
-	super.destroy();
-
-	this.stopProgram();
-
-	this.canvas.forceContextLoss();
-	}
-
-/**
- * Set fullscreen mode of the tab canvas.
- *
- * @method setFullscreen
- * @param {boolean} fullscreen If true enters fullscreen if false exits fullscreen.
- */
-	setFullscreen(fullscreen) {
-	if (fullscreen)
+	updateSize()
 	{
-		Nunu.setFullscreen(true, this.element);
+		super.updateSize();
 
-		this.position.set(0, 0);
-		this.size.set(window.screen.width, window.screen.height);
-		this.updateInterface();
-	}
-	else
-	{
-		Nunu.setFullscreen(false);
-		Editor.gui.updateInterface();
-	}
-	}
-
-/**
- * Dispose runnning program.
- *
- * @method stopProgram
- */
-	stopProgram() {
-	this.setFullscreen(false);
-
-	if (this.program !== null)
-	{
-		this.program.dispose();
-		this.program = null;
-	}
-
-	this.canvas.renderer.setAnimationLoop(null);
-	}
-
-	resetCanvas() {
-	RendererCanvas.prototype.resetCanvas.call(this);
-
-	if (this.program !== null && this.program.mouse !== null)
-	{
-		this.program.mouse.setCanvas(this.canvas.canvas);
-	}
-	}
-
-/**
- * Get the Editor.program object to be run in this tab.
- *
- * @method getProgram
- */
-	getProgram() {
-	// Run the program directly all changed made with code are kept
-	if (Editor.settings.general.immediateMode)
-	{
-		this.program = Editor.program;
-	}
-	// Run a copy of the program
-	else
-	{
-		this.program = Editor.program.clone();
-	}
-	}
-
-/**
- * Prepare the program to be run, create a default camera.
- *
- * Run the initialization scripts from the object and set the renderer size.
- *
- * @method runProgram
- */
-	runProgram() {
-	try
-	{
-		// Create a default camera for program (same as runtime).
-		this.program.defaultCamera = new PerspectiveCamera(60, 1, 0.1, 1e5);
-		this.program.defaultCamera.position.set(0, 5, -5);
-
-		// Set runtime variables
-		this.program.setRenderer(this.canvas.renderer);
-		this.program.initialize();
-		this.program.resize(this.canvas.canvas.width, this.canvas.canvas.height);
-	}
-	catch (error)
-	{
-		Editor.alert(Locale.errorRunInitialize + "\n(" + error + ")");
-		console.warn("nunuStudio: Error while initializing program.", error);
-		this.close();
-		return;
-	}
-
-	var self = this;
-
-	// If program uses VR set button
-	if (this.program.vrAvailable())
-	{
-		// Show VR button
-		this.vrButton.setVisibility(true);
-		this.vrButton.position.set(40, 5);
-
-		// Create VR switch callback
-		this.vrButton.setOnClick(function()
-		{
-			if (self.program.xrEnabled)
-			{
-				self.program.exitVR();
-			}
-			else
-			{
-				self.program.enterVR();
-			}
-		});
-	}
-
-	if (this.program.arAvailable())
-	{
-		// Show AR button
-		this.arButton.setVisibility(true);
-		this.arButton.position.set(this.program.vrAvailable() ? 75 : 40, 5);
-		this.arButton.setOnClick(function()
-		{
-			if (self.program.xrEnabled)
-			{
-				self.program.exitAR();
-			}
-			else
-			{
-				self.program.enterAR();
-			}
-		});
-	}
-
-	// Update the program logic and render the program to the canvas using the renderer.
-	this.canvas.renderer.setAnimationLoop(function()
-	{
-		if (self.program === null)
-		{
-			return;
-		}
-
-		try
-		{
-			self.program.update();
-		}
-		catch (error)
-		{
-			Editor.alert(Locale.errorRunRender + "\n(" + error + ")");
-			console.warn("nunuStudio: Error while running program.", error);
-			self.close();
-			return;
-		}
-
-		try
-		{
-			self.program.render(self.canvas.renderer);
-		}
-		catch (error)
-		{
-			Editor.alert(Locale.errorRunRender + "\n(" + error + ")");
-			console.warn("nunuStudio: Error while rendering program.", error);
-			self.close();
-			return;
-		}
-	});
-	}
-
-/**
- * Restart the program running in the tab.
- *
- * @method restartProgram
- */
-	restartProgram() {
-	this.stopProgram();
-	this.getProgram();
-	this.runProgram();
-	}
-
-	updateSize() {
-	super.updateSize();
-
-	this.canvas.size.copy(this.size);
-	this.canvas.updateSize();
+		this.canvas.size.copy(this.size);
+		this.canvas.updateSize();
 	}
 
 }
@@ -336,4 +349,4 @@ class RunProject extends TabComponent {
 RunProject.prototype.reloadContext = RendererCanvas.prototype.reloadContext;
 RunProject.prototype.forceContextLoss = RendererCanvas.prototype.forceContextLoss;
 
-export {RunProject};
+export { RunProject };

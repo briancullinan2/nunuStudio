@@ -168,7 +168,7 @@ THREE.Object3D.prototype.addAbove = function (object, children)
  * @param {THREE.Object3D} object
  * @param {number} index
  */
-THREE.Object3D.prototype.addBellow = function (object, children)
+THREE.Object3D.prototype.addBelow = function (object, children)
 {
 	if(object === this)
 	{

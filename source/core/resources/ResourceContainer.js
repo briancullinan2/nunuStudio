@@ -7,7 +7,7 @@ function ResourceContainer()
 {
 	/**
 	 * Image resources.
-	 * 
+	 *
 	 * @property images
 	 * @type {Array}
 	 */
@@ -15,7 +15,7 @@ function ResourceContainer()
 
 	/**
 	 * Video resources.
-	 * 
+	 *
 	 * @property videos
 	 * @type {Array}
 	 */
@@ -23,7 +23,7 @@ function ResourceContainer()
 
 	/**
 	 * Audio resources.
-	 * 
+	 *
 	 * @property audio
 	 * @type {Array}
 	 */
@@ -31,7 +31,7 @@ function ResourceContainer()
 
 	/**
 	 * Fonts resources.
-	 * 
+	 *
 	 * @property fonts
 	 * @type {Array}
 	 */
@@ -39,7 +39,7 @@ function ResourceContainer()
 
 	/**
 	 * Materials resources.
-	 * 
+	 *
 	 * @property materials
 	 * @type {Array}
 	 */
@@ -47,7 +47,7 @@ function ResourceContainer()
 
 	/**
 	 * Textures resources.
-	 * 
+	 *
 	 * @property textures
 	 * @type {Array}
 	 */
@@ -55,7 +55,7 @@ function ResourceContainer()
 
 	/**
 	 * Geometries resources.
-	 * 
+	 *
 	 * @property geometries
 	 * @type {Array}
 	 */
@@ -63,7 +63,7 @@ function ResourceContainer()
 
 	/**
 	 * Generic resources, can be program data, code files etc.
-	 * 
+	 *
 	 * @property resources
 	 * @type {Array}
 	 */
@@ -71,7 +71,7 @@ function ResourceContainer()
 
 	/**
 	 * Shapes resources, may be used to generate geometry data.
-	 * 
+	 *
 	 * @property shapes
 	 * @type {Array}
 	 */
@@ -81,7 +81,7 @@ function ResourceContainer()
 	 * Skeletons resources, use for the meshes to store their skeleton data.
 	 *
 	 * Skeletons can be shared between meshes.
-	 * 
+	 *
 	 * @property skeletons
 	 * @type {Array}
 	 */
@@ -95,7 +95,7 @@ ResourceContainer.libraries = ["images", "videos", "audio", "fonts", "materials"
  *
  * @method copyResources
  */
-ResourceContainer.prototype.copyResources = function(container)
+ResourceContainer.prototype.copyResources = function (container)
 {
 	this.materials = container.materials;
 	this.textures = container.textures;
@@ -109,9 +109,9 @@ ResourceContainer.prototype.copyResources = function(container)
 	this.skeletons = container.skeletons;
 };
 
-ResourceContainer.prototype.getTexture = function(uuid)
+ResourceContainer.prototype.getTexture = function (uuid)
 {
-	if (this.textures[uuid] === undefined)
+	if(this.textures[uuid] === undefined)
 	{
 		console.warn("nunuStudio: ResourceContainer, Undefined texture", uuid);
 	}
@@ -119,35 +119,35 @@ ResourceContainer.prototype.getTexture = function(uuid)
 	return this.textures[uuid];
 };
 
-ResourceContainer.prototype.getGeometry = function(uuid)
+ResourceContainer.prototype.getGeometry = function (uuid)
 {
-	if (this.geometries[uuid] === undefined)
+	if(this.geometries[uuid] === undefined)
 	{
 		console.warn("nunuStudio: ResourceContainer, Undefined geometry", uuid);
 	}
-	
+
 	return this.geometries[uuid];
 };
 
-ResourceContainer.prototype.getMaterial = function(uuid)
+ResourceContainer.prototype.getMaterial = function (uuid)
 {
-	if (uuid instanceof Array)
+	if(uuid instanceof Array)
 	{
 		var array = [];
-		for (var i = 0; i < uuid.length; i++)
+		for(var i = 0; i < uuid.length; i++)
 		{
-			if (this.materials[uuid[i]] === undefined)
+			if(this.materials[uuid[i]] === undefined)
 			{
 				console.warn("nunuStudio: ResourceContainer, Undefined material", uuid);
 			}
 
 			array.push(this.materials[uuid[i]]);
 		}
-		
+
 		return array;
 	}
 
-	if (this.materials[uuid] === undefined)
+	if(this.materials[uuid] === undefined)
 	{
 		console.warn("nunuStudio: ResourceContainer, Undefined material", uuid);
 	}
@@ -155,22 +155,22 @@ ResourceContainer.prototype.getMaterial = function(uuid)
 	return this.materials[uuid];
 };
 
-ResourceContainer.prototype.getFont = function(uuid)
+ResourceContainer.prototype.getFont = function (uuid)
 {
-	if (this.fonts[uuid] === undefined)
+	if(this.fonts[uuid] === undefined)
 	{
 		console.warn("nunuStudio: ResourceContainer, Undefined font", uuid);
 	}
 	return this.fonts[uuid];
 };
 
-ResourceContainer.prototype.getAudio = function(uuid)
+ResourceContainer.prototype.getAudio = function (uuid)
 {
-	if (this.audio[uuid] === undefined)
+	if(this.audio[uuid] === undefined)
 	{
 		console.warn("nunuStudio: ResourceContainer, Undefined audio", uuid);
 	}
 	return this.audio[uuid];
 };
 
-export {ResourceContainer};
+export { ResourceContainer };

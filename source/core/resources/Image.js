@@ -63,7 +63,7 @@ class Image extends Resource
 				this.loading = FileSystem.readFileArrayBuffer(url, true).then(arraybuffer =>
 				{
 					this.loadArrayBufferData(arraybuffer);
-				})
+				});
 			}
 			// URL
 			else
@@ -274,7 +274,7 @@ class Image extends Resource
 	 * @param {Object} meta
 	 * @return {Object} json
 	 */
-	async toJSON(meta)
+	toJSON(meta)
 	{
 		if(meta.images[this.uuid] !== undefined)
 		{
@@ -285,7 +285,8 @@ class Image extends Resource
 
 		if(this.format === "url")
 		{
-			this.loadArrayBufferData(await FileSystem.readFileArrayBuffer(this.data), this.encoding);
+			debugger
+			this.loadArrayBufferData(FileSystem.readFileArrayBuffer(this.data), this.encoding);
 		}
 
 		data.width = this.width;

@@ -1,6 +1,7 @@
 import { Object3D, Material, MeshBasicMaterial, SpriteMaterial, Sprite, Texture } from "three";
 import { ResourceContainer } from "./ResourceContainer.js";
 
+
 /**
  * Resource manager is used to manage available resources used by objects
  *
