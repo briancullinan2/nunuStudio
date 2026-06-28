@@ -507,7 +507,8 @@ class TransformControls extends Object3D
 					this.attributes[i].oldRotationMatrix.extractRotation(this.objects[i].matrix);
 					this.attributes[i].worldRotationMatrix.extractRotation(this.objects[i].matrixWorld);
 					this.attributes[i].parentRotationMatrix.extractRotation(this.objects[i].parent.matrixWorld);
-					this.attributes[i].parentScale.setFromMatrixScale(this.tempMatrix.getInverse(this.objects[i].parent.matrixWorld));
+					this.tempMatrix.copy(this.objects[i].parent.matrixWorld).invert();
+					this.attributes[i].parentScale.setFromMatrixScale(this.tempMatrix);
 				}
 
 				this.offset.copy(planeIntersect.point);

@@ -34,7 +34,7 @@ class TransformGizmoScale extends TransformGizmo
 		var z = new BufferGeometry();
 		z.setAttribute("position", new Float32BufferAttribute([0, 0, 0, 0, 0, 1], 3));
 
-		this.handleGizmos =
+		const handleGizmos =
 		{
 			X: [[new Mesh(arrowGeometry, GizmoMaterial.red), [0.5, 0, 0], [0, 0, - Math.PI / 2]], [new Line(x, GizmoLineMaterial.red)]],
 			Y: [[new Mesh(arrowGeometry, GizmoMaterial.green), [0, 0.5, 0]], [new Line(y, GizmoLineMaterial.green)]],
@@ -42,7 +42,7 @@ class TransformGizmoScale extends TransformGizmo
 			XYZ: [[new Mesh(new BoxGeometry(0.125, 0.125, 0.125), GizmoMaterial.whiteAlpha)]]
 		};
 
-		this.pickerGizmos =
+		const pickerGizmos =
 		{
 			X: [[new Mesh(new CylinderGeometry(0.2, 0, 1, 4, 1, false), TransformGizmo.pickerMaterial), [0.6, 0, 0], [0, 0, - Math.PI / 2]]],
 			Y: [[new Mesh(new CylinderGeometry(0.2, 0, 1, 4, 1, false), TransformGizmo.pickerMaterial), [0, 0.6, 0]]],
@@ -50,7 +50,7 @@ class TransformGizmoScale extends TransformGizmo
 			XYZ: [[new Mesh(new BoxGeometry(0.4, 0.4, 0.4), TransformGizmo.pickerMaterial)]]
 		};
 
-		super();
+		super(handleGizmos, pickerGizmos);
 	}
 
 	setActivePlane(axis, eye)

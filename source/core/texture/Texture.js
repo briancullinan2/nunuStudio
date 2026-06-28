@@ -186,4 +186,61 @@ class Texture extends TTexture
 	}
 }
 
+/**
+ * UUID of this object instance. This gets automatically assigned, so this shouldn't be edited.
+ *
+ * @property uuid
+ * @type {string}
+ */
+/**
+ * How much a single repetition of the texture is offset from the beginning, in each direction U and V.
+ *
+ * @property offset
+ * @type {Vector2}
+ */
+/**
+ * How many times the texture is repeated across the surface, in each direction U and V.  If repeat is set greater than 1 in either direction, the corresponding Wrap parameter should also be set to .
+ *
+ * @property repeat
+ * @type {Vector2}
+ */
+/**
+ * Indicates where the center of rotation is. To rotate around the center point set this value to (0.5, 0.5).
+ *
+ * @property center
+ * @type {Vector2}
+ */
+/**
+ * How much the texture is rotated around the center point, in radians. Postive values are counter-clockwise.
+ *
+ * @property rotation
+ * @type {number}
+ * @default 0
+ */
+/**
+ * False by default, which is the norm for PNG images. Set to true if the RGB values have been stored premultiplied by alpha.
+ *
+ * @property premultiplyAlpha
+ * @type {boolean}
+ */
+/**
+ * Flips the image's Y axis to match the WebGL texture coordinate space.
+ *
+ * @property flipY
+ * @type {boolean}
+ */
+/**
+ * Array of user-specified mipmaps (optional).
+ *
+ * @property mipmaps
+ * @type {Array}
+ */
+/**
+ * DOM element attached to the texture
+ *
+ * @property image
+ * @type {Element}
+ */
+
+
 export { Texture };

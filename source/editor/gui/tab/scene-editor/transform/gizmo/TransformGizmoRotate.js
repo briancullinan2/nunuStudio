@@ -15,7 +15,7 @@ class TransformGizmoRotate extends TransformGizmo
 {
 	constructor()
 	{
-		this.handleGizmos =
+		const handleGizmos =
 		{
 			X: [[new Line(new CircleGeometry(1, "x", 0.5), GizmoLineMaterial.red)]],
 			Y: [[new Line(new CircleGeometry(1, "y", 0.5), GizmoLineMaterial.green)]],
@@ -24,7 +24,7 @@ class TransformGizmoRotate extends TransformGizmo
 			XYZE: [[new Line(new CircleGeometry(1, "z", 1), GizmoLineMaterial.grey)]]
 		};
 
-		this.pickerGizmos =
+		const pickerGizmos =
 		{
 			X: [[new Mesh(TransformGizmoRotate.torus, TransformGizmo.pickerMaterial), [0, 0, 0], [0, - Math.PI / 2, - Math.PI / 2]]],
 			Y: [[new Mesh(TransformGizmoRotate.torus, TransformGizmo.pickerMaterial), [0, 0, 0], [Math.PI / 2, 0, 0]]],
@@ -33,7 +33,7 @@ class TransformGizmoRotate extends TransformGizmo
 			XYZE: [[new Mesh(new BufferGeometry())]]
 		};
 
-		super();
+		super(handleGizmos, pickerGizmos);
 	}
 
 
