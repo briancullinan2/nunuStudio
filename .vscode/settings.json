@@ -29,8 +29,8 @@
 	"js/ts.format.semicolons": "insert",
 	"js/ts.format.insertSpaceBeforeFunctionParenthesis": false,
 	"js/ts.format.insertSpaceAfterKeywordsInControlFlowStatements": false,
-	"js/ts.format.placeOpenBraceOnNewLineForControlBlocks": true,
-	"js/ts.format.placeOpenBraceOnNewLineForFunctions": true,
+	"js/ts.format.placeOpenBraceOnNewLineForControlBlocks": false,
+	"js/ts.format.placeOpenBraceOnNewLineForFunctions": false,
 	// ==========================================
 	// Code Linting & Validation (Enforcing ES5/ES9 & Strict Rules)
 	// ==========================================

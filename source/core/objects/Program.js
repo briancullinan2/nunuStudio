@@ -254,7 +254,7 @@ class Program extends ResourceManager
 	 *
 	 * @method initialize
 	 */
-	initialize()
+	async initialize()
 	{
 		if(this.mouse === null)
 		{
@@ -279,14 +279,14 @@ class Program extends ResourceManager
 			{
 				if(this.children[i].uuid === this.defaultScene)
 				{
-					this.setScene(this.children[i]);
+					await this.setScene(this.children[i]);
 					break;
 				}
 			}
 		}
 		else if(this.children.length > 0)
 		{
-			this.setScene(this.children[0]);
+			await this.setScene(this.children[0]);
 		}
 
 		// Lock mouse pointer
@@ -513,7 +513,7 @@ class Program extends ResourceManager
 	 * @method setScene
 	 * @param {Scene | string} scene Scene object or name of the scene to be used.
 	 */
-	setScene(scene)
+	async setScene(scene)
 	{
 		// Try to get scene by UUID
 		if(typeof scene === "string")
@@ -537,7 +537,7 @@ class Program extends ResourceManager
 				this.scene.defaultCamera = this.defaultCamera;
 			}
 
-			this.scene.initialize();
+			await this.scene.initialize();
 
 			if(this.canvas !== null)
 			{

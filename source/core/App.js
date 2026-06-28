@@ -126,7 +126,7 @@ App.loadApp = function (url, canvas)
  *
  * @method run
  */
-App.prototype.run = function ()
+App.prototype.run = async function ()
 {
 	if(this.program === null)
 	{
@@ -148,7 +148,7 @@ App.prototype.run = function ()
 	this.program.setRenderer(this.renderer);
 
 	// Initialize program
-	this.program.initialize();
+	await this.program.initialize();
 
 	// Lock mouse pointer
 	if(this.program.lockPointer)

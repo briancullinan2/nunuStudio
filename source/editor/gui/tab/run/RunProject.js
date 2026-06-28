@@ -122,7 +122,7 @@ class RunProject extends TabComponent
 		if(this.program === null)
 		{
 			await this.getProgram();
-			this.runProgram();
+			await this.runProgram();
 		}
 
 		Editor.gui.menuBar.run.setText(Locale.stop);
@@ -228,7 +228,7 @@ class RunProject extends TabComponent
 	 *
 	 * @method runProgram
 	 */
-	runProgram()
+	async runProgram()
 	{
 		try
 		{
@@ -238,7 +238,7 @@ class RunProject extends TabComponent
 
 			// Set runtime variables
 			this.program.setRenderer(this.canvas.renderer);
-			this.program.initialize();
+			await this.program.initialize();
 			this.program.resize(this.canvas.canvas.width, this.canvas.canvas.height);
 		}
 		catch(error)
@@ -333,7 +333,7 @@ class RunProject extends TabComponent
 	{
 		this.stopProgram();
 		await this.getProgram();
-		this.runProgram();
+		await this.runProgram();
 	}
 
 	updateSize()

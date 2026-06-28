@@ -964,9 +964,9 @@ Editor.createNewProgram = async function ()
 
 	var program = new Program();
 
-	Editor.createDefaultResouces();
+	await Editor.createDefaultResouces();
 	Editor.setProgram(program);
-	Editor.addDefaultScene(Editor.defaultMaterial);
+	await Editor.addDefaultScene(Editor.defaultMaterial);
 	Editor.setOpenFile(null);
 };
 
