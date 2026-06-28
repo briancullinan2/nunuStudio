@@ -274,11 +274,13 @@ function evaluatePackageUpgrades(target, packageJsonPath, backupPath)
 
 	for(const version of uniqueCandidates)
 	{
-		if(version === target.currentVersion)
+		const normalizedCurrent = target.currentVersion.replace(/[^0-9.]/g, '');
+
+		if(version === normalizedCurrent || version === target.currentVersion)
 		{
 			console.log(`Already current version: ${version}, skipping.`);
 			continue;
-		} else if(target.currentVersion === target.absoluteLatest)
+		} else if(normalizedCurrent === target.absoluteLatest)
 		{
 			console.log(`Already latest version: ${version}, skipping.`);
 			break;

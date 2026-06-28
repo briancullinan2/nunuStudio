@@ -10,8 +10,10 @@ import { Global } from "../../../../Global.js";
  *
  * @class OrientationCube
  */
-class OrientationCube {
-	constructor() {
+class OrientationCube
+{
+	constructor()
+	{
 		/**
 		 * Orientation cube viewport.
 		 *
@@ -112,26 +114,32 @@ class OrientationCube {
 	 *
 	 * @method raycast
 	 */
-	raycast(mouse, canvas) {
+	raycast(mouse, canvas)
+	{
 		var pointer = mouse;
 
-		if (canvas !== undefined && canvas !== null && canvas.clientWidth !== 0 && canvas.clientHeight !== 0) {
+		if(canvas !== undefined && canvas !== null && canvas.clientWidth !== 0 && canvas.clientHeight !== 0)
+		{
 			var ratioX = canvas.width / canvas.clientWidth;
 			var ratioY = canvas.height / canvas.clientHeight;
 
-			if (ratioX !== 1 || ratioY !== 1) {
+			if(ratioX !== 1 || ratioY !== 1)
+			{
 				this.rayPointer.position.set(mouse.position.x * ratioX, mouse.position.y * ratioY);
 				pointer = this.rayPointer;
 			}
 		}
 
-		if (this.viewport.isInside(canvas, pointer)) {
+		if(this.viewport.isInside(canvas, pointer))
+		{
 			this.raycaster.setFromCamera(this.viewport.getNormalized(canvas, pointer), this.camera);
 
 			var intersects = this.raycaster.intersectObjects(this.scene.children, true);
-			if (intersects.length > 0) {
+			if(intersects.length > 0)
+			{
 				this.selected = intersects[0].object;
-				this.selected.material.color.set(0xFFFF00);
+				// Use explicit hex string to safely target the underlying material color properties
+				this.selected.material.color.setHex(0xFFFF00);
 				return intersects[0].object.code;
 			}
 		}
@@ -140,7 +148,8 @@ class OrientationCube {
 	}
 
 	// Update cube position from camera
-	updateRotation(camera) {
+	updateRotation(camera)
+	{
 		this.scene.quaternion.copy(camera.quaternion);
 		this.scene.updateMatrix();
 		this.scene.matrix.invert();
@@ -151,7 +160,8 @@ class OrientationCube {
 	 *
 	 * @method render
 	 */
-	render(renderer, canvas) {
+	render(renderer, canvas)
+	{
 		this.viewport.width = renderer.domElement.width;
 		this.viewport.height = renderer.domElement.height;
 		this.viewport.update();
@@ -159,8 +169,9 @@ class OrientationCube {
 
 		renderer.render(this.scene, this.camera);
 
-		if (this.selected !== null) {
-			this.selected.material.color.set(0xFFFFFF);
+		if(this.selected !== null)
+		{
+			this.selected.material.color.setHex(0xFFFFFF);
 			this.selected = null;
 		}
 	}
