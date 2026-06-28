@@ -55,7 +55,7 @@ class TextureChooser extends Component {
 	var self = this;
 
 	// On drop get file dropped
-	this.preview.ondrop = function(event)
+	this.preview.ondrop = async function(event)
 	{
 		// File
 		if (event.dataTransfer.files.length > 0)
@@ -76,7 +76,7 @@ class TextureChooser extends Component {
 			// Image
 			else if (value instanceof Image)
 			{
-				self.setTexture(new Texture(value));
+				self.setTexture(await Texture.create(value));
 			}
 			// Video
 			else if (value instanceof Video)

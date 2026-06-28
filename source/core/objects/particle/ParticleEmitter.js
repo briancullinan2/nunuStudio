@@ -23,7 +23,7 @@ class ParticleEmitter extends Points
 	{
 		// 1. super() called instantly and synchronously with the resolved geometry and material
 		super(group.geometry, group.material);
-		this.loading = this.initialize()
+		this.loading = this.initialize(group, emitter)
 	}
 
 	async initialize(group, emitter)

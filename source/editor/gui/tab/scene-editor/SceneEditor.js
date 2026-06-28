@@ -85,7 +85,7 @@ class SceneEditor extends TabComponent
 			self.mouse.setCanvas(this.canvas);
 
 			this.canvas.ondragover = Component.preventDefault;
-			this.canvas.ondrop = function (event)
+			this.canvas.ondrop = async function (event)
 			{
 				event.preventDefault();
 
@@ -235,7 +235,7 @@ class SceneEditor extends TabComponent
 						// Image
 						else if(draggedObject instanceof Image)
 						{
-							attachTexture(new Texture(draggedObject), object);
+							attachTexture(await Texture.create(draggedObject), object);
 						}
 						// Video
 						else if(draggedObject instanceof Video)
@@ -1410,7 +1410,7 @@ class SceneEditor extends TabComponent
 			if(object instanceof Camera)
 			{
 				this.objectHelper.add(new CameraHelper(object));
-				this.objectHelper.add(new ObjectIconHelper(object, Global.FILE_PATH + "icons/camera/camera.png"));
+				this.objectHelper.add(await ObjectIconHelper.create(object, Global.FILE_PATH + "icons/camera/camera.png"));
 			}
 			// Light
 			else if(object instanceof Light)
@@ -1448,7 +1448,7 @@ class SceneEditor extends TabComponent
 				// Ambient light
 				else
 				{
-					this.objectHelper.add(new ObjectIconHelper(object, ObjectIcons.get(object.type)));
+					this.objectHelper.add(await ObjectIconHelper.create(object, ObjectIcons.get(object.type)));
 				}
 			}
 			// Physics
@@ -1459,7 +1459,7 @@ class SceneEditor extends TabComponent
 			// LensFlare
 			else if(object instanceof LensFlare)
 			{
-				this.objectHelper.add(new ObjectIconHelper(object, ObjectIcons.get(object.type)));
+				this.objectHelper.add(await ObjectIconHelper.create(object, ObjectIcons.get(object.type)));
 			}
 			// Skinned Mesh
 			else if(object instanceof SkinnedMesh)
@@ -1471,7 +1471,7 @@ class SceneEditor extends TabComponent
 			else if(object instanceof Bone)
 			{
 				this.objectHelper.add(new SkeletonHelper(object.parent));
-				this.objectHelper.add(new ObjectIconHelper(object, ObjectIcons.get(object.type)));
+				this.objectHelper.add(await ObjectIconHelper.create(object, ObjectIcons.get(object.type)));
 			}
 			// Mesh
 			else if(object instanceof Mesh)
@@ -1491,18 +1491,18 @@ class SceneEditor extends TabComponent
 			// Spine animation
 			else if(object instanceof SpineAnimation)
 			{
-				this.objectHelper.add(new ObjectIconHelper(object, ObjectIcons.get(object.type)));
+				this.objectHelper.add(await ObjectIconHelper.create(object, ObjectIcons.get(object.type)));
 			}
 			// Group
 			else if(object instanceof Group)
 			{
 				this.objectHelper.add(new BoxHelper(object, 0xFFFF00));
-				this.objectHelper.add(new ObjectIconHelper(object, ObjectIcons.get(object.type)));
+				this.objectHelper.add(await ObjectIconHelper.create(object, ObjectIcons.get(object.type)));
 			}
 			// Object 3D
 			else
 			{
-				this.objectHelper.add(new ObjectIconHelper(object, ObjectIcons.get(object.type)));
+				this.objectHelper.add(await ObjectIconHelper.create(object, ObjectIcons.get(object.type)));
 			}
 		}
 	}

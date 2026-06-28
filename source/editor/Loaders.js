@@ -111,7 +111,7 @@ Loaders.loadTexture = function (file, onLoad)
 	var extension = FileSystem.getFileExtension(file.name);
 
 	var reader = new FileReader();
-	reader.onload = function ()
+	reader.onload = async function ()
 	{
 		if(extension === "dds")
 		{
@@ -142,7 +142,7 @@ Loaders.loadTexture = function (file, onLoad)
 			var image = new Image(jpeg, "jpeg");
 			Editor.addAction(new AddResourceAction(image, Editor.program, "images"));
 
-			var texture = new Texture(image);
+			var texture = await Texture.create(image);
 			texture.name = name;
 			Editor.addAction(new AddResourceAction(texture, Editor.program, "textures"));
 		}
@@ -169,7 +169,7 @@ Loaders.loadTexture = function (file, onLoad)
 		else
 		{
 			var image = new Image(reader.result, extension);
-			var texture = new Texture(image);
+			var texture = await Texture.create(image);
 			texture.name = name;
 			Editor.addAction(new AddResourceAction(image, Editor.program, "images"));
 			Editor.addAction(new AddResourceAction(texture, Editor.program, "textures"));
@@ -313,7 +313,7 @@ Loaders.loadSpineAnimation = async function (file)
 		var data = await FileSystem.readFile(file.path);
 		var atlas = await FileSystem.readFile(atlasFile);
 
-		var animation = new SpineAnimation(data, atlas, path);
+		var animation = await SpineAnimation.create(data, atlas, path);
 		animation.name = FileSystem.getFileName(file.path);
 		Editor.addObject(animation);
 	}

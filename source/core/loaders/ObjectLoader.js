@@ -423,7 +423,7 @@ class ObjectLoader extends ResourceContainer
 						data.textures[i].texture = this.getTexture(data.textures[i].texture);
 					}
 
-					object = new SpineAnimation(data.json, data.atlas, "", data.textures);
+					object = await SpineAnimation.create(data.json, data.atlas, "", data.textures);
 
 					if(data.animation !== undefined)
 					{

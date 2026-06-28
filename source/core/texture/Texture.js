@@ -24,24 +24,24 @@ class Texture extends TTexture
 {
 	constructor(source, mapping, wrapS, wrapT, magFilter, minFilter, format, type, anisotropy, encoding)
 	{
-		// Resolve source before calling super
+		// Resolve source layout or construct placeholders immediately
 		var resolvedSource;
-		if(typeof source === "string")
+		if(source instanceof Image)
+		{
+			resolvedSource = source;
+		}
+		else if(typeof source === "string")
 		{
 			resolvedSource = new Image(source);
 		}
-		else if(source === undefined)
-		{
-			resolvedSource = new Image();
-		}
 		else
 		{
-			resolvedSource = source;
+			resolvedSource = new Image();
 		}
 
 		const newImage = document.createElement("img");
 
-		// Initialize with a minimal, valid 1x1 data layout to prevent WebGL 0x0 size crash
+		// Initialize with standard empty image element to maintain WebGL pipeline structures
 		super(new Source(newImage), mapping, wrapS, wrapT, magFilter, minFilter, format, type, anisotropy, encoding);
 
 		this.element = newImage;
@@ -101,6 +101,38 @@ class Texture extends TTexture
 	}
 
 	/**
+	 * Asynchronous static factory method to safely resolve image loading properties
+	 * before establishing standard operational configuration cycles.
+	 *
+	 * @static
+	 * @method create
+	 */
+	static async create(source, mapping, wrapS, wrapT, magFilter, minFilter, format, type, anisotropy, encoding)
+	{
+		var resolvedSource;
+		if(typeof source === "string")
+		{
+			resolvedSource = new Image(source);
+		}
+		else if(source === undefined)
+		{
+			resolvedSource = new Image();
+		}
+		else
+		{
+			resolvedSource = source;
+		}
+
+		// Check for underlying resource loader lifecycle instances
+		if(resolvedSource && resolvedSource.loading instanceof Promise)
+		{
+			await resolvedSource.loading;
+		}
+
+		return new Texture(resolvedSource, mapping, wrapS, wrapT, magFilter, minFilter, format, type, anisotropy, encoding);
+	}
+
+	/**
 	 * Should be called after updating the source of the texture.
 	 *
 	 * Will copy the source data to the texture for upload to the GPU.
@@ -119,8 +151,6 @@ class Texture extends TTexture
 			{
 				if(self.source)
 				{
-					// Reassign the structural reference inside the Source wrapper
-					// to force Three.js to query the real image dimensions
 					self.source.data = self.element;
 					self.source.needsUpdate = true;
 				}
@@ -185,62 +215,5 @@ class Texture extends TTexture
 		return data;
 	}
 }
-
-/**
- * UUID of this object instance. This gets automatically assigned, so this shouldn't be edited.
- *
- * @property uuid
- * @type {string}
- */
-/**
- * How much a single repetition of the texture is offset from the beginning, in each direction U and V.
- *
- * @property offset
- * @type {Vector2}
- */
-/**
- * How many times the texture is repeated across the surface, in each direction U and V.  If repeat is set greater than 1 in either direction, the corresponding Wrap parameter should also be set to .
- *
- * @property repeat
- * @type {Vector2}
- */
-/**
- * Indicates where the center of rotation is. To rotate around the center point set this value to (0.5, 0.5).
- *
- * @property center
- * @type {Vector2}
- */
-/**
- * How much the texture is rotated around the center point, in radians. Postive values are counter-clockwise.
- *
- * @property rotation
- * @type {number}
- * @default 0
- */
-/**
- * False by default, which is the norm for PNG images. Set to true if the RGB values have been stored premultiplied by alpha.
- *
- * @property premultiplyAlpha
- * @type {boolean}
- */
-/**
- * Flips the image's Y axis to match the WebGL texture coordinate space.
- *
- * @property flipY
- * @type {boolean}
- */
-/**
- * Array of user-specified mipmaps (optional).
- *
- * @property mipmaps
- * @type {Array}
- */
-/**
- * DOM element attached to the texture
- *
- * @property image
- * @type {Element}
- */
-
 
 export { Texture };

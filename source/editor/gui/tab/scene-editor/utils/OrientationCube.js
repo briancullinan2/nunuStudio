@@ -45,10 +45,16 @@ class OrientationCube
 		// Selected face
 		this.selected = null;
 
+		this.loading = this.initialize();
+	}
+
+	async initialize()
+	{
+
 		var plane = new PlaneGeometry(1, 1);
 
 		// Cube faces
-		var texture = new Texture(Global.FILE_PATH + "camera/xPos.png");
+		var texture = await Texture.create(Global.FILE_PATH + "camera/xPos.png");
 		texture.format = RGBAFormat;
 		this.xPos = new Mesh(plane, new MeshBasicMaterial({ map: texture }));
 		this.xPos.code = OrientationCube.X_POS;
@@ -58,7 +64,7 @@ class OrientationCube
 		this.xPos.updateMatrix();
 		this.scene.add(this.xPos);
 
-		var texture = new Texture(Global.FILE_PATH + "camera/xNeg.png");
+		var texture = await Texture.create(Global.FILE_PATH + "camera/xNeg.png");
 		texture.format = RGBAFormat;
 		this.xNeg = new Mesh(plane, new MeshBasicMaterial({ map: texture }));
 		this.xNeg.code = OrientationCube.X_NEG;
@@ -68,7 +74,7 @@ class OrientationCube
 		this.xNeg.updateMatrix();
 		this.scene.add(this.xNeg);
 
-		var texture = new Texture(Global.FILE_PATH + "camera/yPos.png");
+		var texture = await Texture.create(Global.FILE_PATH + "camera/yPos.png");
 		texture.format = RGBAFormat;
 		this.yPos = new Mesh(plane, new MeshBasicMaterial({ map: texture }));
 		this.yPos.code = OrientationCube.Y_POS;
@@ -78,7 +84,7 @@ class OrientationCube
 		this.yPos.updateMatrix();
 		this.scene.add(this.yPos);
 
-		var texture = new Texture(Global.FILE_PATH + "camera/yNeg.png");
+		var texture = await Texture.create(Global.FILE_PATH + "camera/yNeg.png");
 		texture.format = RGBAFormat;
 		this.yNeg = new Mesh(plane, new MeshBasicMaterial({ map: texture }));
 		this.yNeg.code = OrientationCube.Y_NEG;
@@ -88,7 +94,7 @@ class OrientationCube
 		this.yNeg.updateMatrix();
 		this.scene.add(this.yNeg);
 
-		var texture = new Texture(Global.FILE_PATH + "camera/zPos.png");
+		var texture = await Texture.create(Global.FILE_PATH + "camera/zPos.png");
 		texture.format = RGBAFormat;
 		this.zPos = new Mesh(plane, new MeshBasicMaterial({ map: texture }));
 		this.zPos.code = OrientationCube.Z_POS;
@@ -97,7 +103,7 @@ class OrientationCube
 		this.zPos.updateMatrix();
 		this.scene.add(this.zPos);
 
-		var texture = new Texture(Global.FILE_PATH + "camera/zNeg.png");
+		var texture = await Texture.create(Global.FILE_PATH + "camera/zNeg.png");
 		texture.format = RGBAFormat;
 		this.zNeg = new Mesh(plane, new MeshBasicMaterial({ map: texture }));
 		this.zNeg.code = OrientationCube.Z_NEG;

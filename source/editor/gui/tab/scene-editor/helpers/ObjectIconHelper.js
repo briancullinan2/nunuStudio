@@ -1,15 +1,20 @@
-import { Object3D, Sprite, Texture, SpriteMaterial } from "three";
+import { Object3D, Sprite, SpriteMaterial } from "three";
+import { Texture } from "../../../../../core/texture/Texture.js";
 
-/** 
+/**
  * Object icon helper is used to display the icon of an object.
- * 
+ *
  * @class ObjectIconHelper
+ * @extends {Sprite}
  * @param {Object3D} object
- * @param {String) icon Icon URL.
+ * @param {SpriteMaterial} material Pre-resolved material instance.
  */
-class ObjectIconHelper extends Sprite {
-	constructor(object, icon) {
-		super(ObjectIconHelper.getMaterial(icon));
+class ObjectIconHelper extends Sprite
+{
+	constructor(object, material)
+	{
+		// super receives a completely resolved material from the factory
+		super(material);
 
 		/**
 		 * Object attached to the helper
@@ -39,19 +44,36 @@ class ObjectIconHelper extends Sprite {
 	 */
 
 	/**
+	 * Static factory method to resolve the icon material asynchronously before instantiation.
+	 *
+	 * @static
+	 * @method create
+	 * @param {Object3D} object Target object.
+	 * @param {string} icon Icon URL string.
+	 */
+	static async create(object, icon)
+	{
+		const material = await ObjectIconHelper.getMaterial(icon);
+		return new ObjectIconHelper(object, material);
+	}
+
+	/**
 	 * Get the sprite material for a icon url.
 	 *
 	 * @static
 	 * @method getMaterial
 	 * @param {string} icon Icon URL.
 	 */
-	getMaterial(icon) {
-		if (ObjectIconHelper.MATERIALS.has(icon)) {
+	static async getMaterial(icon)
+	{
+		if(ObjectIconHelper.MATERIALS.has(icon))
+		{
 			return ObjectIconHelper.MATERIALS.get(icon);
 		}
 
-		var element = document.createElement("img");
-		var texture = new Texture(element);
+		// Texture.create expects a string or an Image instance based on our factory signature
+		const texture = await Texture.create(icon);
+
 		var material = new SpriteMaterial(
 			{
 				map: texture,
@@ -64,18 +86,34 @@ class ObjectIconHelper extends Sprite {
 
 		material.ratio = 1.0;
 
-		element.onload = function () {
-			material.ratio = this.naturalWidth / this.naturalHeight;
-			texture.needsUpdate = true;
-		};
-		element.src = icon;
+		// Access the underlying HTML Image element bound inside our custom Texture setup
+		const element = texture.element;
+
+		if(element)
+		{
+			const updateRatio = function ()
+			{
+				material.ratio = this.naturalWidth / this.naturalHeight;
+				texture.needsUpdate = true;
+			};
+
+			if(element.complete && element.naturalWidth > 0)
+			{
+				updateRatio.call(element);
+			}
+			else
+			{
+				element.addEventListener("load", updateRatio);
+			}
+		}
 
 		ObjectIconHelper.MATERIALS.set(icon, material);
 
 		return material;
-	};
+	}
 
-	update() {
+	update()
+	{
 		// Position
 		this.matrix.elements[12] = this.object.matrixWorld.elements[12];
 		this.matrix.elements[13] = this.object.matrixWorld.elements[13];
@@ -85,9 +123,7 @@ class ObjectIconHelper extends Sprite {
 		this.matrix.elements[0] = this.size;
 		this.matrix.elements[5] = this.size / this.material.ratio;
 		this.matrix.elements[10] = this.size;
-
 	}
-
 }
 
 ObjectIconHelper.MATERIALS = new Map();

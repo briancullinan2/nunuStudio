@@ -1,8 +1,8 @@
-import {Clock, Object3D} from "three";
-import {AtlasAttachmentLoader, SkeletonJson, SkeletonMesh, TextureAtlas} from "@esotericsoftware/spine-threejs";
-import {Texture} from "../../texture/Texture.js";
-import {Image} from "../../resources/Image.js";
-import {SpineTexture} from "./SpineTexture.js";
+import { Clock, Object3D } from "three";
+import { AtlasAttachmentLoader, SkeletonJson, SkeletonMesh, TextureAtlas } from "@esotericsoftware/spine-threejs";
+import { Texture } from "../../texture/Texture.js";
+import { Image } from "../../resources/Image.js";
+import { SpineTexture } from "./SpineTexture.js";
 
 /**
  * Spine animation object, to used with animation produced inside Esoteric spine. These animations are created using the Spine animation studio software.
@@ -13,69 +13,16 @@ import {SpineTexture} from "./SpineTexture.js";
  *
  * @class SpineAnimation
  * @extends {SkeletonMesh}
+ * @param {Object} skeleton Shared skeleton data fully resolved by the factory wrapper.
  * @param {Object} json Object containing the spine JSON encoded data for this animation.
  * @param {string} atlas Atlas file path.
- * @param {string} path Path to retrieve images from.
  * @param {Texture[]} textures List of textures provided for this animation.
  * @module Animations
  */
 class SpineAnimation extends SkeletonMesh
 {
-	constructor(json, atlas, path, textures)
+	constructor(skeleton, json, atlas, textures)
 	{
-		if (textures === undefined)
-		{
-			textures = [];
-		}
-
-		var textureAtlas = new TextureAtlas(atlas, function(file)
-		{
-			for (var i = 0; i < textures.length; i++)
-			{
-				if (textures[i].name === file)
-				{
-					var texture = new SpineTexture(textures[i].texture);
-					break;
-				}
-			}
-
-			if (i === textures.length)
-			{
-				var texture = new SpineTexture(new Texture(new Image(path + "/" + file)));
-				textures.push({name: file, texture: texture.texture});
-			}
-
-			var element = texture.texture.image;
-			var image = texture.texture.source;
-
-			if (image.width > 0 && image.height > 0)
-			{
-				element.width = image.width;
-				element.height = image.height;
-			}
-			else if (element.naturalWidth !== 0 && element.naturalHeight !== 0)
-			{
-				element.width = element.naturalWidth;
-				element.height = element.naturalHeight;
-				image.width = element.width;
-				image.height = element.height;
-			}
-			else
-			{
-				var beginning = atlas.search("size: ");
-				var end = atlas.search("\nformat");
-				var size = atlas.substring(beginning + 6, end);
-				size = size.split(",");
-				element.width = parseInt(size[0]);
-				element.height = parseInt(size[1]);
-			}
-
-			return texture;
-		});
-
-		var loader = new AtlasAttachmentLoader(textureAtlas);
-		var skeleton = new SkeletonJson(loader).readSkeletonData(json);
-
 		super(skeleton);
 
 		this.name = "spine";
@@ -146,6 +93,90 @@ class SpineAnimation extends SkeletonMesh
 		this.play();
 	}
 
+	/**
+	 * Asynchronously pre-loads textures and sets up the asset linkages prior to execution context allocation.
+	 *
+	 * @static
+	 * @method create
+	 */
+	static async create(json, atlas, path, textures = [])
+	{
+		// Intercept Spine's synchronous atlas requirements and resolve our custom textures first
+		const imageFiles = [];
+
+		// Use a dummy TextureAtlas parser sweep to extract the target filenames needed out of the atlas string layout
+		new TextureAtlas(atlas, function (file)
+		{
+			imageFiles.push(file);
+			return null;
+		});
+
+		// Resolve any missing files completely using async blocks before instantiating the real Atlas
+		for(const file of imageFiles)
+		{
+			let found = false;
+			for(let i = 0; i < textures.length; i++)
+			{
+				if(textures[i].name === file)
+				{
+					found = true;
+					break;
+				}
+			}
+
+			if(!found)
+			{
+				const nativeTex = await Texture.create(new Image(path + "/" + file));
+				const spineTex = new SpineTexture(nativeTex);
+				textures.push({ name: file, texture: spineTex.texture });
+			}
+		}
+
+		// Now that the texture dependencies are resolved, instantiation can run instantly and synchronously
+		const textureAtlas = new TextureAtlas(atlas, function (file)
+		{
+			let texture = null;
+			for(let i = 0; i < textures.length; i++)
+			{
+				if(textures[i].name === file)
+				{
+					texture = new SpineTexture(textures[i].texture);
+					break;
+				}
+			}
+
+			const element = texture.texture.image;
+			const image = texture.texture.customSource || texture.texture.source;
+
+			if(image.width > 0 && image.height > 0)
+			{
+				element.width = image.width;
+				element.height = image.height;
+			} else if(element.naturalWidth !== 0 && element.naturalHeight !== 0)
+			{
+				element.width = element.naturalWidth;
+				element.height = element.naturalHeight;
+				image.width = element.width;
+				image.height = element.height;
+			} else
+			{
+				const beginning = atlas.search("size: ");
+				const end = atlas.search("\nformat");
+				let size = atlas.substring(beginning + 6, end);
+				size = size.split(",");
+				element.width = parseInt(size[0]);
+				element.height = parseInt(size[1]);
+			}
+
+			return texture;
+		});
+
+		const loader = new AtlasAttachmentLoader(textureAtlas);
+		const skeleton = new SkeletonJson(loader).readSkeletonData(json);
+
+		return new SpineAnimation(skeleton, json, atlas, textures);
+	}
+
 	update(delta)
 	{
 		super.update(delta);
@@ -172,12 +203,12 @@ class SpineAnimation extends SkeletonMesh
 	 */
 	play()
 	{
-		if (this.animation !== null)
+		if(this.animation !== null)
 		{
 			this.setAnimation(this.track, this.animation, this.loop);
 		}
 
-		if (this.skin !== null)
+		if(this.skin !== null)
 		{
 			this.setSkin(this.skin);
 		}
@@ -206,17 +237,16 @@ class SpineAnimation extends SkeletonMesh
 	{
 		try
 		{
-			if (track !== undefined) {this.track = track;}
-			if (animation !== undefined) {this.animation = animation;}
-			if (loop !== undefined) {this.loop = loop;}
+			if(track !== undefined) { this.track = track; }
+			if(animation !== undefined) { this.animation = animation; }
+			if(loop !== undefined) { this.loop = loop; }
 
 			this.state.setAnimation(this.track, this.animation, this.loop);
 		}
-		catch (e)
+		catch(e)
 		{
 			this.animation = null;
-
-			console.warn("nunuStudio: Error setting spine animation " + name + " on track " + track);
+			console.warn("nunuStudio: Error setting spine animation " + animation + " on track " + track);
 		}
 	}
 
@@ -244,7 +274,7 @@ class SpineAnimation extends SkeletonMesh
 			this.skeleton.setSkinByName(name);
 			this.skin = name;
 		}
-		catch (e)
+		catch(e)
 		{
 			this.skin = null;
 			console.warn("nunuStudio: Error setting spine skin " + name);
@@ -256,12 +286,12 @@ class SpineAnimation extends SkeletonMesh
 		// Store textures
 		var textures = [];
 		var self = this;
-		var data = Object3D.prototype.toJSON.call(this, meta, function(meta)
+		var data = Object3D.prototype.toJSON.call(this, meta, function (meta)
 		{
-			for (var i = 0; i < self.textures.length; i++)
+			for(var i = 0; i < self.textures.length; i++)
 			{
 				var texture = self.textures[i].texture.toJSON(meta);
-				textures.push({name: self.textures[i].name, texture: texture.uuid});
+				textures.push({ name: self.textures[i].name, texture: texture.uuid });
 			}
 		});
 
@@ -271,13 +301,13 @@ class SpineAnimation extends SkeletonMesh
 		data.object.textures = textures;
 
 		// Default animation and skin
-		if (this.animation !== null)
+		if(this.animation !== null)
 		{
 			data.object.animation = this.animation;
 			data.object.track = this.track;
 			data.object.loop = this.loop;
 		}
-		if (this.skin !== null)
+		if(this.skin !== null)
 		{
 			data.object.skin = this.skin;
 		}
@@ -286,4 +316,4 @@ class SpineAnimation extends SkeletonMesh
 	}
 }
 
-export {SpineAnimation};
+export { SpineAnimation };
