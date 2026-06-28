@@ -160,7 +160,6 @@ FileSystem.readFile = async function (fname, sync, onLoad, onProgress, onError)
  */
 FileSystem.readFileArrayBuffer = async function (fname, sync, onLoad, onProgress, onError)
 {
-	debugger
 	// NodeJS Environment
 	if(FileSystem.fs && FileSystem.isLocalFile(fname))
 	{

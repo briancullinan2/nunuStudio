@@ -285,7 +285,6 @@ class Image extends Resource
 
 		if(this.format === "url")
 		{
-			debugger
 			this.loadArrayBufferData(FileSystem.readFileArrayBuffer(this.data), this.encoding);
 		}
 

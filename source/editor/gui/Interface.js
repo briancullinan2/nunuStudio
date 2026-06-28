@@ -5,15 +5,12 @@
  *
  * @class Interface
  */
-class Interface
-{
-	constructor()
-	{
-		this.loading = this.initialize()
+class Interface {
+	constructor() {
+		this.loading = this.initialize();
 	}
 
-	async initialize()
-	{
+	async initialize() {
 		const { TabContainer } = await import("../components/tabs/splittable/TabContainer.js");
 		const { DocumentBody } = await import("../components/DocumentBody.js");
 		const { TabGroupSplit } = await import("../components/tabs/splittable/TabGroupSplit.js");
@@ -52,8 +49,7 @@ class Interface
 
 		this.animation = await leftBottom.addTab(AnimationTab, false);
 
-		if(DEVELOPMENT)
-		{
+		if(DEVELOPMENT) {
 			await leftBottom.addTab(ProfilingTab, false);
 		}
 
@@ -62,7 +58,12 @@ class Interface
 		this.inspector = await rightBottom.addTab(InspectorContainer, false);
 
 		this.menuBar = new MainMenu(DocumentBody);
-		await this.menuBar.loading
+		await this.menuBar.loading;
+
+		// Force Asset Explorer to activate after all sister tabs have registered and layout changes settle
+		if(this.assetExplorer && typeof this.assetExplorer.activate === "function") {
+			this.assetExplorer.activate();
+		}
 	}
 
 	/**
@@ -72,23 +73,18 @@ class Interface
 	 *
 	 * @method saveProgram
 	 */
-	async saveProgram()
-	{
+	async saveProgram() {
 		const { Nunu } = await import("../../core/Nunu.js");
 		const { FileSystem } = await import("../../core/FileSystem.js");
 		const { Editor } = await import("../Editor.js");
 
-		if(Nunu.runningOnDesktop())
-		{
-			FileSystem.chooseFile(function (files)
-			{
+		if(Nunu.runningOnDesktop()) {
+			FileSystem.chooseFile(function (files) {
 				Editor.saveProgram(files[0].path, true);
 			}, ".nsp", true);
 		}
-		else
-		{
-			FileSystem.chooseFileName(function (fname)
-			{
+		else {
+			FileSystem.chooseFileName(function (fname) {
 				Editor.saveProgram(fname, true);
 			}, ".nsp", Editor.openFile !== null ? Editor.openFile : "file");
 		}
@@ -101,18 +97,14 @@ class Interface
 	 *
 	 * @method loadProgram
 	 */
-	async loadProgram()
-	{
+	async loadProgram() {
 		const { Editor } = await import("../Editor.js");
 		const { Locale } = await import("../locale/LocaleManager.js");
 		const { FileSystem } = await import("../../core/FileSystem.js");
 
-		if(Editor.confirm(Locale.changesWillBeLost + " " + Locale.loadProject))
-		{
-			FileSystem.chooseFile(function (files)
-			{
-				if(files.length > 0)
-				{
+		if(Editor.confirm(Locale.changesWillBeLost + " " + Locale.loadProject)) {
+			FileSystem.chooseFile(function (files) {
+				if(files.length > 0) {
 					Editor.loadProgram(files[0], files[0].name.endsWith(".nsp"));
 				}
 			}, ".isp, .nsp");
@@ -124,19 +116,16 @@ class Interface
 	 *
 	 * @method newProgram
 	 */
-	async newProgram()
-	{
+	async newProgram() {
 		const { Editor } = await import("../Editor.js");
 		const { Locale } = await import("../locale/LocaleManager.js");
 
-		if(Editor.confirm(Locale.changesWillBeLost + " " + Locale.createProject))
-		{
+		if(Editor.confirm(Locale.changesWillBeLost + " " + Locale.createProject)) {
 			Editor.createNewProgram();
 		}
 	}
 
-	updateInterface()
-	{
+	updateInterface() {
 		var width = window.innerWidth;
 		var height = window.innerHeight;
 
