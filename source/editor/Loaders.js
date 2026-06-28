@@ -58,26 +58,21 @@ function Loaders() { }
  * @param {File} file
  * @param {Function} onLoad
  */
-Loaders.loadTexture = function (file, onLoad)
-{
+Loaders.loadTexture = function (file, onLoad) {
 	// Load compressed texture from data parsed by the texture loaders.
-	function loadCompressedTexture(data)
-	{
+	function loadCompressedTexture(data) {
 		var texture = new CompressedTexture();
 
-		if(data.isCubemap === true)
-		{
+		if(data.isCubemap === true) {
 			var faces = data.mipmaps.length / data.mipmapCount;
 
 			texture.isCubeTexture = true;
 			texture.image = [];
 
-			for(var f = 0; f < faces; f++)
-			{
+			for(var f = 0; f < faces; f++) {
 				texture.image[f] = { mipmaps: [] };
 
-				for(var i = 0; i < data.mipmapCount; i++)
-				{
+				for(var i = 0; i < data.mipmapCount; i++) {
 					texture.image[f].mipmaps.push(data.mipmaps[f * data.mipmapCount + i]);
 					texture.image[f].format = data.format;
 					texture.image[f].width = data.width;
@@ -89,15 +84,13 @@ Loaders.loadTexture = function (file, onLoad)
 			texture.minFilter = LinearFilter;
 			texture.mapping = CubeReflectionMapping;
 		}
-		else
-		{
+		else {
 			texture.image.width = data.width;
 			texture.image.height = data.height;
 			texture.mipmaps = data.mipmaps;
 		}
 
-		if(data.mipmapCount === 1)
-		{
+		if(data.mipmapCount === 1) {
 			texture.minFilter = LinearFilter;
 		}
 
@@ -111,31 +104,26 @@ Loaders.loadTexture = function (file, onLoad)
 	var extension = FileSystem.getFileExtension(file.name);
 
 	var reader = new FileReader();
-	reader.onload = async function ()
-	{
-		if(extension === "dds")
-		{
+	reader.onload = async function () {
+		if(extension === "dds") {
 			var loader = new DDSLoader();
 			var texture = loadCompressedTexture(loader.parse(reader.result));
 			texture.name = name;
 			Editor.addAction(new AddResourceAction(texture, Editor.program, "textures"));
 		}
-		else if(extension === "pvr")
-		{
+		else if(extension === "pvr") {
 			var loader = new PVRLoader();
 			var texture = loadCompressedTexture(loader.parse(reader.result));
 			texture.name = name;
 			Editor.addAction(new AddResourceAction(texture, Editor.program, "textures"));
 		}
-		else if(extension === "ktx")
-		{
+		else if(extension === "ktx") {
 			var loader = new KTXLoader();
 			var texture = loadCompressedTexture(loader.parse(reader.result));
 			texture.name = name;
 			Editor.addAction(new AddResourceAction(texture, Editor.program, "textures"));
 		}
-		else if(extension === "tga")
-		{
+		else if(extension === "tga") {
 			var loader = new TGALoader();
 			var jpeg = loader.parse(reader.result).toDataURL("image/jpeg", 1.0);
 
@@ -146,28 +134,24 @@ Loaders.loadTexture = function (file, onLoad)
 			texture.name = name;
 			Editor.addAction(new AddResourceAction(texture, Editor.program, "textures"));
 		}
-		else if(extension === "basis")
-		{
+		else if(extension === "basis") {
 			var renderer = new WebGLRenderer({ alpha: true });
 
 			var loader = new BasisTextureLoader();
 			loader.setTranscoderPath(Global.FILE_PATH + "wasm/basis/");
 			loader.detectSupport(renderer);
-			loader._createTexture(reader.result).then(function (texture)
-			{
+			loader._createTexture(reader.result).then(function (texture) {
 				texture.colorSpace = SRGBColorSpace;
 				texture.name = name;
 				Editor.addAction(new AddResourceAction(texture, Editor.program, "textures"));
-			}).catch(function (error)
-			{
+			}).catch(function (error) {
 				Editor.alert("Error decoding basis texture.");
 				console.error("nunuStudio: Error decoding basis texture.", error);
 			});
 
 			renderer.dispose();
 		}
-		else
-		{
+		else {
 			var image = new Image(reader.result, extension);
 			var texture = await Texture.create(image);
 			texture.name = name;
@@ -175,8 +159,7 @@ Loaders.loadTexture = function (file, onLoad)
 			Editor.addAction(new AddResourceAction(texture, Editor.program, "textures"));
 		}
 
-		if(onLoad !== undefined)
-		{
+		if(onLoad !== undefined) {
 			onLoad(texture);
 		}
 	};
@@ -191,14 +174,12 @@ Loaders.loadTexture = function (file, onLoad)
  * @param {File} file
  * @param {Function} onLoad Callback function called after the resource is loaded.
  */
-Loaders.loadVideoTexture = function (file, onLoad)
-{
+Loaders.loadVideoTexture = function (file, onLoad) {
 	var name = FileSystem.getFileName(file.name);
 	var extension = FileSystem.getFileExtension(file.name);
 
 	var reader = new FileReader();
-	reader.onload = function ()
-	{
+	reader.onload = function () {
 		var video = new Video(reader.result, extension);
 		video.name = name;
 
@@ -208,8 +189,7 @@ Loaders.loadVideoTexture = function (file, onLoad)
 		Editor.addAction(new AddResourceAction(video, Editor.program, "videos"));
 		Editor.addAction(new AddResourceAction(texture, Editor.program, "textures"));
 
-		if(onLoad !== undefined)
-		{
+		if(onLoad !== undefined) {
 			onLoad(texture);
 		}
 	};
@@ -218,18 +198,15 @@ Loaders.loadVideoTexture = function (file, onLoad)
 };
 
 // Load audio from file object
-Loaders.loadAudio = function (file, onLoad)
-{
+Loaders.loadAudio = function (file, onLoad) {
 	var name = FileSystem.getFileName(file.name);
 	var reader = new FileReader();
 
-	reader.onload = function ()
-	{
+	reader.onload = function () {
 		var audio = new Audio(reader.result);
 		audio.name = name;
 
-		if(onLoad !== undefined)
-		{
+		if(onLoad !== undefined) {
 			onLoad(audio);
 		}
 
@@ -240,39 +217,32 @@ Loaders.loadAudio = function (file, onLoad)
 };
 
 // Load font from file object
-Loaders.loadFont = function (file, onLoad)
-{
+Loaders.loadFont = function (file, onLoad) {
 	var name = FileSystem.getFileName(file.name);
 	var extension = FileSystem.getFileExtension(file.name);
 	var reader = new FileReader();
 
-	reader.onload = function ()
-	{
-		if(extension === "json")
-		{
+	reader.onload = function () {
+		if(extension === "json") {
 			var font = new Font(JSON.parse(reader.result));
 		}
-		else
-		{
+		else {
 			var font = new Font(reader.result);
 			font.encoding = extension;
 		}
 		font.name = name;
 
-		if(onLoad !== undefined)
-		{
+		if(onLoad !== undefined) {
 			onLoad(font);
 		}
 
 		Editor.addAction(new AddResourceAction(font, Editor.program, "fonts"));
 	};
 
-	if(extension === "json")
-	{
+	if(extension === "json") {
 		reader.readAsText(file);
 	}
-	else
-	{
+	else {
 		reader.readAsArrayBuffer(file);
 	}
 };
@@ -286,25 +256,20 @@ Loaders.loadFont = function (file, onLoad)
  * @method loadSpineAnimation
  * @param {File} file File to load.
  */
-Loaders.loadSpineAnimation = async function (file)
-{
-	try
-	{
+Loaders.loadSpineAnimation = async function (file) {
+	try {
 		var path = FileSystem.getFilePath(file.path);
 
 		var atlasFile = null;
 		var files = FileSystem.getFilesDirectory(path);
-		for(var i = 0; i < files.length; i++)
-		{
-			if(files[i].endsWith("atlas"))
-			{
+		for(var i = 0; i < files.length; i++) {
+			if(files[i].endsWith("atlas")) {
 				atlasFile = path + files[i];
 				break;
 			}
 		}
 
-		if(atlasFile === null)
-		{
+		if(atlasFile === null) {
 			Editor.alert(Locale.failedLoadSpine);
 			console.warn("nunuStudio: No atlas file found in the directory.");
 			return;
@@ -317,8 +282,7 @@ Loaders.loadSpineAnimation = async function (file)
 		animation.name = FileSystem.getFileName(file.path);
 		Editor.addObject(animation);
 	}
-	catch(e)
-	{
+	catch(e) {
 		Editor.alert(Locale.failedLoadSpine + "(" + e + ")");
 	}
 };
@@ -330,13 +294,11 @@ Loaders.loadSpineAnimation = async function (file)
  * @method loadText
  * @param {File} file File to load.
  */
-Loaders.loadText = function (file)
-{
+Loaders.loadText = function (file) {
 	var reader = new FileReader();
 	var name = FileSystem.getFileNameWithExtension(file.name);
 
-	reader.onload = function ()
-	{
+	reader.onload = function () {
 		var resource = new TextFile(reader.result, FileSystem.getFileExtension(name));
 		resource.name = name;
 
@@ -355,76 +317,64 @@ Loaders.loadText = function (file)
  * @param {File} file File to be read and parsed.
  * @param {Object3D} parent Object to add the objects.
  */
-Loaders.loadModel = async function (file, parent)
-{
+Loaders.loadModel = async function (file, parent, callback) {
 	var name = file.name;
 	var extension = FileSystem.getFileExtension(name);
 	var path = file.path !== undefined ? FileSystem.getFilePath(file.path) : "";
 	var modal = new LoadingModal(DocumentBody);
+	callback ||= Editor.addObject;
 	modal.show();
 
-	try
-	{
+	try {
 		// GCode
-		if(extension === "gcode")
-		{
+		if(extension === "gcode") {
 			var reader = new FileReader();
-			reader.onload = function ()
-			{
+			reader.onload = function () {
 				var loader = new GCodeLoader();
 				var obj = loader.parse(reader.result);
-				Editor.addObject(obj, parent);
+				callback(obj, parent);
 				modal.destroy();
 			};
 
 			reader.readAsText(file);
 		}
 		// Wavefront OBJ
-		else if(extension === "obj")
-		{
+		else if(extension === "obj") {
 			var materials = null;
 
 			// Look for MTL file
-			if(Nunu.runningOnDesktop())
-			{
-				try
-				{
+			if(Nunu.runningOnDesktop()) {
+				try {
 					var mtl = FileSystem.getNameWithoutExtension(file.path) + ".mtl";
 
-					if(FileSystem.fileExists(mtl))
-					{
+					if(FileSystem.fileExists(mtl)) {
 						console.log("nunuStudio: MTL file found.", path);
 						var mtlLoader = new MTLLoader();
 						mtlLoader.setPath(path);
 						materials = mtlLoader.parse(await FileSystem.readFile(mtl), path);
 					}
 				}
-				catch(f)
-				{
+				catch(f) {
 					Editor.alert(Locale.errorLoadingFile + "\n(" + f + ")");
 					console.error("nunuStudio: Error loading file", f);
 				}
 			}
 
 			var reader = new FileReader();
-			reader.onload = function ()
-			{
-				try
-				{
+			reader.onload = function () {
+				try {
 					var loader = new OBJLoader();
 
-					if(materials !== null)
-					{
+					if(materials !== null) {
 						loader.setMaterials(materials);
 					}
 
 					var obj = loader.parse(reader.result);
 					obj.name = FileSystem.getFileName(name);
-					Editor.addObject(obj, parent);
+					callback(obj, parent);
 					modal.destroy();
 				}
-				catch(e)
-				{
+				catch(e) {
 					Editor.alert(Locale.errorLoadingFile + "\n(" + e + ")");
 					console.error("nunuStudio: Error loading file", e);
 				}
@@ -433,22 +383,17 @@ Loaders.loadModel = async function (file, parent)
 			reader.readAsText(file);
 		}
 		// 3MF
-		else if(extension === "3mf")
-		{
+		else if(extension === "3mf") {
 			var reader = new FileReader();
-			reader.onload = function ()
-			{
-				try
-				{
+			reader.onload = function () {
+				try {
 					var loader = new ThreeMFLoader();
-					loader.parse(reader.result, function (obj)
-					{
-						Editor.addObject(obj, parent);
+					loader.parse(reader.result, function (obj) {
+						callback(obj, parent);
 						modal.destroy();
 					});
 				}
-				catch(e)
-				{
+				catch(e) {
 					Editor.alert(Locale.errorLoadingFile + "\n(" + e + ")");
 					console.error("nunuStudio: Error loading file", e);
 				}
@@ -456,13 +401,10 @@ Loaders.loadModel = async function (file, parent)
 			reader.readAsArrayBuffer(file);
 		}
 		// VOX
-		else if(extension === "vox")
-		{
+		else if(extension === "vox") {
 			var reader = new FileReader();
-			reader.onload = function ()
-			{
-				try
-				{
+			reader.onload = function () {
+				try {
 					var loader = new VOXLoader();
 					var chunks = loader.parse(reader.result);
 
@@ -479,15 +421,13 @@ Loaders.loadModel = async function (file, parent)
 					var group = new Group();
 					group.name = name;
 
-					for(var i = 0; i < chunks.length; i++)
-					{
+					for(var i = 0; i < chunks.length; i++) {
 						var chunk = chunks[i];
 						var size = chunk.size;
 						var data = chunk.data;
 
 						var mesh = new InstancedMesh(geometry, material, data.length / 4);
-						for(var j = 0, k = 0; j < data.length; j += 4, k++)
-						{
+						for(var j = 0, k = 0; j < data.length; j += 4, k++) {
 							var x = data[j + 0] - size.x / 2;
 							var y = data[j + 1] - size.y / 2;
 							var z = data[j + 2] - size.z / 2;
@@ -497,11 +437,10 @@ Loaders.loadModel = async function (file, parent)
 
 					}
 
-					Editor.addObject(group, parent);
+					callback(group, parent);
 					modal.destroy();
 				}
-				catch(e)
-				{
+				catch(e) {
 					Editor.alert(Locale.errorLoadingFile + "\n(" + e + ")");
 					console.error("nunuStudio: Error loading file", e);
 				}
@@ -509,21 +448,17 @@ Loaders.loadModel = async function (file, parent)
 			reader.readAsArrayBuffer(file);
 		}
 		// AWD
-		else if(extension === "awd")
-		{
+		else if(extension === "awd") {
 			var reader = new FileReader();
-			reader.onload = function ()
-			{
-				try
-				{
+			reader.onload = function () {
+				try {
 					var loader = new AWDLoader();
 					loader._baseDir = path;
 					var awd = loader.parse(reader.result);
-					Editor.addObject(awd, parent);
+					callback(awd, parent);
 					modal.destroy();
 				}
-				catch(e)
-				{
+				catch(e) {
 					Editor.alert(Locale.errorLoadingFile + "\n(" + e + ")");
 					console.error("nunuStudio: Error loading file", e);
 				}
@@ -531,20 +466,16 @@ Loaders.loadModel = async function (file, parent)
 			reader.readAsArrayBuffer(file);
 		}
 		// AMF
-		else if(extension === "amf")
-		{
+		else if(extension === "amf") {
 			var reader = new FileReader();
-			reader.onload = function ()
-			{
-				try
-				{
+			reader.onload = function () {
+				try {
 					var loader = new AMFLoader();
 					var amf = loader.parse(reader.result);
-					Editor.addObject(amf, parent);
+					callback(amf, parent);
 					modal.destroy();
 				}
-				catch(e)
-				{
+				catch(e) {
 					Editor.alert(Locale.errorLoadingFile + "\n(" + e + ")");
 					console.error("nunuStudio: Error loading file", e);
 				}
@@ -552,20 +483,16 @@ Loaders.loadModel = async function (file, parent)
 			reader.readAsArrayBuffer(file);
 		}
 		// Assimp
-		else if(extension === "assimp")
-		{
+		else if(extension === "assimp") {
 			var reader = new FileReader();
-			reader.onload = function ()
-			{
-				try
-				{
+			reader.onload = function () {
+				try {
 					var loader = new AssimpLoader();
 					var assimp = loader.parse(reader.result, path);
-					Editor.addObject(assimp.object, parent);
+					callback(assimp.object, parent);
 					modal.destroy();
 				}
-				catch(e)
-				{
+				catch(e) {
 					Editor.alert(Locale.errorLoadingFile + "\n(" + e + ")");
 					console.error("nunuStudio: Error loading file", e);
 				}
@@ -573,29 +500,23 @@ Loaders.loadModel = async function (file, parent)
 			reader.readAsArrayBuffer(file);
 		}
 		// Babylon
-		else if(extension === "babylon")
-		{
+		else if(extension === "babylon") {
 			var reader = new FileReader();
-			reader.onload = function ()
-			{
-				try
-				{
+			reader.onload = function () {
+				try {
 					var loader = new BabylonLoader();
 					var json = JSON.parse(reader.result);
 					var babylon = loader.parse(json, path);
 					babylon.type = "Group";
-					babylon.traverse(function (object)
-					{
-						if(object instanceof Mesh)
-						{
+					babylon.traverse(function (object) {
+						if(object instanceof Mesh) {
 							object.material = new MeshPhongMaterial();
 						}
 					});
-					Editor.addObject(babylon, parent);
+					callback(babylon, parent);
 					modal.destroy();
 				}
-				catch(e)
-				{
+				catch(e) {
 					Editor.alert(Locale.errorLoadingFile + "\n(" + e + ")");
 					console.error("nunuStudio: Error loading file", e);
 				}
@@ -615,7 +536,7 @@ Loaders.loadModel = async function (file, parent)
 		// 				var container = new Group();
 		// 				container.name = FileSystem.getNameWithoutExtension(name);
 		// 				blend.three.loadScene(container);
-		// 				Editor.addObject(container, parent);
+		// 				callback(container, parent);
 		// 				modal.destroy();
 		// 			});
 		// 		}
@@ -628,21 +549,17 @@ Loaders.loadModel = async function (file, parent)
 		// 	reader.readAsArrayBuffer(file);
 		// }
 		// 3DS
-		else if(extension === "3ds")
-		{
+		else if(extension === "3ds") {
 			var reader = new FileReader();
-			reader.onload = function ()
-			{
-				try
-				{
+			reader.onload = function () {
+				try {
 					var loader = new TDSLoader();
 					loader.setPath(path);
 					var group = loader.parse(reader.result);
-					Editor.addObject(group, parent);
+					callback(group, parent);
 					modal.destroy();
 				}
-				catch(e)
-				{
+				catch(e) {
 					Editor.alert(Locale.errorLoadingFile + "\n(" + e + ")");
 					console.error("nunuStudio: Error loading file", e);
 				}
@@ -650,35 +567,28 @@ Loaders.loadModel = async function (file, parent)
 			reader.readAsArrayBuffer(file);
 		}
 		// Collada
-		else if(extension === "dae")
-		{
+		else if(extension === "dae") {
 			var reader = new FileReader();
-			reader.onload = function ()
-			{
-				try
-				{
+			reader.onload = function () {
+				try {
 					var loader = new ColladaLoader();
 					var collada = loader.parse(reader.result, path);
 
 					var scene = collada.scene;
 					var animations = collada.animations;
 
-					if(animations.length > 0)
-					{
-						scene.traverse(function (child)
-						{
-							if(child instanceof SkinnedMesh)
-							{
+					if(animations.length > 0) {
+						scene.traverse(function (child) {
+							if(child instanceof SkinnedMesh) {
 								child.animations = animations;
 							}
 						});
 					}
 
-					Editor.addObject(scene, parent);
+					callback(scene, parent);
 					modal.destroy();
 				}
-				catch(e)
-				{
+				catch(e) {
 					Editor.alert(Locale.errorLoadingFile + "\n(" + e + ")");
 					console.error("nunuStudio: Error loading file", e);
 				}
@@ -686,36 +596,29 @@ Loaders.loadModel = async function (file, parent)
 			reader.readAsText(file);
 		}
 		// Draco
-		else if(extension === "drc")
-		{
+		else if(extension === "drc") {
 			var reader = new FileReader();
-			reader.onload = function ()
-			{
-				try
-				{
+			reader.onload = function () {
+				try {
 					var loader = new DRACOLoader();
 					loader.setDecoderPath(Global.FILE_PATH + "wasm/draco/");
 					loader.setDecoderConfig({ type: "wasm" });
-					loader.decodeDracoFile(reader.result, function (geometry)
-					{
+					loader.decodeDracoFile(reader.result, function (geometry) {
 						loader.releaseDecoderModule();
 
-						if(geometry.isBufferGeometry === true)
-						{
+						if(geometry.isBufferGeometry === true) {
 							var normals = geometry.getAttribute("normal");
-							if(normals === undefined)
-							{
+							if(normals === undefined) {
 								geometry.computeVertexNormals();
 							}
 						}
 
 						var mesh = new Mesh(geometry, Editor.defaultMaterial);
-						Editor.addObject(mesh, parent);
+						callback(mesh, parent);
 						modal.destroy();
 					});
 				}
-				catch(e)
-				{
+				catch(e) {
 					Editor.alert(Locale.errorLoadingFile + "\n(" + e + ")");
 					console.error("nunuStudio: Error loading file", e);
 				}
@@ -723,21 +626,17 @@ Loaders.loadModel = async function (file, parent)
 			reader.readAsArrayBuffer(file);
 		}
 		// GLTF
-		else if(extension === "gltf" || extension === "glb")
-		{
+		else if(extension === "gltf" || extension === "glb") {
 			var reader = new FileReader();
-			reader.onload = function ()
-			{
-				try
-				{
+			reader.onload = function () {
+				try {
 					var dracoLoader = new DRACOLoader();
 					dracoLoader.setDecoderPath(Global.FILE_PATH + "wasm/draco/");
 					dracoLoader.setDecoderConfig({ type: "wasm" });
 
 					var loader = new GLTFLoader();
 					loader.dracoLoader = dracoLoader;
-					loader.parse(reader.result, path, function (gltf)
-					{
+					loader.parse(reader.result, path, function (gltf) {
 						dracoLoader.dispose();
 
 						var scene = gltf.scene;
@@ -745,23 +644,19 @@ Loaders.loadModel = async function (file, parent)
 						scene.name = FileSystem.getNameWithoutExtension(name);
 
 						var animations = gltf.animations;
-						if(animations.length > 0)
-						{
-							scene.traverse(function (child)
-							{
-								if(child instanceof SkinnedMesh)
-								{
+						if(animations.length > 0) {
+							scene.traverse(function (child) {
+								if(child instanceof SkinnedMesh) {
 									child.animations = animations;
 								}
 							});
 						}
 
-						Editor.addObject(scene, parent);
+						callback(scene, parent);
 						modal.destroy();
 					});
 				}
-				catch(e)
-				{
+				catch(e) {
 					Editor.alert(Locale.errorLoadingFile + "\n(" + e + ")");
 					console.error("nunuStudio: Error loading file", e);
 				}
@@ -769,13 +664,10 @@ Loaders.loadModel = async function (file, parent)
 			reader.readAsArrayBuffer(file);
 		}
 		// PLY
-		else if(extension === "ply")
-		{
+		else if(extension === "ply") {
 			var reader = new FileReader();
-			reader.onload = function ()
-			{
-				try
-				{
+			reader.onload = function () {
+				try {
 					var loader = new PLYLoader();
 					var modelName = FileSystem.getNameWithoutExtension(name);
 
@@ -784,11 +676,10 @@ Loaders.loadModel = async function (file, parent)
 
 					var mesh = new Mesh(geometry, Editor.defaultMaterial);
 					mesh.name = modelName;
-					Editor.addObject(mesh, parent);
+					callback(mesh, parent);
 					modal.destroy();
 				}
-				catch(e)
-				{
+				catch(e) {
 					Editor.alert(Locale.errorLoadingFile + "\n(" + e + ")");
 					console.error("nunuStudio: Error loading file", e);
 				}
@@ -796,13 +687,10 @@ Loaders.loadModel = async function (file, parent)
 			reader.readAsText(file);
 		}
 		// VTK
-		else if(extension === "vtk" || extension === "vtp")
-		{
+		else if(extension === "vtk" || extension === "vtp") {
 			var reader = new FileReader();
-			reader.onload = function ()
-			{
-				try
-				{
+			reader.onload = function () {
+				try {
 					var loader = new VTKLoader();
 					var modelName = FileSystem.getNameWithoutExtension(name);
 					var geometry = loader.parse(reader.result);
@@ -810,11 +698,10 @@ Loaders.loadModel = async function (file, parent)
 
 					var mesh = new Mesh(geometry, Editor.defaultMaterial);
 					mesh.name = modelName;
-					Editor.addObject(mesh, parent);
+					callback(mesh, parent);
 					modal.destroy();
 				}
-				catch(e)
-				{
+				catch(e) {
 					Editor.alert(Locale.errorLoadingFile + "\n(" + e + ")");
 					console.error("nunuStudio: Error loading file", e);
 				}
@@ -822,13 +709,10 @@ Loaders.loadModel = async function (file, parent)
 			reader.readAsArrayBuffer(file);
 		}
 		// PRWM
-		else if(extension === "prwm")
-		{
+		else if(extension === "prwm") {
 			var reader = new FileReader();
-			reader.onload = function ()
-			{
-				try
-				{
+			reader.onload = function () {
+				try {
 					var loader = new PRWMLoader();
 					var modelName = FileSystem.getNameWithoutExtension(name);
 
@@ -837,11 +721,10 @@ Loaders.loadModel = async function (file, parent)
 
 					var mesh = new Mesh(geometry, Editor.defaultMaterial);
 					mesh.name = modelName;
-					Editor.addObject(mesh, parent);
+					callback(mesh, parent);
 					modal.destroy();
 				}
-				catch(e)
-				{
+				catch(e) {
 					Editor.alert(Locale.errorLoadingFile + "\n(" + e + ")");
 					console.error("nunuStudio: Error loading file", e);
 				}
@@ -850,25 +733,20 @@ Loaders.loadModel = async function (file, parent)
 		}
 
 		// VRML
-		else if(extension === "wrl" || extension === "vrml")
-		{
+		else if(extension === "wrl" || extension === "vrml") {
 			var reader = new FileReader();
-			reader.onload = function ()
-			{
-				try
-				{
+			reader.onload = function () {
+				try {
 					var loader = new VRMLLoader();
 					var scene = loader.parse(reader.result);
 
-					for(var i = 0; i < scene.children.length; i++)
-					{
-						Editor.addObject(scene.children[i], parent);
+					for(var i = 0; i < scene.children.length; i++) {
+						callback(scene.children[i], parent);
 					}
 
 					modal.destroy();
 				}
-				catch(e)
-				{
+				catch(e) {
 					Editor.alert(Locale.errorLoadingFile + "\n(" + e + ")");
 					console.error("nunuStudio: Error loading file", e);
 				}
@@ -876,32 +754,25 @@ Loaders.loadModel = async function (file, parent)
 			reader.readAsText(file);
 		}
 		// FBX
-		else if(extension === "fbx")
-		{
+		else if(extension === "fbx") {
 			var reader = new FileReader();
-			reader.onload = function ()
-			{
-				try
-				{
+			reader.onload = function () {
+				try {
 					var loader = new FBXLoader();
 					var object = loader.parse(reader.result, path);
 
-					if(object.animations !== undefined && object.animations.length > 0)
-					{
-						object.traverse(function (child)
-						{
-							if(child instanceof SkinnedMesh)
-							{
+					if(object.animations !== undefined && object.animations.length > 0) {
+						object.traverse(function (child) {
+							if(child instanceof SkinnedMesh) {
 								child.animations = object.animations;
 							}
 						});
 					}
 
-					Editor.addObject(object, parent);
+					callback(object, parent);
 					modal.destroy();
 				}
-				catch(e)
-				{
+				catch(e) {
 					Editor.alert(Locale.errorLoadingFile + "\n(" + e + ")");
 					console.error("nunuStudio: Error loading file", e);
 				}
@@ -909,17 +780,14 @@ Loaders.loadModel = async function (file, parent)
 			reader.readAsArrayBuffer(file);
 		}
 		// X
-		else if(extension === "x")
-		{
-			function convertAnimation(baseAnime, name)
-			{
+		else if(extension === "x") {
+			function convertAnimation(baseAnime, name) {
 				var animation = {};
 				animation.fps = baseAnime.fps;
 				animation.name = name;
 				animation.hierarchy = [];
 
-				for(var i = 0; i < baseAnime.hierarchy.length; i++)
-				{
+				for(var i = 0; i < baseAnime.hierarchy.length; i++) {
 					var firstKey = -1;
 
 					var frame = {};
@@ -927,12 +795,9 @@ Loaders.loadModel = async function (file, parent)
 					frame.parent = baseAnime.hierarchy[i].parent;
 					frame.keys = [];
 
-					for(var m = 1; m < baseAnime.hierarchy[i].keys.length; m++)
-					{
-						if(baseAnime.hierarchy[i].keys[m].time > 0)
-						{
-							if(firstKey === -1)
-							{
+					for(var m = 1; m < baseAnime.hierarchy[i].keys.length; m++) {
+						if(baseAnime.hierarchy[i].keys[m].time > 0) {
+							if(firstKey === -1) {
 								firstKey = m - 1;
 								frame.keys.push(baseAnime.hierarchy[i].keys[m - 1]);
 							}
@@ -942,8 +807,7 @@ Loaders.loadModel = async function (file, parent)
 
 						animation.length = baseAnime.hierarchy[i].keys[m].time;
 
-						if(m >= baseAnime.hierarchy[i].keys.length - 1)
-						{
+						if(m >= baseAnime.hierarchy[i].keys.length - 1) {
 							break;
 						}
 
@@ -956,38 +820,30 @@ Loaders.loadModel = async function (file, parent)
 			}
 
 			var reader = new FileReader();
-			reader.onload = function ()
-			{
-				try
-				{
+			reader.onload = function () {
+				try {
 					var loader = new XLoader();
 					loader.baseDir = path;
-					loader.parse(reader.result, function (object)
-					{
-						for(var i = 0; i < object.FrameInfo.length; i++)
-						{
+					loader.parse(reader.result, function (object) {
+						for(var i = 0; i < object.FrameInfo.length; i++) {
 							var model = object.FrameInfo[i];
 
-							if(model instanceof SkinnedMesh)
-							{
-								if(object.XAnimationObj !== undefined && object.XAnimationObj.length > 0)
-								{
+							if(model instanceof SkinnedMesh) {
+								if(object.XAnimationObj !== undefined && object.XAnimationObj.length > 0) {
 									var animations = object.XAnimationObj;
-									for(var j = 0; j < animations.length; j++)
-									{
+									for(var j = 0; j < animations.length; j++) {
 										model.animationSpeed = 1000;
 										model.animations.push(AnimationClip.parseAnimation(convertAnimation(animations[j], animations[j].name), model.skeleton.bones));
 									}
 								}
 							}
 
-							Editor.addObject(model, parent);
+							callback(model, parent);
 						}
 						modal.destroy();
 					});
 				}
-				catch(e)
-				{
+				catch(e) {
 					Editor.alert(Locale.errorLoadingFile + "\n(" + e + ")");
 					console.error("nunuStudio: Error loading file", e);
 				}
@@ -995,22 +851,18 @@ Loaders.loadModel = async function (file, parent)
 			reader.readAsArrayBuffer(file);
 		}
 		// PCD
-		else if(extension === "pcd")
-		{
+		else if(extension === "pcd") {
 			var reader = new FileReader();
-			reader.onload = function ()
-			{
-				try
-				{
+			reader.onload = function () {
+				try {
 					var loader = new PCDLoader();
 					var pcd = loader.parse(reader.result, file.name);
 					pcd.material.name = "points";
 
-					Editor.addObject(pcd, parent);
+					callback(pcd, parent);
 					modal.destroy();
 				}
-				catch(e)
-				{
+				catch(e) {
 					Editor.alert(Locale.errorLoadingFile + "\n(" + e + ")");
 					console.error("nunuStudio: Error loading file", e);
 				}
@@ -1018,26 +870,21 @@ Loaders.loadModel = async function (file, parent)
 			reader.readAsArrayBuffer(file);
 		}
 		// SVG
-		else if(extension === "svg")
-		{
+		else if(extension === "svg") {
 			var reader = new FileReader();
-			reader.onload = function ()
-			{
-				try
-				{
+			reader.onload = function () {
+				try {
 					var loader = new SVGLoader();
 					var paths = loader.parse(reader.result);
 
 					var group = new Group();
 					var position = 0;
 
-					for(var i = 0; i < paths.length; i++)
-					{
+					for(var i = 0; i < paths.length; i++) {
 						var material = new MeshBasicMaterial({ color: paths[i].color });
 						var shapes = paths[i].toShapes(true);
 
-						for(var j = 0; j < shapes.length; j++)
-						{
+						for(var j = 0; j < shapes.length; j++) {
 							var shape = shapes[j];
 							var geometry = new ShapeGeometry(shape);
 							var mesh = new Mesh(geometry, material);
@@ -1047,11 +894,10 @@ Loaders.loadModel = async function (file, parent)
 						}
 					}
 
-					Editor.addObject(group, parent);
+					callback(group, parent);
 					modal.destroy();
 				}
-				catch(e)
-				{
+				catch(e) {
 					Editor.alert(Locale.errorLoadingFile + "\n(" + e + ")");
 					console.error("nunuStudio: Error loading file", e);
 				}
@@ -1059,24 +905,20 @@ Loaders.loadModel = async function (file, parent)
 			reader.readAsText(file);
 		}
 		// STL
-		else if(extension === "stl")
-		{
+		else if(extension === "stl") {
 			var reader = new FileReader();
-			reader.onload = function ()
-			{
-				try
-				{
+			reader.onload = function () {
+				try {
 					var loader = new STLLoader();
 
 					var modelName = FileSystem.getNameWithoutExtension(name);
 					var geometry = loader.parse(reader.result);
 					geometry.name = modelName;
 
-					Editor.addObject(new Mesh(geometry, Editor.defaultMaterial), parent);
+					callback(new Mesh(geometry, Editor.defaultMaterial), parent);
 					modal.destroy();
 				}
-				catch(e)
-				{
+				catch(e) {
 					Editor.alert(Locale.errorLoadingFile + "\n(" + e + ")");
 					console.error("nunuStudio: Error loading file", e);
 				}
@@ -1084,13 +926,10 @@ Loaders.loadModel = async function (file, parent)
 			reader.readAsArrayBuffer(file);
 		}
 		// threejs JSON
-		else if(extension === "json")
-		{
+		else if(extension === "json") {
 			var reader = new FileReader();
-			reader.onload = function ()
-			{
-				try
-				{
+			reader.onload = function () {
+				try {
 					var loader = new JSONLoader();
 					var data = loader.parse(JSON.parse(reader.result));
 					var materials = data.materials;
@@ -1098,50 +937,42 @@ Loaders.loadModel = async function (file, parent)
 
 					// Material
 					var material = null;
-					if(materials === undefined || materials.length === 0)
-					{
+					if(materials === undefined || materials.length === 0) {
 						material = Editor.defaultMaterial;
 					}
-					else if(materials.length === 1)
-					{
+					else if(materials.length === 1) {
 						material = materials[0];
 					}
-					else if(materials.length > 1)
-					{
+					else if(materials.length > 1) {
 						material = materials;
 					}
 
 					// Mesh
 					var mesh = null;
-					if(geometry.bones.length > 0)
-					{
+					if(geometry.bones.length > 0) {
 						mesh = new SkinnedMesh(geometry, material);
 					}
-					else
-					{
+					else {
 						mesh = new Mesh(geometry, material);
 					}
 
-					Editor.addObject(mesh, parent);
+					callback(mesh, parent);
 					modal.destroy();
 				}
-				catch(e)
-				{
+				catch(e) {
 					Editor.alert(Locale.errorLoadingFile + ':' + name + "\n(" + e + ")");
 					console.error("nunuStudio: Error loading file", e);
 				}
 			};
 			reader.readAsText(file);
 		}
-		else
-		{
+		else {
 			modal.destroy();
 			Editor.alert(Locale.unknownFileFormat + ':' + name);
 			console.warn("nunuStudio: Unknown file format");
 		}
 	}
-	catch(e)
-	{
+	catch(e) {
 		modal.destroy();
 		Editor.alert(Locale.errorLoadingFile + ':' + name + "\n(" + e + ")");
 		console.error("nunuStudio: Error loading file", e);
