@@ -84,9 +84,9 @@ class ObjectLoader extends ResourceContainer
 
 		var self = this;
 		var loader = new FileLoader(this.manager);
-		loader.load(url, function (text)
+		loader.load(url, async function (text)
 		{
-			self.parse(JSON.parse(text), onLoad);
+			await self.parse(JSON.parse(text), onLoad);
 		}, onProgress, onError);
 	}
 
@@ -100,7 +100,7 @@ class ObjectLoader extends ResourceContainer
 	 * @param {Function} onLoad onLoad callback.
 	 * @return {Object} Program loaded from json data.
 	 */
-	parse(json, onLoad)
+	async parse(json, onLoad)
 	{
 		this.parseResources(json.resources);
 		this.parseShape(json.shapes);
@@ -112,7 +112,7 @@ class ObjectLoader extends ResourceContainer
 		this.parseTextures(json.textures);
 		this.parseMaterials(json.materials);
 
-		var object = this.parseObject(json.object);
+		var object = await this.parseObject(json.object);
 
 		// Bind sekeletons
 		if(json.skeletons !== undefined)
@@ -653,7 +653,7 @@ class ObjectLoader extends ResourceContainer
 
 					if(data.defaultCamera !== undefined)
 					{
-						object.defaultCamera = this.parse(data.defaultCamera);
+						object.defaultCamera = await this.parse(data.defaultCamera);
 					}
 
 					if(data.cameras !== undefined)
@@ -977,7 +977,7 @@ class ObjectLoader extends ResourceContainer
 		{
 			for(var child in data.children)
 			{
-				object.add(this.parseObject(data.children[child]));
+				object.add(await this.parseObject(data.children[child]));
 			}
 		}
 

@@ -620,7 +620,7 @@ class Program extends ResourceManager
 	{
 		const { ObjectLoader } = await import("../loaders/ObjectLoader.js");
 
-		return new ObjectLoader().parse(await this.toJSON());
+		return await new ObjectLoader().parse(await this.toJSON());
 	}
 
 	/**

@@ -512,4 +512,7 @@ class ResourceManager extends Object3D
 		}
 	}
 }
+
+Object.assign(ResourceManager.prototype, ResourceContainer.prototype);
+
 export { ResourceManager };

@@ -282,17 +282,17 @@ class MainMenu extends Component
 					var loader = new ObjectLoader();
 					var reader = new FileReader();
 
-					reader.onload = function ()
+					reader.onload = async function ()
 					{
 						if(binary)
 						{
 							var pson = new StaticPair();
 							var data = pson.decode(reader.result);
-							var program = loader.parse(data);
+							var program = await loader.parse(data);
 						}
 						else
 						{
-							var program = loader.parse(JSON.parse(reader.result));
+							var program = await loader.parse(JSON.parse(reader.result));
 						}
 
 						var actions = [];

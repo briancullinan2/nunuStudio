@@ -170,7 +170,7 @@ Editor.initialize = async function ()
 
 	// Initialize User Interface
 	Editor.gui = new Interface();
-	await Editor.gui.loading
+	await Editor.gui.loading;
 	Editor.gui.updateInterface();
 
 	// Check is some project file passed as argument
@@ -802,7 +802,7 @@ Editor.pasteObject = async function (target)
 		var objs = [];
 		for(var i = 0; i < data.length; i++)
 		{
-			var obj = new ObjectLoader().parse(data[i]);
+			var obj = await new ObjectLoader().parse(data[i]);
 			obj.traverse(function (child)
 			{
 				child.uuid = MathUtils.generateUUID();
@@ -1186,7 +1186,7 @@ Editor.loadProgram = async function (file, binary)
 	var modal = new LoadingModal(DocumentBody);
 	modal.show();
 
-	function onload()
+	async function onload()
 	{
 		try
 		{
@@ -1198,11 +1198,11 @@ Editor.loadProgram = async function (file, binary)
 			{
 				var pson = new StaticPair();
 				var data = pson.decode(reader.result);
-				program = loader.parse(data);
+				program = await loader.parse(data);
 			}
 			else
 			{
-				program = loader.parse(JSON.parse(reader.result));
+				program = await loader.parse(JSON.parse(reader.result));
 			}
 
 			Editor.setOpenFile(file);

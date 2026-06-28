@@ -221,14 +221,14 @@ App.prototype.loadProgram = async function (fname, onProgress)
 	if(fname.endsWith(".isp"))
 	{
 		const data = await FileSystem.readFile(fname, false, undefined, handleProgress);
-		this.program = loader.parse(JSON.parse(data));
+		this.program = await loader.parse(JSON.parse(data));
 	}
 	// Binary project
 	else if(fname.endsWith(".nsp"))
 	{
 		const data = await FileSystem.readFileArrayBuffer(fname, false, undefined, handleProgress);
 		const pson = new StaticPair();
-		this.program = loader.parse(pson.decode(data));
+		this.program = await loader.parse(pson.decode(data));
 	}
 
 	return this;

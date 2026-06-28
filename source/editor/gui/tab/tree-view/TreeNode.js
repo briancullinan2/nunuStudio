@@ -48,7 +48,7 @@ class TreeNode extends Component
 {
 	constructor(container)
 	{
-		super(container, "div")
+		super(container, "div");
 		// Container
 		this.container = container;
 
@@ -445,9 +445,9 @@ class TreeNode extends Component
 					});
 
 					// Duplicate object
-					context.addOption(Locale.duplicate, function ()
+					context.addOption(Locale.duplicate, async function ()
 					{
-						var object = new ObjectLoader().parse(self.object.toJSON());
+						var object = await new ObjectLoader().parse(self.object.toJSON());
 						object.traverse(function (child)
 						{
 							child.uuid = MathUtils.generateUUID();

@@ -116,7 +116,7 @@ class ParticleEmitter extends Points
 
 		var children = this.children;
 		this.children = [];
-		var particle = new ObjectLoader().parse(this.toJSON());
+		var particle = await new ObjectLoader().parse(this.toJSON());
 		this.children = children;
 
 		this.group = particle.group;
