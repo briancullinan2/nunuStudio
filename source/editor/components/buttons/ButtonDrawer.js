@@ -65,23 +65,74 @@ class ButtonDrawer extends ButtonIcon {
 		this.setExpanded(false);
 
 		var self = this;
+		this.hoverTimeout = null;
 
-		this.addEvent("mouseenter", function () {
-			if(self.disabled === false) {
-				self.setExpanded(true);
+		// Initialize static shared field tracker on the class constructor if undefined
+		if(this.constructor.activeMenu === undefined) {
+			this.constructor.activeMenu = null;
+		}
+
+		// Helper to safely clear timeouts on this instance
+		var clearTimer = function () {
+			if(self.hoverTimeout) {
+				clearTimeout(self.hoverTimeout);
+				self.hoverTimeout = null;
 			}
-		});
+		};
 
-		this.addEvent("mouseleave", function () {
-			self.setExpanded(false);
-		});
+		// Trigger Item - Mouse Enter
+		this.addEvent("mouseenter", function () {
+			if(self.disabled === true) {
+				return;
+			}
 
-		this.panel.addEvent("mouseenter", function () {
+			// Forcefully close a competing menu only if it's completely distinct
+			if(self.constructor.activeMenu && self.constructor.activeMenu !== self) {
+				if(self.constructor.activeMenu.hoverTimeout) {
+					clearTimeout(self.constructor.activeMenu.hoverTimeout);
+					self.constructor.activeMenu.hoverTimeout = null;
+				}
+				self.constructor.activeMenu.setExpanded(false);
+			}
+
+			clearTimer();
+			self.constructor.activeMenu = self;
 			self.setExpanded(true);
 		});
 
+		// Trigger Item - Mouse Leave
+		this.addEvent("mouseleave", function () {
+			if(self.disabled === true) {
+				return;
+			}
+
+			clearTimer();
+			self.hoverTimeout = setTimeout(function () {
+				// Only collapse if the mouse didn't successfully enter this panel session
+				if(self.constructor.activeMenu === self) {
+					self.setExpanded(false);
+					self.constructor.activeMenu = null;
+				}
+			}, 300);
+		});
+
+		// Main Dropdown Panel Box - Mouse Enter
+		this.panel.addEvent("mouseenter", function () {
+			// Keep everything alive and cancel the pending death timer from the trigger
+			clearTimer();
+			self.constructor.activeMenu = self;
+			self.setExpanded(true);
+		});
+
+		// Main Dropdown Panel Box - Mouse Leave
 		this.panel.addEvent("mouseleave", function () {
-			self.setExpanded(false);
+			clearTimer();
+			self.hoverTimeout = setTimeout(function () {
+				if(self.constructor.activeMenu === self) {
+					self.setExpanded(false);
+					self.constructor.activeMenu = null;
+				}
+			}, 300);
 		});
 	}
 

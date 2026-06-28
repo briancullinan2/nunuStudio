@@ -20,11 +20,10 @@ class Button extends Component {
 		 * @type {boolean}
 		 */
 		var disabled = false;
-		Object.defineProperty(this, "disabled",
-			{
-				get: function () { return disabled; },
-				set: function (value) { this.setDisabled(value); }
-			});
+		Object.defineProperty(this, "disabled", {
+			get: function () { return disabled; },
+			set: function (value) { this.setDisabled(value); }
+		});
 
 		/**
 		 * Base style of the button shown normally.
@@ -54,16 +53,41 @@ class Button extends Component {
 		this.preventDragEvents();
 
 		var self = this;
+		var parentController = parent;
 
 		this.addEvent("mouseenter", function () {
-			if(!self.disabled) {
-				self.setStyles(self.stylePointerOver);
+			if(self.disabled) {
+				return;
+			}
+
+			self.setStyles(self.stylePointerOver);
+
+			// Crucial: Clear the parent panel's close sequence if we are interacting inside it
+			if(parentController && parentController.hoverTimeout) {
+				clearTimeout(parentController.hoverTimeout);
+				parentController.hoverTimeout = null;
 			}
 		});
 
 		this.addEvent("mouseleave", function () {
-			if(!self.disabled) {
-				self.setStyles(self.styleBase);
+			if(self.disabled) {
+				return;
+			}
+
+			self.setStyles(self.styleBase);
+
+			// Give the parent layout tree a brand new countdown sequence so it can gracefully close if they exit the grid completely
+			if(parentController && typeof parentController.setExpanded === "function") {
+				if(parentController.hoverTimeout) {
+					clearTimeout(parentController.hoverTimeout);
+				}
+
+				parentController.hoverTimeout = setTimeout(function () {
+					parentController.setExpanded(false);
+					if(parentController.constructor && parentController.constructor.activeMenu === parentController) {
+						parentController.constructor.activeMenu = null;
+					}
+				}, 300);
 			}
 		});
 	}
