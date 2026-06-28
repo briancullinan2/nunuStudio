@@ -27,17 +27,22 @@
 
 
 ### TODO:
-Offline capable with a setting.
-Maximum frame rate limiter with a setting.
-Default maximum camera distance, and a setting.
-Improving the mouse menu hover, I found it sometimes disappears too quickly.
-Fixing the texture on the "Move Gripper"/TransformGizmoTranslate to be two sided. Add keyboard -> racetrace -> angle -> move with arrow keys.
-Change the ray tracer to be based on the active canvas orientation instead of the window.
-Throttling UI updates when loading large models into the scene and the project explorer.
-Remove the use of canvas.size to prevent layout recalculations when adding elements even though the window size hasn't changed. This causes speed problems when loading a model with thousands of vertices, like an entire Quake 3 map.
-Expose the loadObject() function externally to load external assets that users can double-click to add or clone to the scene.
-Most excitingly, I'm attaching my Objaverse-XL pipeline to the asset search bar, allowing anyone to add any object they search for out of 9 million models streamed from GitHub and Sketchfab!
-Add mobile/responsive support.
+DONE: Offline capable.
+DONE: Maximum frame rate limiter with a setting.
+DONE: Default maximum camera distance, and a setting.
+DONE: Improving the mouse menu hover, I found it sometimes disappears too quickly.
+DONE: Fixing the texture on the "Move Gripper"/TransformGizmoTranslate to be two sided.
+DONE: Throttling UI updates when loading large models into the scene and the project explorer.
+DONE: Remove the use of canvas.size to prevent layout recalculations when adding elements even though the window size hasn't changed. This causes speed problems when loading a model with thousands of vertices, like an entire Quake 3 map.
+
+---
+
+TODO:Offline mode setting.
+TODO: Add keyboard -> racetrace -> angle -> move with arrow keys.
+TODO: Change the ray tracer to be based on the active canvas orientation instead of the window.
+TODO: Expose the loadObject() function externally to load external assets that users can double-click to add or clone to the scene.
+TODO: Most excitingly, I'm attaching my Objaverse-XL pipeline to the asset search bar, allowing anyone to add any object they search for out of 9 million models streamed from GitHub and Sketchfab!
+TODO: Add mobile/responsive support.
 
 
 
