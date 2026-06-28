@@ -13,10 +13,8 @@ import { Component } from "../Component.js";
  * @extends {Component}
  * @param {Component} parent Parent element.
  */
-class TabGroup extends Component
-{
-	constructor(parent, placement)
-	{
+class TabGroup extends Component {
+	constructor(parent, placement) {
 		super(parent, "div");
 
 		var self = this;
@@ -29,8 +27,7 @@ class TabGroup extends Component
 		// Buttons
 		this.buttons = new Division(this);
 		this.buttons.element.style.backgroundColor = "var(--bar-color)";
-		this.buttons.element.ondrop = async function (event)
-		{
+		this.buttons.element.ondrop = async function (event) {
 			const { TabComponent } = await import("./TabComponent.js");
 
 			event.preventDefault();
@@ -38,8 +35,7 @@ class TabGroup extends Component
 			var uuid = event.dataTransfer.getData("uuid");
 			var tab = DragBuffer.get(uuid);
 
-			if(tab instanceof TabComponent)
-			{
+			if(tab instanceof TabComponent) {
 				self.attachTab(tab);
 				DragBuffer.pop(uuid);
 			}
@@ -108,12 +104,10 @@ class TabGroup extends Component
 		 */
 		this.focused = false;
 
-		this.element.onmouseenter = function ()
-		{
+		this.element.onmouseenter = function () {
 			self.focused = true;
 		};
-		this.element.onmouseleave = function ()
-		{
+		this.element.onmouseleave = function () {
 			self.focused = false;
 		};
 	}
@@ -124,10 +118,8 @@ class TabGroup extends Component
 	 *
 	 * @method updateMetadata
 	 */
-	updateMetadata()
-	{
-		for(var i = 0; i < this.options.length; i++)
-		{
+	updateMetadata() {
+		for(var i = 0; i < this.options.length; i++) {
 			this.options[i].updateMetadata();
 		}
 	}
@@ -137,10 +129,8 @@ class TabGroup extends Component
 	 *
 	 * @method updateMetadata
 	 */
-	updateObjectsView()
-	{
-		for(var i = 0; i < this.options.length; i++)
-		{
+	updateObjectsView() {
+		for(var i = 0; i < this.options.length; i++) {
 			this.options[i].updateObjectsView();
 		}
 	}
@@ -152,8 +142,7 @@ class TabGroup extends Component
 	 * @param {TabComponent} tab Tab to be moved.
 	 * @param {number} insertIndex Index where to place the tab.
 	 */
-	attachTab(tab, insertIndex)
-	{
+	attachTab(tab, insertIndex) {
 		// Remove from old group
 		tab.container.removeTab(tab.index, true);
 
@@ -163,20 +152,17 @@ class TabGroup extends Component
 		tab.attachTo(this.tab);
 
 		// Add to options
-		if(insertIndex !== undefined)
-		{
+		if(insertIndex !== undefined) {
 			tab.index = insertIndex;
 			this.options.splice(insertIndex, 0, tab);
 		}
-		else
-		{
+		else {
 			tab.index = this.options.length;
 			this.options.push(tab);
 		}
 
 		// Select the tab if none selected
-		if(this.selected === null)
-		{
+		if(this.selected === null) {
 			this.selectTab(tab);
 		}
 
@@ -193,8 +179,7 @@ class TabGroup extends Component
 	 * @param {number} origin Origin index.
 	 * @param {number} destination Destination index.
 	 */
-	moveTabIndex(origin, destination)
-	{
+	moveTabIndex(origin, destination) {
 		var button = this.options[origin];
 
 		this.options.splice(origin, 1);
@@ -204,18 +189,14 @@ class TabGroup extends Component
 		this.updateInterface();
 	}
 
-	updateSelection()
-	{
-		for(var i = 0; i < this.options.length; i++)
-		{
+	updateSelection() {
+		for(var i = 0; i < this.options.length; i++) {
 			this.options[i].updateSelection();
 		}
 	}
 
-	updateSettings()
-	{
-		for(var i = 0; i < this.options.length; i++)
-		{
+	updateSettings() {
+		for(var i = 0; i < this.options.length; i++) {
 			this.options[i].updateSettings();
 		}
 	}
@@ -225,10 +206,8 @@ class TabGroup extends Component
 	 *
 	 * @method getActiveTab
 	 */
-	getActiveTab()
-	{
-		if(this.selected !== null)
-		{
+	getActiveTab() {
+		if(this.selected !== null) {
 			return this.selected;
 		}
 
@@ -240,10 +219,8 @@ class TabGroup extends Component
 	 *
 	 * @method closeActual
 	 */
-	closeActual()
-	{
-		if(this.selected !== null && this.selected.closeable)
-		{
+	closeActual() {
+		if(this.selected !== null && this.selected.closeable) {
 			this.selected.deactivate();
 			this.removeTab(this.selected);
 		}
@@ -257,34 +234,38 @@ class TabGroup extends Component
 	 * @method selectTab
 	 * @param {TabComponent} tab TabComponent to be selected or index in the tab array.
 	 */
-	async selectTab(tab)
-	{
+	async selectTab(tab) {
 		const { TabComponent } = await import("./TabComponent.js");
 
-		if(this.selected !== null)
-		{
+		console.warn("nunuStudio [TabGroup]: selectTab called with:", {
+			input: tab,
+			type: typeof tab,
+			isTabComponentInstance: tab instanceof TabComponent,
+			availableOptionsLength: this.options ? this.options.length : 0,
+			currentlySelectedBefore: this.selected ? this.selected.constructor.name : null
+		});
+
+		if(this.selected !== null) {
 			this.selected.deactivate();
 		}
 
 		// Tab as a TabComponent object
-		if(tab instanceof TabComponent)
-		{
+		if(tab instanceof TabComponent) {
 			this.selected = tab;
 			this.selected.activate();
 		}
-		// Tab as a index
-		else if(typeof tab === "number" && tab > -1 && tab < this.options.length)
-		{
+		// Tab as an index
+		else if(typeof tab === "number" && tab > -1 && this.options && tab < this.options.length) {
 			this.selected = this.options[tab];
 			this.selected.activate();
 		}
-		else
-		{
+		else {
 			this.selected = null;
 		}
 
 		this.empty.style.display = this.selected === null ? "flex" : "none";
 		this.updateInterface();
+
 	}
 
 	/**
@@ -292,10 +273,8 @@ class TabGroup extends Component
 	 *
 	 * @method selectNextTab
 	 */
-	selectNextTab()
-	{
-		if(this.options.length > 0)
-		{
+	selectNextTab() {
+		if(this.options.length > 0) {
 			this.selectTab((this.selected.index + 1) % this.options.length);
 		}
 	}
@@ -305,16 +284,12 @@ class TabGroup extends Component
 	 *
 	 * @method selectPreviousTab
 	 */
-	selectPreviousTab()
-	{
-		if(this.options.length > 0)
-		{
-			if(this.selected.index === 0)
-			{
+	selectPreviousTab() {
+		if(this.options.length > 0) {
+			if(this.selected.index === 0) {
 				this.selectTab(this.options.length - 1);
 			}
-			else
-			{
+			else {
 				this.selectTab(this.selected.index - 1);
 			}
 		}
@@ -325,22 +300,28 @@ class TabGroup extends Component
 	 *
 	 * @method addtab
 	 */
-	async addTab(TabConstructor, closeable)
-	{
+	async addTab(TabConstructor, closeable) {
+		const { TabComponent } = await import("./TabComponent.js");
 		const { TabButton } = await import("./TabButton.js");
 
 		var tab = new TabConstructor(this.tab, closeable, this, this.options.length);
 		if(tab.loading && tab.loading instanceof Promise)
-			await tab.loading
+			await tab.loading;
 		tab.button = new TabButton(this.buttons, tab);
 		this.options.push(tab);
 
-		if(this.selected === null || this.options.length === 1)
-		{
+		if(this.selected === null || this.options.length === 1) {
+			// because of async/await
+			if(tab instanceof TabComponent) {
+				this.selected = tab;
+			}
+			// Tab as an index
+			else if(typeof tab === "number" && tab > -1 && this.options && tab < this.options.length) {
+				this.selected = this.options[tab];
+			}
 			this.selectTab(tab);
 		}
-		else
-		{
+		else {
 			this.updateInterface();
 		}
 
@@ -354,14 +335,10 @@ class TabGroup extends Component
 	 * @param {Constructor} type Type of tab to look for.
 	 * @param {Object} object Object attached to the tab.
 	 */
-	getTab(type, object)
-	{
-		for(var i = 0; i < this.options.length; i++)
-		{
-			if(this.options[i] instanceof type)
-			{
-				if(object === undefined || this.options[i].isAttached(object))
-				{
+	getTab(type, object) {
+		for(var i = 0; i < this.options.length; i++) {
+			if(this.options[i] instanceof type) {
+				if(object === undefined || this.options[i].isAttached(object)) {
 					return this.options[i];
 				}
 			}
@@ -377,21 +354,17 @@ class TabGroup extends Component
 	 * @param {number} index Index of tab to look for.
 	 * @param {boolean} dontDestroy If true the element is not destroyed.
 	 */
-	removeTab(index, dontDestroy)
-	{
+	removeTab(index, dontDestroy) {
 		// If index is an object get the actual index
-		if(typeof index === "object")
-		{
+		if(typeof index === "object") {
 			index = this.options.indexOf(index);
 		}
 
 		// Check if the index is in range
-		if(index > -1 && index < this.options.length)
-		{
+		if(index > -1 && index < this.options.length) {
 			var tab = this.options[index];
 
-			if(dontDestroy !== true)
-			{
+			if(dontDestroy !== true) {
 				tab.destroy();
 			}
 
@@ -399,19 +372,15 @@ class TabGroup extends Component
 			this.updateOptionIndex();
 
 			// Select option
-			if(this.selected === tab)
-			{
-				if(this.options.length > 0)
-				{
+			if(this.selected === tab) {
+				if(this.options.length > 0) {
 					this.selectTab(index !== 0 ? index - 1 : 0);
 				}
-				else
-				{
+				else {
 					this.selectTab(null);
 				}
 			}
-			else
-			{
+			else {
 				this.selectTab(null);
 			}
 
@@ -427,37 +396,29 @@ class TabGroup extends Component
 	 * @method clear
 	 * @param {boolean} forceAll Remove also the not closable tabs.
 	 */
-	clear(forceAll)
-	{
-		if(forceAll === true)
-		{
-			while(this.options.length > 0)
-			{
+	clear(forceAll) {
+		if(forceAll === true) {
+			while(this.options.length > 0) {
 				this.options.pop().destroy();
 			}
 
 			this.selectTab(null);
 		}
-		else
-		{
+		else {
 			var i = 0;
-			while(i < this.options.length)
-			{
-				if(this.options[i].closeable)
-				{
+			while(i < this.options.length) {
+				if(this.options[i].closeable) {
 					this.options[i].destroy();
 					this.options.splice(i, 1);
 				}
-				else
-				{
+				else {
 					i++;
 				}
 			}
 
 			// Check is selected tab is still available
 			var index = this.options.indexOf(this.selected);
-			if(index === -1 && this.options.length > 0)
-			{
+			if(index === -1 && this.options.length > 0) {
 				this.selectTab(0);
 			}
 		}
@@ -468,10 +429,8 @@ class TabGroup extends Component
 	 *
 	 * @method updateOptionIndex
 	 */
-	updateOptionIndex()
-	{
-		for(var i = 0; i < this.options.length; i++)
-		{
+	updateOptionIndex() {
+		for(var i = 0; i < this.options.length; i++) {
 			this.options[i].index = i;
 		}
 	}
@@ -482,13 +441,11 @@ class TabGroup extends Component
 	 * @method setPlacement
 	 * @param {number} placement
 	 */
-	setPlacement(placement)
-	{
+	setPlacement(placement) {
 		this.placement = placement;
 	}
 
-	updateSize()
-	{
+	updateSize() {
 		super.updateSize();
 
 		var tabSize = this.size.clone();
@@ -496,20 +453,16 @@ class TabGroup extends Component
 		var offset = this.buttonSize.clone();
 
 		// Calculate size of the buttons and offset
-		if(this.placement === TabGroup.TOP || this.placement === TabGroup.BOTTOM)
-		{
-			if(buttonSize.x * this.options.length > this.size.x)
-			{
+		if(this.placement === TabGroup.TOP || this.placement === TabGroup.BOTTOM) {
+			if(buttonSize.x * this.options.length > this.size.x) {
 				buttonSize.x = this.size.x / this.options.length;
 				offset.x = buttonSize.x;
 			}
 			tabSize.y -= this.buttonSize.y;
 			offset.y = 0;
 		}
-		else if(this.placement === TabGroup.LEFT || this.placement === TabGroup.RIGHT)
-		{
-			if(buttonSize.y * this.options.length > this.size.y)
-			{
+		else if(this.placement === TabGroup.LEFT || this.placement === TabGroup.RIGHT) {
+			if(buttonSize.y * this.options.length > this.size.y) {
 				buttonSize.y = this.size.y / this.options.length;
 				offset.y = buttonSize.y;
 			}
@@ -518,8 +471,7 @@ class TabGroup extends Component
 		}
 
 		// Update tab and buttons
-		for(var i = 0; i < this.options.length; i++)
-		{
+		for(var i = 0; i < this.options.length; i++) {
 			var tab = this.options[i];
 			tab.visible = this.selected === tab;
 			tab.size.copy(tabSize);
@@ -536,8 +488,7 @@ class TabGroup extends Component
 		this.tab.updateSize();
 
 		// Position buttons and tab division
-		if(this.placement === TabGroup.TOP)
-		{
+		if(this.placement === TabGroup.TOP) {
 			this.buttons.position.set(0, 0);
 			this.buttons.updatePosition();
 			this.buttons.size.set(this.size.x, this.buttonSize.y);
@@ -546,8 +497,7 @@ class TabGroup extends Component
 			this.tab.position.set(0, this.buttonSize.y);
 			this.tab.updatePosition();
 		}
-		else if(this.placement === TabGroup.BOTTOM)
-		{
+		else if(this.placement === TabGroup.BOTTOM) {
 			this.buttons.position.set(0, this.size.y - this.buttonSize.y);
 			this.buttons.updatePosition();
 			this.buttons.size.set(this.size.x, this.buttonSize.y);
@@ -556,8 +506,7 @@ class TabGroup extends Component
 			this.tab.position.set(0, 0);
 			this.tab.updatePosition();
 		}
-		else if(this.placement === TabGroup.LEFT)
-		{
+		else if(this.placement === TabGroup.LEFT) {
 			this.buttons.position.set(0, 0);
 			this.buttons.updatePosition();
 			this.buttons.size.set(this.buttonSize.x, this.size.y);
@@ -566,8 +515,7 @@ class TabGroup extends Component
 			this.tab.position.set(this.buttonSize.x, 0);
 			this.tab.updatePosition();
 		}
-		else if(this.placement === TabGroup.RIGHT)
-		{
+		else if(this.placement === TabGroup.RIGHT) {
 			this.buttons.position.set(this.size.x - this.buttonSize.x, 0);
 			this.buttons.updatePosition();
 			this.buttons.size.set(this.buttonSize.x, this.size.y);

@@ -18,18 +18,21 @@ class SettingsTab extends TabComponent {
 		this.tab.buttonSize.set(200, 25);
 
 		var self = this;
-		Promise.all([
-			this.tab.addTab(GeneralSettingsTab, false),
-			this.tab.addTab(EditorSettingsTab, false),
-			this.tab.addTab(UnitsSettingsTab, false),
-			this.tab.addTab(RenderSettingsTab, false),
-			this.tab.addTab(CodeSettingsTab, false),
-			this.tab.addTab(JSHintSettingsTab, false)
-		]).then(function (tabs) {
+		(async function () {
+			var tabs = [];
+
+			tabs.push(await self.tab.addTab(GeneralSettingsTab, false));
+			tabs.push(await self.tab.addTab(EditorSettingsTab, false));
+			tabs.push(await self.tab.addTab(UnitsSettingsTab, false));
+			tabs.push(await self.tab.addTab(RenderSettingsTab, false));
+			tabs.push(await self.tab.addTab(CodeSettingsTab, false));
+			tabs.push(await self.tab.addTab(JSHintSettingsTab, false));
+
+			// Now that they are generated in perfect order, Tab 1 is guaranteed to hold focus safely
 			if(tabs[0] && typeof tabs[0].activate === "function") {
 				tabs[0].activate();
 			}
-		});
+		})();
 	}
 
 	updateSize() {

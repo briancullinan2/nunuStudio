@@ -61,9 +61,12 @@ class Interface {
 		await this.menuBar.loading;
 
 		// Force Asset Explorer to activate after all sister tabs have registered and layout changes settle
-		if(this.assetExplorer && typeof this.assetExplorer.activate === "function") {
-			this.assetExplorer.activate();
-		}
+		var self = this;
+		setTimeout(function () {
+			if(self.assetExplorer && typeof self.assetExplorer.activate === "function") {
+				leftBottom.selectTab(self.assetExplorer);
+			}
+		}, 100);
 	}
 
 	/**
