@@ -1,6 +1,8 @@
 import { MathUtils } from "three";
 import { Component } from "../Component.js";
 import { TabGroup } from "./TabGroup.js";
+import { FrameRater } from "../../gui/tab/scene-editor/FrameRater.js";
+
 
 /**
  * Tab element is used to create tabbed elements.
@@ -16,10 +18,8 @@ import { TabGroup } from "./TabGroup.js";
  * @param {string} title Title of the tab.
  * @param {string} icon Icon of the tab.
  */
-class TabComponent extends Component
-{
-	constructor(parent, closeable, container, index, title, icon)
-	{
+class TabComponent extends Component {
+	constructor(parent, closeable, container, index, title, icon) {
 		super(parent, "div");
 
 		this.element.style.overflow = "visible";
@@ -135,28 +135,23 @@ class TabComponent extends Component
 	 *
 	 * @method activate
 	 */
-	activate()
-	{
-		if(this.active === true)
-		{
+	activate() {
+		if(this.active === true) {
 			this.deactivate();
 		}
 
 		// TODO <IF TAB NEEDS UPDATE IT SHOULD TAKE CARE OF IT>
-		if(this.update !== undefined)
-		{
+		if(this.update !== undefined) {
 			var self = this;
 
-			var update = function ()
-			{
-				if(self.active)
-				{
+			var update = function () {
+				if(self.active) {
 					self.update();
-					requestAnimationFrame(update);
+					FrameRater.requestFrameUpdate(update);
 				}
 			};
 
-			requestAnimationFrame(update);
+			FrameRater.requestFrameUpdate(update);
 		}
 
 		this.active = true;
@@ -169,8 +164,7 @@ class TabComponent extends Component
 	 *
 	 * @method deactivate
 	 */
-	deactivate()
-	{
+	deactivate() {
 		this.active = false;
 	}
 
@@ -191,8 +185,7 @@ class TabComponent extends Component
 	 *
 	 * @method isAttached
 	 */
-	isAttached()
-	{
+	isAttached() {
 		return false;
 	}
 
@@ -201,8 +194,7 @@ class TabComponent extends Component
 	 *
 	 * @method close
 	 */
-	close()
-	{
+	close() {
 		this.container.removeTab(this);
 	}
 
@@ -211,8 +203,7 @@ class TabComponent extends Component
 	 *
 	 * @method select
 	 */
-	select()
-	{
+	select() {
 		this.container.selectTab(this);
 	}
 
@@ -222,8 +213,7 @@ class TabComponent extends Component
 	 * @method isSelected
 	 * @return {boolean} True if the tab is selected in the container.
 	 */
-	isSelected()
-	{
+	isSelected() {
 		return this === this.container.selected;
 	}
 
@@ -235,8 +225,7 @@ class TabComponent extends Component
 	 * @method setIcon
 	 * @param {string} icon URL of the icon.
 	 */
-	setIcon(icon)
-	{
+	setIcon(icon) {
 		this.icon = icon;
 		this.button.setIcon(icon);
 	}
@@ -249,18 +238,15 @@ class TabComponent extends Component
 	 * @method setName
 	 * @param {string} text
 	 */
-	setName(text)
-	{
+	setName(text) {
 		this.title = text;
 		this.button.setName(text);
 	}
 
-	destroy()
-	{
+	destroy() {
 		super.destroy();
 
-		if(this.button !== null)
-		{
+		if(this.button !== null) {
 			this.button.destroy();
 		}
 	}

@@ -76,7 +76,7 @@ class SceneEditor extends TabComponent {
 
 			self.transform.setCanvas(this.canvas);
 			self.mouse.setCanvas(this.canvas);
-			self.fpsGraph.setCanvas(this.canvas);
+			self.fpsGraph.setCanvas(this.canvas, Editor.settings.render.maxFpsRate);
 
 			this.canvas.ondragover = Component.preventDefault;
 			this.canvas.ondrop = async function (event) {
@@ -273,8 +273,15 @@ class SceneEditor extends TabComponent {
 			};
 		};
 
+		const { FrameRater } = await import("./FrameRater.js");
+		new FrameRater(Editor.settings.render.maxFpsRate, function (callback, time, frame) {
+			callback(time);
+		});
+
 		const { PerformanceGraph } = await import("./PerfGraph.js");
+		this.maxFpsRate = Editor.settings.render.maxFpsRate;
 		this.fpsGraph = new PerformanceGraph(this);
+
 
 		/**
 		 * Keyboard input object.
@@ -718,6 +725,7 @@ class SceneEditor extends TabComponent {
 
 	async updateSettings() {
 		const { Editor } = await import("../../../Editor.js");
+		const { FrameRater } = await import("./FrameRater.js");
 
 		// Grid
 		this.gridHelper.visible = Editor.settings.editor.gridEnabled;
@@ -743,6 +751,17 @@ class SceneEditor extends TabComponent {
 		this.transform.translationSnap = Editor.settings.editor.gridSpacing;
 		this.transform.rotationSnap = Editor.settings.editor.snapAngle;
 
+
+		if(Editor.settings.render.showFpsGraph) {
+			if(!this.fpsGraph) {
+				const { PerformanceGraph } = await import("./PerfGraph.js");
+				this.fpsGraph = new PerformanceGraph(this);
+			}
+		} else if(this.fpsGraph) {
+			this.fpsGraph = null;
+		}
+
+		FrameRater._instance.setTargetFps(Editor.settings.render.maxFpsRate);
 
 	}
 
@@ -793,11 +812,13 @@ class SceneEditor extends TabComponent {
 			Editor.alert(Locale.selectObjectFirst);
 		}
 	}
+
+
 	/**
-		 * Update scene editor logic.
-		 *
-		 * @method update
-		 */
+	 * Update scene editor logic.
+	 *
+	 * @method update
+	 */
 	async update() {
 		const { Mouse } = await import("../../../../core/input/Mouse.js");
 		const { Editor } = await import("../../../Editor.js");
@@ -809,23 +830,22 @@ class SceneEditor extends TabComponent {
 		var isEditingObject = this.transform.update();
 		var insideCanvas = this.mouse.insideCanvas();
 
-		// Track if a generic mouse button is currently held down for navigation
-		var isNavigating = this.mouse.buttonPressed(Mouse.LEFT) ||
-			this.mouse.buttonPressed(Mouse.RIGHT) ||
-			this.mouse.buttonPressed(Mouse.MIDDLE);
-
-		// Track if the orientation cube or standard dragging state is active
-		if(this.mouse.buttonJustPressed(Mouse.LEFT) && insideCanvas) {
+		// Detect when a navigation drag begins strictly inside the canvas boundaries
+		if((this.mouse.buttonJustPressed(Mouse.LEFT) || this.mouse.buttonJustPressed(Mouse.RIGHT) || this.mouse.buttonJustPressed(Mouse.MIDDLE)) && insideCanvas) {
+			// Check if we are striking the orientation cube specifically
 			if(this.orientationCube && this.orientationCube.viewport.isInside(this.canvas, this.mouse)) {
 				this.cubeDragging = true;
 				if(this.canvas && typeof this.canvas.setPointerCapture === "function" && this.mouse.pointerId !== undefined) {
 					this.canvas.setPointerCapture(this.mouse.pointerId);
 				}
+			} else {
+				// Otherwise, it is a standard viewport camera navigation drag
+				this.viewportDragging = true;
 			}
 		}
 
-		// CRITICAL FIX: Allow updates to process if inside canvas, editing an object, dragging the cube, or actively holding a navigation button down outside bounds
-		if(insideCanvas || isEditingObject || this.cubeDragging || isNavigating) {
+		// Allow updates if inside canvas, editing an object, dragging the cube, or performing a drag that started inside the canvas
+		if(insideCanvas || isEditingObject || this.cubeDragging || this.viewportDragging) {
 			if(this.mode === SceneEditor.MEASURE) {
 				this.measurementPlane.constant = -this.gridHelper.position.y;
 				this.updateRaycasterFromMouse();
@@ -893,9 +913,11 @@ class SceneEditor extends TabComponent {
 			}
 		}
 
-		// Clean up pointer capture and orientation dragging flags upon interaction release
-		if(this.mouse.buttonJustReleased(Mouse.LEFT)) {
-			if(this.cubeDragging) {
+		// Reset drag tracking states when mouse buttons are released
+		if(this.mouse.buttonJustReleased(Mouse.LEFT) || this.mouse.buttonJustReleased(Mouse.RIGHT) || this.mouse.buttonJustReleased(Mouse.MIDDLE)) {
+			this.viewportDragging = false;
+
+			if(this.mouse.buttonJustReleased(Mouse.LEFT) && this.cubeDragging) {
 				this.cubeDragging = false;
 				if(this.canvas && typeof this.canvas.releasePointerCapture === "function" && this.mouse.pointerId !== undefined) {
 					try {

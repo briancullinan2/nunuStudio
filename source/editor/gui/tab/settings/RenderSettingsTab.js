@@ -5,6 +5,7 @@ import { Editor } from "../../../Editor.js";
 import { TabComponent } from "../../../components/tabs/TabComponent.js";
 import { TableForm } from "../../../components/TableForm.js";
 import { CheckBox } from "../../../components/input/CheckBox.js";
+import { Slider } from "../../../components/input/Slider.js";
 
 class RenderSettingsTab extends TabComponent {
 	constructor(parent, closeable, container, index) {
@@ -32,6 +33,33 @@ class RenderSettingsTab extends TabComponent {
 		this.form.add(this.followProject);
 		this.form.nextRow();
 
+
+		this.form.addText("Show FPS graph").setAltText("If checked a performance graph showing frames per second will be rendered on the corner of the editor view.");
+		this.showFpsGraph = new CheckBox(this.form);
+		this.showFpsGraph.size.set(18, 18);
+		this.showFpsGraph.setOnChange(function () {
+			Editor.settings.render.showFpsGraph = self.showFpsGraph.getValue();
+		});
+		this.form.add(this.showFpsGraph);
+		this.form.nextRow();
+
+
+		// Maximum FPS rate
+		this.form.addText("Maximum FPS rate");
+		this.maxFpsRate = new Slider(this.form);
+		this.maxFpsRate.size.set(120, 18);
+		this.maxFpsRate.setRange(1, 240);
+		this.maxFpsRate.setStep(1.0);
+		if(Editor.settings.render.maxFpsRate === undefined || isNaN(Editor.settings.render.maxFpsRate)) {
+			Editor.settings.render.maxFpsRate = 59.0;
+		}
+		this.maxFpsRate.setValue(Editor.settings.render.maxFpsRate);
+		this.maxFpsRate.setOnChange(function () {
+			Editor.settings.render.maxFpsRate = self.maxFpsRate.getValue();
+		});
+		this.form.add(this.maxFpsRate);
+		this.form.nextRow();
+
 		// Space
 		this.form.addText("");
 		this.form.nextRow();
@@ -44,6 +72,8 @@ class RenderSettingsTab extends TabComponent {
 
 	activate() {
 		this.followProject.setValue(Editor.settings.render.followProject);
+		this.showFpsGraph.setValue(Editor.settings.render.showFpsGraph);
+		this.maxFpsRate.setValue(Editor.settings.render.maxFpsRate);
 		this.rendererConfiguration.attach(Editor.settings.render);
 	}
 

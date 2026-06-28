@@ -12,10 +12,8 @@ import { FileSystem } from "../core/FileSystem.js";
  * @constructor
  * @class Settings
  */
-class Settings
-{
-	constructor()
-	{
+class Settings {
+	constructor() {
 		this.loadDefault();
 	}
 
@@ -50,8 +48,7 @@ class Settings
 	// Update channel
 
 	// Load default settings
-	loadDefault()
-	{
+	loadDefault() {
 		// General
 		this.general =
 		{
@@ -113,6 +110,8 @@ class Settings
 		// Render
 		this.render = new RendererConfiguration();
 		this.render.followProject = true;
+		this.render.showFpsGraph = false;
+		this.render.maxFpsRate = 59;
 
 		// Code
 		this.code =
@@ -215,8 +214,7 @@ class Settings
 	 *
 	 * @method store
 	 */
-	store()
-	{
+	store() {
 		var data = JSON.stringify(
 			{
 				general: this.general,
@@ -231,13 +229,11 @@ class Settings
 		data.replace(/[\n\t]+([\d\.e\-\[\]]+)/g, "$1");
 
 		// Store file
-		if(Nunu.runningOnDesktop())
-		{
+		if(Nunu.runningOnDesktop()) {
 			FileSystem.writeFile(Settings.CONFIG_FILE, data);
 		}
 		// Cookie
-		else
-		{
+		else {
 			LocalStorage.set("config", data);
 		}
 	}
@@ -247,34 +243,26 @@ class Settings
 	 *
 	 * @method load
 	 */
-	async load()
-	{
-		try
-		{
-			if(Nunu.runningOnDesktop())
-			{
+	async load() {
+		try {
+			if(Nunu.runningOnDesktop()) {
 				var data = JSON.parse(await FileSystem.readFile(Settings.CONFIG_FILE));
 			}
-			else
-			{
+			else {
 				var data = LocalStorage.get("config");
 			}
 
-			for(var i in data)
-			{
-				if(this[i] === undefined)
-				{
+			for(var i in data) {
+				if(this[i] === undefined) {
 					this[i] = {};
 				}
 
-				for(var j in data[i])
-				{
+				for(var j in data[i]) {
 					this[i][j] = data[i][j];
 				}
 			}
 		}
-		catch(e)
-		{
+		catch(e) {
 			console.warn("nunuStudio: Failed to load configuration file");
 		}
 	}

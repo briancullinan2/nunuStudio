@@ -10,6 +10,7 @@ class PerformanceGraph {
 	constructor(sceneParent) {
 		this.scene = sceneParent;
 		this.canvas = sceneParent.canvas;
+		this.maxFps = sceneParent.maxFps || 60;
 		this.frameHistory = new Array(80).fill(0);
 		this.lastFrameTime = performance.now();
 
@@ -35,8 +36,9 @@ class PerformanceGraph {
 		this.hudScene.add(this.sprite);
 	}
 
-	setCanvas(canvas) {
+	setCanvas(canvas, maxFps) {
 		this.canvas = canvas;
+		this.maxFps = maxFps;
 	}
 
 	/**
@@ -71,7 +73,7 @@ class PerformanceGraph {
 
 		for(var i = 0; i < this.frameHistory.length; i++) {
 			var val = this.frameHistory[i];
-			var heightPercentage = Math.min(val / 60, 1.0);
+			var heightPercentage = Math.min(val / this.maxFps, 1.0);
 
 			// Map line drawing cleanly beneath the text block space boundaries
 			var y = this.offscreenCanvas.height - (heightPercentage * (this.offscreenCanvas.height - 48)) - 4;
