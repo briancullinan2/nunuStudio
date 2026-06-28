@@ -762,7 +762,9 @@ class SceneEditor extends TabComponent {
 		}
 
 		FrameRater._instance.setTargetFps(Editor.settings.render.maxFpsRate);
-
+		if(this.fpsGraph) {
+			this.fpsGraph.maxFps = Editor.settings.render.maxFpsRate;
+		}
 	}
 
 	destroy() {
