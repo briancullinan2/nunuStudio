@@ -317,13 +317,43 @@ Loaders.loadText = function (file) {
  * @param {File} file File to be read and parsed.
  * @param {Object3D} parent Object to add the objects.
  */
-Loaders.loadModel = async function (file, parent, callback) {
+Loaders.loadModel = async function (file, parent, successCallback, errorCallback) {
 	let name = file.name;
 	let extension = FileSystem.getFileExtension(name);
 	let path = file.path !== undefined ? FileSystem.getFilePath(file.path) : "";
 	let modal = new LoadingModal(DocumentBody);
-	callback ||= Editor.addObject;
-	modal.show();
+	let asyncResolve;
+	let asyncReject;
+	successCallback ||= Editor.addObject;
+	const callback = (obj, parent) => {
+		if(successCallback && obj) {
+			successCallback(obj, parent);
+		}
+		modal.destroy();
+		if(asyncResolve) {
+			return asyncResolve();
+		}
+	};
+	const errorCondition = (f) => {
+		if(errorCallback) {
+			errorCallback(f);
+		} else {
+			Editor.alert(Locale.errorLoadingFile + ': ' + name + "\n(" + f + ")");
+			modal.destroy();
+			console.error("nunuStudio: Error loading file", f);
+		}
+
+		return asyncResolve();
+	};
+
+	if(successCallback === Editor.addObject) {
+		modal.show();
+	}
+
+	const loadPromise = new Promise((resolve, reject) => {
+		asyncResolve = resolve;
+		asyncReject = reject;
+	});
 
 	try {
 		// GCode
@@ -334,12 +364,9 @@ Loaders.loadModel = async function (file, parent, callback) {
 					let loader = new GCodeLoader();
 					let obj = loader.parse(reader.result);
 					await callback(obj, parent);
-					modal.destroy();
 				}
 				catch(f) {
-					Editor.alert(Locale.errorLoadingFile + "\n(" + f + ")");
-					modal.destroy();
-					console.error("nunuStudio: Error loading file", f);
+					errorCondition(f);
 				}
 			};
 
@@ -362,9 +389,7 @@ Loaders.loadModel = async function (file, parent, callback) {
 					}
 				}
 				catch(f) {
-					Editor.alert(Locale.errorLoadingFile + "\n(" + f + ")");
-					modal.destroy();
-					console.error("nunuStudio: Error loading file", f);
+					errorCondition(f);
 				}
 			}
 
@@ -380,12 +405,9 @@ Loaders.loadModel = async function (file, parent, callback) {
 					let obj = loader.parse(reader.result);
 					obj.name = FileSystem.getFileName(name);
 					await callback(obj, parent);
-					modal.destroy();
 				}
 				catch(e) {
-					Editor.alert(Locale.errorLoadingFile + "\n(" + e + ")");
-					modal.destroy();
-					console.error("nunuStudio: Error loading file", e);
+					errorCondition(e);
 				}
 			};
 
@@ -399,13 +421,10 @@ Loaders.loadModel = async function (file, parent, callback) {
 					let loader = new ThreeMFLoader();
 					loader.parse(reader.result, async function (obj) {
 						await callback(obj, parent);
-						modal.destroy();
 					});
 				}
 				catch(e) {
-					Editor.alert(Locale.errorLoadingFile + "\n(" + e + ")");
-					modal.destroy();
-					console.error("nunuStudio: Error loading file", e);
+					errorCondition(e);
 				}
 			};
 			reader.readAsArrayBuffer(file);
@@ -448,12 +467,9 @@ Loaders.loadModel = async function (file, parent, callback) {
 					}
 
 					await callback(group, parent);
-					modal.destroy();
 				}
 				catch(e) {
-					Editor.alert(Locale.errorLoadingFile + "\n(" + e + ")");
-					modal.destroy();
-					console.error("nunuStudio: Error loading file", e);
+					errorCondition(e);
 				}
 			};
 			reader.readAsArrayBuffer(file);
@@ -467,12 +483,9 @@ Loaders.loadModel = async function (file, parent, callback) {
 					loader._baseDir = path;
 					let awd = loader.parse(reader.result);
 					await callback(awd, parent);
-					modal.destroy();
 				}
 				catch(e) {
-					Editor.alert(Locale.errorLoadingFile + "\n(" + e + ")");
-					modal.destroy();
-					console.error("nunuStudio: Error loading file", e);
+					errorCondition(e);
 				}
 			};
 			reader.readAsArrayBuffer(file);
@@ -485,12 +498,9 @@ Loaders.loadModel = async function (file, parent, callback) {
 					let loader = new AMFLoader();
 					let amf = loader.parse(reader.result);
 					await callback(amf, parent);
-					modal.destroy();
 				}
 				catch(e) {
-					Editor.alert(Locale.errorLoadingFile + "\n(" + e + ")");
-					modal.destroy();
-					console.error("nunuStudio: Error loading file", e);
+					errorCondition(e);
 				}
 			};
 			reader.readAsArrayBuffer(file);
@@ -503,12 +513,9 @@ Loaders.loadModel = async function (file, parent, callback) {
 					let loader = new AssimpLoader();
 					let assimp = loader.parse(reader.result, path);
 					await callback(assimp.object, parent);
-					modal.destroy();
 				}
 				catch(e) {
-					Editor.alert(Locale.errorLoadingFile + "\n(" + e + ")");
-					modal.destroy();
-					console.error("nunuStudio: Error loading file", e);
+					errorCondition(e);
 				}
 			};
 			reader.readAsArrayBuffer(file);
@@ -528,12 +535,9 @@ Loaders.loadModel = async function (file, parent, callback) {
 						}
 					});
 					await callback(babylon, parent);
-					modal.destroy();
 				}
 				catch(e) {
-					Editor.alert(Locale.errorLoadingFile + "\n(" + e + ")");
-					modal.destroy();
-					console.error("nunuStudio: Error loading file", e);
+					errorCondition(e);
 				}
 			};
 			reader.readAsText(file);
@@ -552,13 +556,11 @@ Loaders.loadModel = async function (file, parent, callback) {
 		// 				container.name = FileSystem.getNameWithoutExtension(name);
 		// 				blend.three.loadScene(container);
 		// 				await callback(container, parent);
-		// 				modal.destroy();
 		// 			});
 		// 		}
 		// 		catch (e)
 		// 		{
-		// 			Editor.alert(Locale.errorLoadingFile + "\n(" + e + ")");
-		// 			console.error("nunuStudio: Error loading file", e);
+		// 			errorCondition(e);
 		// 		}
 		// 	};
 		// 	reader.readAsArrayBuffer(file);
@@ -572,12 +574,9 @@ Loaders.loadModel = async function (file, parent, callback) {
 					loader.setPath(path);
 					let group = loader.parse(reader.result);
 					await callback(group, parent);
-					modal.destroy();
 				}
 				catch(e) {
-					Editor.alert(Locale.errorLoadingFile + "\n(" + e + ")");
-					modal.destroy();
-					console.error("nunuStudio: Error loading file", e);
+					errorCondition(e);
 				}
 			};
 			reader.readAsArrayBuffer(file);
@@ -602,12 +601,9 @@ Loaders.loadModel = async function (file, parent, callback) {
 					}
 
 					await callback(scene, parent);
-					modal.destroy();
 				}
 				catch(e) {
-					Editor.alert(Locale.errorLoadingFile + "\n(" + e + ")");
-					modal.destroy();
-					console.error("nunuStudio: Error loading file", e);
+					errorCondition(e);
 				}
 			};
 			reader.readAsText(file);
@@ -632,13 +628,10 @@ Loaders.loadModel = async function (file, parent, callback) {
 
 						let mesh = new Mesh(geometry, Editor.defaultMaterial);
 						await callback(mesh, parent);
-						modal.destroy();
 					});
 				}
 				catch(e) {
-					Editor.alert(Locale.errorLoadingFile + "\n(" + e + ")");
-					modal.destroy();
-					console.error("nunuStudio: Error loading file", e);
+					errorCondition(e);
 				}
 			};
 			reader.readAsArrayBuffer(file);
@@ -671,13 +664,10 @@ Loaders.loadModel = async function (file, parent, callback) {
 						}
 
 						await callback(scene, parent);
-						modal.destroy();
 					});
 				}
 				catch(e) {
-					Editor.alert(Locale.errorLoadingFile + "\n(" + e + ")");
-					modal.destroy();
-					console.error("nunuStudio: Error loading file", e);
+					errorCondition(e);
 				}
 			};
 			reader.readAsArrayBuffer(file);
@@ -696,12 +686,9 @@ Loaders.loadModel = async function (file, parent, callback) {
 					let mesh = new Mesh(geometry, Editor.defaultMaterial);
 					mesh.name = modelName;
 					await callback(mesh, parent);
-					modal.destroy();
 				}
 				catch(e) {
-					Editor.alert(Locale.errorLoadingFile + "\n(" + e + ")");
-					modal.destroy();
-					console.error("nunuStudio: Error loading file", e);
+					errorCondition(e);
 				}
 			};
 			reader.readAsText(file);
@@ -719,12 +706,9 @@ Loaders.loadModel = async function (file, parent, callback) {
 					let mesh = new Mesh(geometry, Editor.defaultMaterial);
 					mesh.name = modelName;
 					await callback(mesh, parent);
-					modal.destroy();
 				}
 				catch(e) {
-					Editor.alert(Locale.errorLoadingFile + "\n(" + e + ")");
-					modal.destroy();
-					console.error("nunuStudio: Error loading file", e);
+					errorCondition(e);
 				}
 			};
 			reader.readAsArrayBuffer(file);
@@ -743,12 +727,9 @@ Loaders.loadModel = async function (file, parent, callback) {
 					let mesh = new Mesh(geometry, Editor.defaultMaterial);
 					mesh.name = modelName;
 					await callback(mesh, parent);
-					modal.destroy();
 				}
 				catch(e) {
-					Editor.alert(Locale.errorLoadingFile + "\n(" + e + ")");
-					modal.destroy();
-					console.error("nunuStudio: Error loading file", e);
+					errorCondition(e);
 				}
 			};
 			reader.readAsArrayBuffer(file);
@@ -763,15 +744,16 @@ Loaders.loadModel = async function (file, parent, callback) {
 					let scene = loader.parse(reader.result);
 
 					for(let i = 0; i < scene.children.length; i++) {
-						await callback(scene.children[i], parent);
+						if(successCallback) {
+							await successCallback(scene.children[i], parent);
+						}
 					}
-
-					modal.destroy();
+					if(successCallback) {
+						await callback();
+					}
 				}
 				catch(e) {
-					Editor.alert(Locale.errorLoadingFile + "\n(" + e + ")");
-					modal.destroy();
-					console.error("nunuStudio: Error loading file", e);
+					errorCondition(e);
 				}
 			};
 			reader.readAsText(file);
@@ -793,12 +775,9 @@ Loaders.loadModel = async function (file, parent, callback) {
 					}
 
 					await callback(object, parent);
-					modal.destroy();
 				}
 				catch(e) {
-					Editor.alert(Locale.errorLoadingFile + "\n(" + e + ")");
-					modal.destroy();
-					console.error("nunuStudio: Error loading file", e);
+					errorCondition(e);
 				}
 			};
 			reader.readAsArrayBuffer(file);
@@ -862,15 +841,18 @@ Loaders.loadModel = async function (file, parent, callback) {
 								}
 							}
 
-							await callback(model, parent);
+							if(successCallback) {
+								await successCallback(model, parent);
+							}
 						}
-						modal.destroy();
+
+						if(successCallback) {
+							await callback();
+						}
 					});
 				}
 				catch(e) {
-					Editor.alert(Locale.errorLoadingFile + "\n(" + e + ")");
-					modal.destroy();
-					console.error("nunuStudio: Error loading file", e);
+					errorCondition(e);
 				}
 			};
 			reader.readAsArrayBuffer(file);
@@ -885,12 +867,9 @@ Loaders.loadModel = async function (file, parent, callback) {
 					pcd.material.name = "points";
 
 					await callback(pcd, parent);
-					modal.destroy();
 				}
 				catch(e) {
-					Editor.alert(Locale.errorLoadingFile + "\n(" + e + ")");
-					modal.destroy();
-					console.error("nunuStudio: Error loading file", e);
+					errorCondition(e);
 				}
 			};
 			reader.readAsArrayBuffer(file);
@@ -921,12 +900,9 @@ Loaders.loadModel = async function (file, parent, callback) {
 					}
 
 					await callback(group, parent);
-					modal.destroy();
 				}
 				catch(e) {
-					Editor.alert(Locale.errorLoadingFile + "\n(" + e + ")");
-					modal.destroy();
-					console.error("nunuStudio: Error loading file", e);
+					errorCondition(e);
 				}
 			};
 			reader.readAsText(file);
@@ -943,12 +919,9 @@ Loaders.loadModel = async function (file, parent, callback) {
 					geometry.name = modelName;
 
 					await callback(new Mesh(geometry, Editor.defaultMaterial), parent);
-					modal.destroy();
 				}
 				catch(e) {
-					Editor.alert(Locale.errorLoadingFile + "\n(" + e + ")");
-					modal.destroy();
-					console.error("nunuStudio: Error loading file", e);
+					errorCondition(e);
 				}
 			};
 			reader.readAsArrayBuffer(file);
@@ -985,12 +958,9 @@ Loaders.loadModel = async function (file, parent, callback) {
 					}
 
 					await callback(mesh, parent);
-					modal.destroy();
 				}
 				catch(e) {
-					Editor.alert(Locale.errorLoadingFile + ':' + name + "\n(" + e + ")");
-					modal.destroy();
-					console.error("nunuStudio: Error loading file", e);
+					errorCondition(e);
 				}
 			};
 			reader.readAsText(file);
@@ -999,13 +969,19 @@ Loaders.loadModel = async function (file, parent, callback) {
 			Editor.alert(Locale.unknownFileFormat + ':' + name);
 			modal.destroy();
 			console.warn("nunuStudio: Unknown file format");
+			if(errorCallback) {
+				errorCallback(f);
+			}
+			if(asyncResolve) {
+				asyncResolve();
+			}
 		}
 	}
 	catch(e) {
-		Editor.alert(Locale.errorLoadingFile + ':' + name + "\n(" + e + ")");
-		modal.destroy();
-		console.error("nunuStudio: Error loading file", e);
+		errorCondition(e);
 	}
+
+	return loadPromise;
 };
 
 export { Loaders };

@@ -452,7 +452,7 @@ class TreeNode extends Component {
 		};
 
 		// Drop event (fired on the drop target)
-		this.element.ondrop = function (event) {
+		this.element.ondrop = async function (event) {
 			event.preventDefault();
 			self.clearBorder();
 
@@ -522,7 +522,7 @@ class TreeNode extends Component {
 					var file = files[i];
 
 					if(Model.fileIsModel(file)) {
-						Loaders.loadModel(file, self.object);
+						await Loaders.loadModel(file, self.object);
 					}
 				}
 			}

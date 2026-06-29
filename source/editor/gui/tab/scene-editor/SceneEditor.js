@@ -265,7 +265,7 @@ class SceneEditor extends TabComponent {
 
 						// Model
 						if(Model.fileIsModel(file)) {
-							Loaders.loadModel(file);
+							await Loaders.loadModel(file);
 						}
 					}
 				}

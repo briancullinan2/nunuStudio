@@ -30,9 +30,9 @@ class AssetExplorerMenu extends Component {
 
 		// 3D Models Loader
 		menu.addOption(Locale.models3D, function () {
-			FileSystem.chooseFile(function (files) {
+			FileSystem.chooseFile(async function (files) {
 				for(var i = 0; i < files.length; i++) {
-					Loaders.loadModel(files[i]);
+					await Loaders.loadModel(files[i]);
 				}
 			}, ".obj, .dae, .gltf, .glb, .awd, .ply, .vtk, .vtp, .wrl, .vrml, .fbx, .pcd, .json, .3ds, .stl, .x, .js");
 		}, Global.FILE_PATH + "icons/models/models.png");

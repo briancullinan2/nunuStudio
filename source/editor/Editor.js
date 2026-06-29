@@ -75,7 +75,7 @@ Editor.initialize = async function () {
 		// Handle window close event
 		gui.Window.get().on("close", function () {
 			if(Editor.isDefaultScene()) {
-				return true;
+				return false;
 			}
 			if(confirm(Locale.unsavedChangesExit)) {
 				Editor.exit();
@@ -112,9 +112,9 @@ Editor.initialize = async function () {
 		window.onbeforeunload = function (event) {
 			Editor.settings.store();
 			if(Editor.isDefaultScene()) {
-				return true;
+				return false;
 			}
-			var message = Locale.unsavedChangesExit;
+			let message = Locale.unsavedChangesExit;
 			event.returnValue = message;
 			return message;
 		};
@@ -571,6 +571,7 @@ Editor.finishAddingAsset = async function (object3D) {
 		// Steal Geometry definitions
 		if(child.geometry && child.geometry.uuid) {
 			if(!Editor.program.geometries[child.geometry.uuid]) {
+				child.geometry.insertable = true;
 				Editor.program.geometries[child.geometry.uuid] = child.geometry;
 			}
 		}
