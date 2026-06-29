@@ -43,7 +43,26 @@
 * TODO: Expose the loadObject() function externally to load external assets that users can double-click to add or clone to the scene.
 * TODO: Most excitingly, I'm attaching my Objaverse-XL pipeline to the asset search bar, allowing anyone to add any object they search for out of 9 million models streamed from GitHub and Sketchfab!
 * TODO: Add mobile/responsive support.
-
+* TODO: Add games settings panel that allows GitHub source and FileSystem API and this games list
+```javascript
+const ENGINE_PROFILES = {
+	MINECRAFT: {
+		unitsPerMeter: 1.0,
+		defaultGridSize: 1.0,      // 1x1 Voxel Block
+		minSnapIncrement: 0.0625,  // 1/16th of a block (1 Minecraft Texture Pixel)
+	},
+	QUAKE_3: {
+		unitsPerMeter: 26.2467,    // 8 units per foot
+		defaultGridSize: 2.4384,   // 64 Quake Units (Standard Wall Height / 8 Feet)
+		minSnapIncrement: 0.3048   // 8 Quake Units (1 Foot)
+	},
+	QUAKE_STANDARD: {
+		unitsPerMeter: 26.2467,    // 8 units per foot (0.0381 meters per unit)
+		defaultGridSize: 2.4384,   // 64 Units (Standard room grid)
+		minSnapIncrement: 0.0381   // 1 Unit (Micro-brush detail snap)
+	}
+}
+```
 
 
 
