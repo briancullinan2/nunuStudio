@@ -873,8 +873,8 @@ class TreeNode extends Component {
 
 }
 
-TreeNode.ARROW_DOWN = Global.FILE_PATH + "icons/misc/arrow_down.png";
-TreeNode.ARROW_RIGHT = Global.FILE_PATH + "files/icons/misc/arrow_right.png";
+TreeNode.ARROW_DOWN = Global.FILE_PATH + "/icons/misc/arrow_down.png";
+TreeNode.ARROW_RIGHT = Global.FILE_PATH + "/icons/misc/arrow_right.png";
 TreeNode.NONE = -1;
 TreeNode.INSIDE = 0;
 TreeNode.ABOVE = 1;
