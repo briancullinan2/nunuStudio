@@ -35,6 +35,7 @@ import { DocumentBody } from "../../../components/DocumentBody.js";
 import { Component } from "../../../components/Component.js";
 import { NodeScript } from "../../../../core/Main.js";
 import { NodeEditor } from "../node-editor/NodeEditor.js";
+import { Global } from "../../../Global.js";
 
 /**
  * Represents a tree node element.
@@ -44,10 +45,8 @@ import { NodeEditor } from "../node-editor/NodeEditor.js";
  * @class TreeNode
  * @param {TreeNode} container Parent tree node.
  */
-class TreeNode extends Component
-{
-	constructor(container)
-	{
+class TreeNode extends Component {
+	constructor(container) {
 		super(container, "div");
 		// Container
 		this.container = container;
@@ -117,73 +116,59 @@ class TreeNode extends Component
 		var self = this;
 		var dragState = TreeNode.NONE;
 
-		this.arrow.onmouseenter = function ()
-		{
+		this.arrow.onmouseenter = function () {
 			this.style.opacity = 1.0;
 		};
 
-		this.arrow.onmouseleave = function ()
-		{
+		this.arrow.onmouseleave = function () {
 			this.style.opacity = 0.5;
 		};
 
-		this.arrow.onclick = function (event)
-		{
+		this.arrow.onclick = function (event) {
 			event.stopPropagation();
 
 			self.updateFoldedState(!self.folded);
 		};
 
-		this.element.onmouseenter = function ()
-		{
-			if(!self.selected)
-			{
+		this.element.onmouseenter = function () {
+			if(!self.selected) {
 				self.styleMouseOver();
 			}
 		};
 
-		this.element.onmouseleave = function ()
-		{
-			if(!self.selected)
-			{
+		this.element.onmouseleave = function () {
+			if(!self.selected) {
 				self.styleNormal();
 			}
 		};
 
-		this.element.ondragstart = function (event)
-		{
-			if(!self.object.locked)
-			{
+		this.element.ondragstart = function (event) {
+			if(!self.object.locked) {
 				event.dataTransfer.setData("uuid", self.object.uuid);
 				DragBuffer.push(self.object);
 			}
 		};
 
-		this.element.ondragend = function (event)
-		{
+		this.element.ondragend = function (event) {
 			event.preventDefault();
 
 			dragState = TreeNode.NONE;
 			self.clearBorder();
 
-			if(!self.object.locked)
-			{
+			if(!self.object.locked) {
 				DragBuffer.pop(self.object.uuid);
 			}
 		};
 
-		this.element.ondragleave = function ()
-		{
+		this.element.ondragleave = function () {
 			event.preventDefault();
 
 			dragState = TreeNode.NONE;
 			self.clearBorder();
 		};
 
-		this.element.oncontextmenu = function (event)
-		{
-			if(!self.object.locked)
-			{
+		this.element.oncontextmenu = function (event) {
+			if(!self.object.locked) {
 				// Scene and program flags
 				var isProgram = self.object instanceof Program;
 				var isScene = self.object instanceof Scene;
@@ -194,42 +179,33 @@ class TreeNode extends Component
 				context.position.set(event.clientX, event.clientY);
 
 				// Open editor
-				if(isScene)
-				{
+				if(isScene) {
 					context.addOption(Locale.sceneEditor, openSceneTab);
 				}
-				else if(isProgram)
-				{
-					context.addOption(Locale.createScene, function ()
-					{
+				else if(isProgram) {
+					context.addOption(Locale.createScene, function () {
 						Editor.addDefaultScene();
 					});
 				}
-				else if(self.object.isObject3D === true)
-				{
+				else if(self.object.isObject3D === true) {
 					context.addOption(Locale.objectEditor, openSceneTab);
 
-					if(self.object instanceof Script)
-					{
+					if(self.object instanceof Script) {
 						context.addOption(Locale.scriptEditor, openScriptTab);
 					}
-					else if(self.object instanceof ParticleEmitter)
-					{
+					else if(self.object instanceof ParticleEmitter) {
 						context.addOption(Locale.particleEditor, openParticleTab);
 					}
 				}
 
-				if(self.object instanceof LightProbe)
-				{
-					context.addOption(Locale.calculateProbe, function ()
-					{
+				if(self.object instanceof LightProbe) {
+					context.addOption(Locale.calculateProbe, function () {
 						self.object.generate();
 					});
 				}
 
 				// Group objects
-				context.addOption(Locale.groupObjects, function ()
-				{
+				context.addOption(Locale.groupObjects, function () {
 					// TODO <USE THE MOVE ACTIONS INSTEAD TO KEEP EVERYTHING ON THE SAME POSITION>
 
 					var actions = [];
@@ -237,22 +213,18 @@ class TreeNode extends Component
 					var parent = self.object.parent;
 					var found = false;
 
-					for(var i = 0; i < Editor.selection.length; i++)
-					{
-						if(Editor.selection[i] instanceof Object3D)
-						{
+					for(var i = 0; i < Editor.selection.length; i++) {
+						if(Editor.selection[i] instanceof Object3D) {
 							actions.push(new RemoveAction(Editor.selection[i]));
 							group.add(Editor.selection[i]);
 
-							if(Editor.selection[i] === self.object)
-							{
+							if(Editor.selection[i] === self.object) {
 								found = true;
 							}
 						}
 					}
 
-					if(!found)
-					{
+					if(!found) {
 						actions.push(new RemoveAction(self.object));
 						group.add(self.object);
 					}
@@ -262,43 +234,35 @@ class TreeNode extends Component
 				});
 
 				// Recalculate Origin
-				context.addOption(Locale.centerOrigin, function ()
-				{
+				context.addOption(Locale.centerOrigin, function () {
 					ObjectUtils.centerGeometryOrigin(self.object);
 				});
 
 				// Rename
-				context.addOption(Locale.rename, function ()
-				{
+				context.addOption(Locale.rename, function () {
 					Editor.renameObject(self.object);
 				});
 
 				// Delete
-				if(!isProgram)
-				{
-					context.addOption(Locale.delete, function ()
-					{
+				if(!isProgram) {
+					context.addOption(Locale.delete, function () {
 						Editor.deleteObject(self.object);
 					});
 				}
 
 				// Mesh specific stuff
-				if(self.object instanceof Mesh || self.object instanceof SkinnedMesh || self.object instanceof InstancedMesh)
-				{
+				if(self.object instanceof Mesh || self.object instanceof SkinnedMesh || self.object instanceof InstancedMesh) {
 					// If mesh has a geometry attached
-					if(self.object.geometry !== undefined)
-					{
+					if(self.object.geometry !== undefined) {
 						// Generate a convex hull for this geometry
-						context.addOption(Locale.convexHull, function ()
-						{
+						context.addOption(Locale.convexHull, function () {
 							var geometry = self.object.geometry.clone();
 							geometry = mergeVertices(geometry);
 
 							const vertices = [];
 							const positionAttribute = geometry.getAttribute("position");
 
-							for(var i = 0; i < positionAttribute.count; i++)
-							{
+							for(var i = 0; i < positionAttribute.count; i++) {
 								const vertex = new Vector3();
 								vertex.fromBufferAttribute(positionAttribute, i);
 								vertices.push(vertex);
@@ -309,16 +273,14 @@ class TreeNode extends Component
 						});
 
 						// Generate normals for the attached geometry
-						context.addOption(Locale.computeNormals, function ()
-						{
+						context.addOption(Locale.computeNormals, function () {
 							var geometry = self.object.geometry.clone();
 							geometry.computeVertexNormals();
 							Editor.addAction(new ChangeAction(self.object, "geometry", geometry));
 						});
 
 						// Apply transformation to geometry
-						context.addOption(Locale.applyTransformation, function ()
-						{
+						context.addOption(Locale.applyTransformation, function () {
 							var geometry = self.object.geometry.clone();
 							geometry.applyMatrix4(self.object.matrixWorld);
 
@@ -333,10 +295,8 @@ class TreeNode extends Component
 				}
 
 				// Convert mesh to instanced mesh
-				if(self.object instanceof Mesh && self.object.geometry !== undefined)
-				{
-					context.addOption(Locale.toInstancedMesh, function ()
-					{
+				if(self.object instanceof Mesh && self.object.geometry !== undefined) {
+					context.addOption(Locale.toInstancedMesh, function () {
 						var instanced = new InstancedMesh(self.object.geometry, self.object.material, 1);
 						instanced.position.copy(self.object.position);
 						instanced.scale.copy(self.object.scale);
@@ -347,11 +307,9 @@ class TreeNode extends Component
 				}
 
 				// Add physics to object
-				if(self.object instanceof Mesh || self.object instanceof SkinnedMesh)
-				{
+				if(self.object instanceof Mesh || self.object instanceof SkinnedMesh) {
 					// Add physics object
-					function createPhysics(object, mode)
-					{
+					function createPhysics(object, mode) {
 						var physics = new PhysicsObject();
 						physics.addShape(PhysicsGenerator.createShape(object, mode));
 						physics.name = object.name;
@@ -369,59 +327,49 @@ class TreeNode extends Component
 
 					var physics = context.addMenu("Add physics");
 
-					physics.addOption(Locale.box, function ()
-					{
+					physics.addOption(Locale.box, function () {
 						createPhysics(self.object, PhysicsGenerator.Type.BOX);
 					});
 
-					physics.addOption(Locale.sphere, function ()
-					{
+					physics.addOption(Locale.sphere, function () {
 						createPhysics(self.object, PhysicsGenerator.Type.SPHERE);
 					});
 
-					physics.addOption(Locale.cylinder, function ()
-					{
+					physics.addOption(Locale.cylinder, function () {
 						createPhysics(self.object, PhysicsGenerator.Type.CYLINDER);
 					});
 
-					physics.addOption(Locale.convexHull, function ()
-					{
+					physics.addOption(Locale.convexHull, function () {
 						createPhysics(self.object, PhysicsGenerator.Type.HULL);
 					});
 				}
 
 				// Change attribute of an object and all its children
-				function setObjectAttribute(object, attribute, value)
-				{
+				function setObjectAttribute(object, attribute, value) {
 					var actions = [];
 
-					if(object[attribute] !== undefined)
-					{
+					if(object[attribute] !== undefined) {
 						actions.push(new ChangeAction(object, attribute, value));
 					}
 
-					object.traverse(function (child)
-					{
+					object.traverse(function (child) {
 						actions.push(new ChangeAction(child, attribute, value));
 					});
 
 					return actions;
 				};
 
-				if(!isScene && !isProgram)
-				{
+				if(!isScene && !isProgram) {
 					var autoUpdate = context.addMenu(Locale.static);
 
 					// Set object and children to static mode
-					autoUpdate.addOption(Locale.static, function ()
-					{
+					autoUpdate.addOption(Locale.static, function () {
 						var actions = setObjectAttribute(self.object, "matrixAutoUpdate", false);
 						Editor.addAction(new ActionBundle(actions));
 					});
 
 					// Set object and children to dynamic mode
-					autoUpdate.addOption(Locale.dynamic, function ()
-					{
+					autoUpdate.addOption(Locale.dynamic, function () {
 						var actions = setObjectAttribute(self.object, "matrixAutoUpdate", true);
 						Editor.addAction(new ActionBundle(actions));
 					});
@@ -429,50 +377,42 @@ class TreeNode extends Component
 					var shadow = context.addMenu(Locale.shadows);
 
 					// Set object and children shadow casting mode
-					shadow.addOption(Locale.enable, function ()
-					{
+					shadow.addOption(Locale.enable, function () {
 						var cast = setObjectAttribute(self.object, "castShadow", true);
 						var receive = setObjectAttribute(self.object, "receiveShadow", true);
 						Editor.addAction(new ActionBundle(cast.concat(receive)));
 					});
 
 					// Set object and children shadow casting mode
-					shadow.addOption(Locale.disable, function ()
-					{
+					shadow.addOption(Locale.disable, function () {
 						var cast = setObjectAttribute(self.object, "castShadow", false);
 						var receive = setObjectAttribute(self.object, "receiveShadow", false);
 						Editor.addAction(new ActionBundle(cast.concat(receive)));
 					});
 
 					// Duplicate object
-					context.addOption(Locale.duplicate, async function ()
-					{
+					context.addOption(Locale.duplicate, async function () {
 						var object = await new ObjectLoader().parse(self.object.toJSON());
-						object.traverse(function (child)
-						{
+						object.traverse(function (child) {
 							child.uuid = MathUtils.generateUUID();
 						});
 						Editor.addAction(new AddAction(object, self.object.parent));
 					});
 
 					// Copy object
-					context.addOption(Locale.copy, function ()
-					{
+					context.addOption(Locale.copy, function () {
 						Editor.copyObject(self.object);
 					});
 
 					// Cut object
-					context.addOption(Locale.cut, function ()
-					{
+					context.addOption(Locale.cut, function () {
 						Editor.cutObject(self.object);
 					});
 				}
 
-				if(!isProgram)
-				{
+				if(!isProgram) {
 					// Paste object form clipboard
-					context.addOption(Locale.paste, function ()
-					{
+					context.addOption(Locale.paste, function () {
 						Editor.pasteObject(self.object);
 					});
 				}
@@ -481,38 +421,30 @@ class TreeNode extends Component
 			}
 		};
 
-		this.element.ondragover = function (event)
-		{
+		this.element.ondragover = function (event) {
 			event.preventDefault();
 
-			if(DragBuffer.buffer[0] instanceof TabComponent)
-			{
+			if(DragBuffer.buffer[0] instanceof TabComponent) {
 				return;
 			}
 
-			if(!self.object.locked)
-			{
+			if(!self.object.locked) {
 				// Object drag
-				if(DragBuffer.buffer[0] instanceof Object3D)
-				{
-					if(event.layerY < 5)
-					{
+				if(DragBuffer.buffer[0] instanceof Object3D) {
+					if(event.layerY < 5) {
 						dragState = TreeNode.ABOVE;
 					}
-					else if(event.layerY > 15)
-					{
+					else if(event.layerY > 15) {
 						dragState = TreeNode.BELLOW;
 					}
-					else
-					{
+					else {
 						dragState = TreeNode.INSIDE;
 					}
 
 					self.setBorder(dragState);
 				}
 				// Resources, files, etc
-				else
-				{
+				else {
 					dragState = TreeNode.INSIDE;
 					self.setBorder(dragState);
 				}
@@ -520,13 +452,11 @@ class TreeNode extends Component
 		};
 
 		// Drop event (fired on the drop target)
-		this.element.ondrop = function (event)
-		{
+		this.element.ondrop = function (event) {
 			event.preventDefault();
 			self.clearBorder();
 
-			if(self.object.locked)
-			{
+			if(self.object.locked) {
 				return;
 			}
 
@@ -535,38 +465,30 @@ class TreeNode extends Component
 			var object = DragBuffer.get(uuid);
 
 			// Object 3D
-			if(object instanceof Object3D)
-			{
-				if(object === self.object)
-				{
+			if(object instanceof Object3D) {
+				if(object === self.object) {
 					Editor.alert(Locale.cannotAddItself);
 					return;
 				}
-				else if(object.contains(self.object))
-				{
+				else if(object.contains(self.object)) {
 					Editor.alert(Locale.cannotAddToChildren);
 					return;
 				}
-				else
-				{
+				else {
 					var selfIsScene = self.object instanceof Scene;
 					var selfIsProgram = self.object instanceof Program;
 					var dragIsScene = object instanceof Scene;
 
 					// Above
-					if(dragState === TreeNode.ABOVE)
-					{
-						if(dragIsScene && selfIsScene || !dragIsScene && !selfIsProgram && !selfIsScene)
-						{
+					if(dragState === TreeNode.ABOVE) {
+						if(dragIsScene && selfIsScene || !dragIsScene && !selfIsProgram && !selfIsScene) {
 							var index = self.object.parent.children.indexOf(self.object);
 							Editor.addAction(new MoveAction(object, self.object.parent, index));
 						}
 					}
 					// Bellow
-					else if(dragState === TreeNode.BELLOW)
-					{
-						if(dragIsScene && selfIsScene || !dragIsScene && !selfIsProgram && !selfIsScene)
-						{
+					else if(dragState === TreeNode.BELLOW) {
+						if(dragIsScene && selfIsScene || !dragIsScene && !selfIsProgram && !selfIsScene) {
 							var index = self.object.parent.children.indexOf(self.object) + 1;
 							Editor.addAction(new MoveAction(object, self.object.parent, index));
 						}
@@ -574,168 +496,131 @@ class TreeNode extends Component
 					// Inside
 					else // if(dragState === TreeNode.INSIDE)
 					{
-						if(selfIsScene && !dragIsScene || dragIsScene && selfIsProgram || !selfIsScene && !selfIsProgram && !dragIsScene)
-						{
+						if(selfIsScene && !dragIsScene || dragIsScene && selfIsProgram || !selfIsScene && !selfIsProgram && !dragIsScene) {
 							Editor.addAction(new MoveAction(object, self.object));
 						}
 					}
 				}
 			}
 			// Material
-			else if(object instanceof Material)
-			{
+			else if(object instanceof Material) {
 				var actions = [];
-				self.object.traverse(function (children)
-				{
-					if(children.material !== undefined)
-					{
+				self.object.traverse(function (children) {
+					if(children.material !== undefined) {
 						actions.push(new ChangeAction(children, "material", object));
 					}
 				});
 
-				if(actions.length > 0)
-				{
+				if(actions.length > 0) {
 					Editor.addAction(new ActionBundle(actions));
 				}
 			}
 			// Dragged file
-			else if(event.dataTransfer.files.length > 0)
-			{
+			else if(event.dataTransfer.files.length > 0) {
 				var files = event.dataTransfer.files;
-				for(var i = 0; i < files.length; i++)
-				{
+				for(var i = 0; i < files.length; i++) {
 					var file = files[i];
 
-					if(Model.fileIsModel(file))
-					{
+					if(Model.fileIsModel(file)) {
 						Loaders.loadModel(file, self.object);
 					}
 				}
 			}
 		};
 
-		this.element.onclick = function (event)
-		{
-			if(event.shiftKey && Editor.selection.length > 0 && Editor.selection[Editor.selection.length - 1].isObject3D === true)
-			{
+		this.element.onclick = function (event) {
+			if(event.shiftKey && Editor.selection.length > 0 && Editor.selection[Editor.selection.length - 1].isObject3D === true) {
 				var object = Editor.selection[Editor.selection.length - 1];
 
 				var selecting = false;
 				var done = false;
 
-				Editor.program.traverse(function (child)
-				{
-					if(done === true)
-					{
+				Editor.program.traverse(function (child) {
+					if(done === true) {
 						return;
 					}
 
-					if(selecting === false)
-					{
-						if(child === object || child === self.object)
-						{
-							if(!Editor.isSelected(child))
-							{
+					if(selecting === false) {
+						if(child === object || child === self.object) {
+							if(!Editor.isSelected(child)) {
 								Editor.addToSelection(child);
 							}
 							selecting = true;
 						}
 					}
-					else
-					{
-						if(child === object || child === self.object)
-						{
-							if(!Editor.isSelected(child))
-							{
+					else {
+						if(child === object || child === self.object) {
+							if(!Editor.isSelected(child)) {
 								Editor.addToSelection(child);
 							}
 
 							selecting = false;
 							done = true;
 						}
-						else
-						{
+						else {
 							Editor.addToSelection(child);
 						}
 					}
 				});
 			}
-			else if(event.ctrlKey)
-			{
-				if(Editor.isSelected(self.object))
-				{
+			else if(event.ctrlKey) {
+				if(Editor.isSelected(self.object)) {
 					Editor.unselectObject(self.object);
 				}
-				else
-				{
+				else {
 					Editor.addToSelection(self.object);
 				}
 			}
-			else
-			{
+			else {
 				Editor.selectObject(self.object);
 			}
 		};
 
-		this.element.ondblclick = function ()
-		{
-			if(!self.object.locked)
-			{
-				if(self.object instanceof PythonScript)
-				{
+		this.element.ondblclick = function () {
+			if(!self.object.locked) {
+				if(self.object instanceof PythonScript) {
 					openTab(PythonScriptEditor, self.object);
 				}
-				else if(self.object instanceof Script)
-				{
+				else if(self.object instanceof Script) {
 					openTab(ScriptEditor, self.object);
 				}
-				else if(self.object instanceof Scene)
-				{
+				else if(self.object instanceof Scene) {
 					openTab(SceneEditor, self.object);
 				}
-				else if(self.object instanceof ParticleEmitter)
-				{
+				else if(self.object instanceof ParticleEmitter) {
 					openTab(ParticleEditor, self.object);
 				}
-				else if(self.object instanceof Camera)
-				{
+				else if(self.object instanceof Camera) {
 					openTab(CameraEditor, self.object);
 				}
-				else if(self.object instanceof NodeScript)
-				{
+				else if(self.object instanceof NodeScript) {
 					openTab(NodeEditor, self.object);
 				}
-				else
-				{
+				else {
 					self.updateFoldedState(!self.folded);
 				}
 			}
 		};
 
 		// Auxiliary method to open a new tab and attach a object to it.
-		async function openTab(Constructor, object)
-		{
+		async function openTab(Constructor, object) {
 			var tab = Editor.gui.tab.getTab(Constructor, object);
-			if(tab === null)
-			{
+			if(tab === null) {
 				tab = await Editor.gui.tab.addTab(Constructor, true);
 				tab.attach(self.object);
 			}
 			tab.select();
 		}
 
-		function openSceneTab()
-		{
+		function openSceneTab() {
 			openTab(SceneEditor, self.object);
 		}
 
-		function openScriptTab()
-		{
+		function openScriptTab() {
 			openTab(ScriptEditor, self.object);
 		}
 
-		function openParticleTab()
-		{
+		function openParticleTab() {
 			openTab(ParticleEditor, self.object);
 		}
 	}
@@ -774,8 +659,7 @@ class TreeNode extends Component
 	 *
 	 * @method clearBorder
 	 */
-	clearBorder()
-	{
+	clearBorder() {
 		this.element.style.border = null;
 		this.element.style.borderTop = null;
 		this.element.style.borderBottom = null;
@@ -786,8 +670,7 @@ class TreeNode extends Component
 	 *
 	 * @method styleNormal
 	 */
-	styleNormal()
-	{
+	styleNormal() {
 		this.element.style.backgroundColor = null;
 	}
 
@@ -796,8 +679,7 @@ class TreeNode extends Component
 	 *
 	 * @method styleSelected
 	 */
-	styleSelected()
-	{
+	styleSelected() {
 		this.element.style.backgroundColor = "var(--button-over-color)";
 	}
 
@@ -806,8 +688,7 @@ class TreeNode extends Component
 	 *
 	 * @method styleMouseOver
 	 */
-	styleMouseOver()
-	{
+	styleMouseOver() {
 		this.element.style.backgroundColor = "var(--bar-color)";
 	}
 
@@ -817,16 +698,13 @@ class TreeNode extends Component
 	 * @method setSelected
 	 * @param {boolean} selected If true set selected, otherwise se unselected.
 	 */
-	setSelected(selected)
-	{
+	setSelected(selected) {
 		this.selected = selected;
 
-		if(this.selected === true)
-		{
+		if(this.selected === true) {
 			this.styleSelected();
 		}
-		else
-		{
+		else {
 			this.styleNormal();
 		}
 	}
@@ -837,20 +715,16 @@ class TreeNode extends Component
 	 * @method setBorder
 	 * @param {number} place Border position.
 	 */
-	setBorder(place)
-	{
+	setBorder(place) {
 		this.clearBorder();
 
-		if(place === TreeNode.ABOVE)
-		{
+		if(place === TreeNode.ABOVE) {
 			this.element.style.borderTop = "1px solid var(--color-gray-light)";
 		}
-		else if(place === TreeNode.BELLOW)
-		{
+		else if(place === TreeNode.BELLOW) {
 			this.element.style.borderBottom = "1px solid var(--color-gray-light)";
 		}
-		else if(place === TreeNode.INSIDE)
-		{
+		else if(place === TreeNode.INSIDE) {
 			this.element.style.border = "1px solid var(--color-gray-light)";
 		}
 	}
@@ -861,8 +735,7 @@ class TreeNode extends Component
 	 * @method attach
 	 * @param {Object3D} object
 	 */
-	attach(object)
-	{
+	attach(object) {
 		this.object = object;
 		this.object.gui = { node: this };
 
@@ -882,8 +755,7 @@ class TreeNode extends Component
 	 * @method addObject
 	 * @param {Object3D} object
 	 */
-	addObject(object)
-	{
+	addObject(object) {
 		var element = new TreeNode(this.container);
 		element.attach(object);
 		element.parent = this;
@@ -898,8 +770,7 @@ class TreeNode extends Component
 	 * @param {Object3D} object
 	 * @param {number} index
 	 */
-	insertObject(object, index)
-	{
+	insertObject(object, index) {
 		var element = new TreeNode(this.container);
 		element.attach(object);
 		element.parent = this;
@@ -912,18 +783,14 @@ class TreeNode extends Component
 	 *
 	 * @method removeElementUUID
 	 */
-	removeElementUUID(uuid)
-	{
-		for(var i = 0; i < this.children.length; i++)
-		{
-			if(this.children[i].uuid === uuid)
-			{
+	removeElementUUID(uuid) {
+		for(var i = 0; i < this.children.length; i++) {
+			if(this.children[i].uuid === uuid) {
 				break;
 			}
 		}
 
-		if(i < this.children.length)
-		{
+		if(i < this.children.length) {
 			var element = this.children[i];
 			this.children.splice(i, 1);
 			return element;
@@ -938,10 +805,8 @@ class TreeNode extends Component
 	 * @method updatedFoldedState
 	 * @param {boolean} folded.
 	 */
-	updateFoldedState(folded)
-	{
-		if(folded !== undefined)
-		{
+	updateFoldedState(folded) {
+		if(folded !== undefined) {
 			this.folded = folded;
 		}
 
@@ -955,12 +820,10 @@ class TreeNode extends Component
 	 *
 	 * @method expandToRoot
 	 */
-	expandToRoot()
-	{
+	expandToRoot() {
 		var parent = this.parent;
 
-		while(parent !== null)
-		{
+		while(parent !== null) {
 			parent.updateFoldedState(false);
 			parent.setVisibility(true);
 			parent = parent.parent;
@@ -969,32 +832,25 @@ class TreeNode extends Component
 		this.element.scrollIntoView({ behavior: "smooth", block: "center", inline: "center" });
 	}
 
-	destroy()
-	{
-		if(this.container.element.contains(this.element))
-		{
+	destroy() {
+		if(this.container.element.contains(this.element)) {
 			this.container.element.removeChild(this.element);
 		}
 
-		for(var i = 0; i < this.children.length; i++)
-		{
+		for(var i = 0; i < this.children.length; i++) {
 			this.children[i].destroy();
 		}
 	}
 
-	updateInterface()
-	{
-		if(this.visible)
-		{
+	updateInterface() {
+		if(this.visible) {
 			var offset = this.level * 20;
 
 			// Arrow
-			if(this.object.isEmpty())
-			{
+			if(this.object.isEmpty()) {
 				this.arrow.style.display = "none";
 			}
-			else
-			{
+			else {
 				this.arrow.style.display = "block";
 				this.arrow.style.left = 5 + offset + "px";
 			}
@@ -1006,21 +862,19 @@ class TreeNode extends Component
 			this.element.style.display = "block";
 			this.element.style.top = this.position.y + "px";
 
-			for(var i = 0; i < this.children.length; i++)
-			{
+			for(var i = 0; i < this.children.length; i++) {
 				this.children[i].updateInterface();
 			}
 		}
-		else
-		{
+		else {
 			this.element.style.display = "none";
 		}
 	}
 
 }
 
-TreeNode.ARROW_DOWN = "files/icons/misc/arrow_down.png";
-TreeNode.ARROW_RIGHT = "files/icons/misc/arrow_right.png";
+TreeNode.ARROW_DOWN = Global.FILE_PATH + "icons/misc/arrow_down.png";
+TreeNode.ARROW_RIGHT = Global.FILE_PATH + "files/icons/misc/arrow_right.png";
 TreeNode.NONE = -1;
 TreeNode.INSIDE = 0;
 TreeNode.ABOVE = 1;
