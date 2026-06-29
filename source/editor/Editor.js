@@ -74,6 +74,9 @@ Editor.initialize = async function () {
 
 		// Handle window close event
 		gui.Window.get().on("close", function () {
+			if(Editor.isDefaultScene()) {
+				return true;
+			}
 			if(confirm(Locale.unsavedChangesExit)) {
 				Editor.exit();
 			}
@@ -108,7 +111,9 @@ Editor.initialize = async function () {
 		// Store settings when exiting the page
 		window.onbeforeunload = function (event) {
 			Editor.settings.store();
-
+			if(Editor.isDefaultScene()) {
+				return true;
+			}
 			var message = Locale.unsavedChangesExit;
 			event.returnValue = message;
 			return message;
@@ -464,6 +469,81 @@ Editor.addObject = async function (object, parent) {
 	}
 
 	Editor.addAction(new ActionBundle(actions));
+};
+
+
+Editor.isDefaultScene = function () {
+	const scene = Editor.getScene();
+	if(!scene) return true;
+
+	// A default canvas setup must have exactly 3 top-level elements
+	if(!scene.children || scene.children.length !== 3) {
+		return false;
+	}
+
+	if(Editor.history.length > 1) {
+		return false;
+	}
+
+	let hasSky = false;
+	let hasBox = false;
+	let hasGround = false;
+
+	for(let i = 0; i < scene.children.length; i++) {
+		const child = scene.children[i];
+
+		if(child.type === "Sky" && child.name === "sky") {
+			hasSky = true;
+		} else if(child.type === "Mesh" && child.name === "box" && child.isMesh) {
+			// Deep evaluate Box Mesh parameters
+			const geom = child.geometry;
+			const mat = child.material;
+
+			if(!geom || !mat || geom.type !== "BoxGeometry" || mat.type !== "MeshStandardMaterial") {
+				return false;
+			}
+
+			// Verify physical parameters: Default cube must be 1x1x1 unit size
+			const p = geom.parameters;
+			if(!p || p.width !== 1 || p.height !== 1 || p.depth !== 1) {
+				return false;
+			}
+
+			// Verify surface values: standard material defaults (roughness 0.6, metalness 0.2)
+			if(mat.roughness !== 0.6 || mat.metalness !== 0.2) {
+				return false;
+			}
+
+			// Verify no sub-objects or layout weights are chained below it
+			if(child.children && child.children.length > 0) {
+				return false;
+			}
+			hasBox = true;
+
+		} else if(child.type === "Mesh" && child.name === "ground" && child.isMesh) {
+			// Deep evaluate Ground Grid parameters
+			const geom = child.geometry;
+			if(!geom || geom.type !== "BoxGeometry") {
+				return false;
+			}
+
+			// Verify physical parameters: Default layout floor bounding canvas is 20x1x20 units
+			const p = geom.parameters;
+			if(!p || p.width !== 20 || p.height !== 1 || p.depth !== 20) {
+				return false;
+			}
+
+			if(child.children && child.children.length > 0) {
+				return false;
+			}
+			hasGround = true;
+		} else {
+			// An external asset or mutated container structure was injected
+			return false;
+		}
+	}
+
+	return hasSky && hasBox && hasGround;
 };
 
 

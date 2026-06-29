@@ -329,7 +329,7 @@ Loaders.loadModel = async function (file, parent, callback) {
 		// GCode
 		if(extension === "gcode") {
 			let reader = new FileReader();
-			reader.onload = function () {
+			reader.onload = async function () {
 				try {
 					let loader = new GCodeLoader();
 					let obj = loader.parse(reader.result);
@@ -369,7 +369,7 @@ Loaders.loadModel = async function (file, parent, callback) {
 			}
 
 			let reader = new FileReader();
-			reader.onload = function () {
+			reader.onload = async function () {
 				try {
 					let loader = new OBJLoader();
 
@@ -397,7 +397,7 @@ Loaders.loadModel = async function (file, parent, callback) {
 			reader.onload = function () {
 				try {
 					let loader = new ThreeMFLoader();
-					loader.parse(reader.result, function (obj) {
+					loader.parse(reader.result, async function (obj) {
 						await callback(obj, parent);
 						modal.destroy();
 					});
@@ -413,7 +413,7 @@ Loaders.loadModel = async function (file, parent, callback) {
 		// VOX
 		else if(extension === "vox") {
 			let reader = new FileReader();
-			reader.onload = function () {
+			reader.onload = async function () {
 				try {
 					let loader = new VOXLoader();
 					let chunks = loader.parse(reader.result);
@@ -461,7 +461,7 @@ Loaders.loadModel = async function (file, parent, callback) {
 		// AWD
 		else if(extension === "awd") {
 			let reader = new FileReader();
-			reader.onload = function () {
+			reader.onload = async function () {
 				try {
 					let loader = new AWDLoader();
 					loader._baseDir = path;
@@ -480,7 +480,7 @@ Loaders.loadModel = async function (file, parent, callback) {
 		// AMF
 		else if(extension === "amf") {
 			let reader = new FileReader();
-			reader.onload = function () {
+			reader.onload = async function () {
 				try {
 					let loader = new AMFLoader();
 					let amf = loader.parse(reader.result);
@@ -498,7 +498,7 @@ Loaders.loadModel = async function (file, parent, callback) {
 		// Assimp
 		else if(extension === "assimp") {
 			let reader = new FileReader();
-			reader.onload = function () {
+			reader.onload = async function () {
 				try {
 					let loader = new AssimpLoader();
 					let assimp = loader.parse(reader.result, path);
@@ -516,7 +516,7 @@ Loaders.loadModel = async function (file, parent, callback) {
 		// Babylon
 		else if(extension === "babylon") {
 			let reader = new FileReader();
-			reader.onload = function () {
+			reader.onload = async function () {
 				try {
 					let loader = new BabylonLoader();
 					let json = JSON.parse(reader.result);
@@ -566,7 +566,7 @@ Loaders.loadModel = async function (file, parent, callback) {
 		// 3DS
 		else if(extension === "3ds") {
 			let reader = new FileReader();
-			reader.onload = function () {
+			reader.onload = async function () {
 				try {
 					let loader = new TDSLoader();
 					loader.setPath(path);
@@ -585,7 +585,7 @@ Loaders.loadModel = async function (file, parent, callback) {
 		// Collada
 		else if(extension === "dae") {
 			let reader = new FileReader();
-			reader.onload = function () {
+			reader.onload = async function () {
 				try {
 					let loader = new ColladaLoader();
 					let collada = loader.parse(reader.result, path);
@@ -620,7 +620,7 @@ Loaders.loadModel = async function (file, parent, callback) {
 					let loader = new DRACOLoader();
 					loader.setDecoderPath(Global.FILE_PATH + "wasm/draco/");
 					loader.setDecoderConfig({ type: "wasm" });
-					loader.decodeDracoFile(reader.result, function (geometry) {
+					loader.decodeDracoFile(reader.result, async function (geometry) {
 						loader.releaseDecoderModule();
 
 						if(geometry.isBufferGeometry === true) {
@@ -654,7 +654,7 @@ Loaders.loadModel = async function (file, parent, callback) {
 
 					let loader = new GLTFLoader();
 					loader.dracoLoader = dracoLoader;
-					loader.parse(reader.result, path, function (gltf) {
+					loader.parse(reader.result, path, async function (gltf) {
 						dracoLoader.dispose();
 
 						let scene = gltf.scene;
@@ -685,7 +685,7 @@ Loaders.loadModel = async function (file, parent, callback) {
 		// PLY
 		else if(extension === "ply") {
 			let reader = new FileReader();
-			reader.onload = function () {
+			reader.onload = async function () {
 				try {
 					let loader = new PLYLoader();
 					let modelName = FileSystem.getNameWithoutExtension(name);
@@ -709,7 +709,7 @@ Loaders.loadModel = async function (file, parent, callback) {
 		// VTK
 		else if(extension === "vtk" || extension === "vtp") {
 			let reader = new FileReader();
-			reader.onload = function () {
+			reader.onload = async function () {
 				try {
 					let loader = new VTKLoader();
 					let modelName = FileSystem.getNameWithoutExtension(name);
@@ -732,7 +732,7 @@ Loaders.loadModel = async function (file, parent, callback) {
 		// PRWM
 		else if(extension === "prwm") {
 			let reader = new FileReader();
-			reader.onload = function () {
+			reader.onload = async function () {
 				try {
 					let loader = new PRWMLoader();
 					let modelName = FileSystem.getNameWithoutExtension(name);
@@ -757,7 +757,7 @@ Loaders.loadModel = async function (file, parent, callback) {
 		// VRML
 		else if(extension === "wrl" || extension === "vrml") {
 			let reader = new FileReader();
-			reader.onload = function () {
+			reader.onload = async function () {
 				try {
 					let loader = new VRMLLoader();
 					let scene = loader.parse(reader.result);
@@ -779,7 +779,7 @@ Loaders.loadModel = async function (file, parent, callback) {
 		// FBX
 		else if(extension === "fbx") {
 			let reader = new FileReader();
-			reader.onload = function () {
+			reader.onload = async function () {
 				try {
 					let loader = new FBXLoader();
 					let object = loader.parse(reader.result, path);
@@ -848,7 +848,7 @@ Loaders.loadModel = async function (file, parent, callback) {
 				try {
 					let loader = new XLoader();
 					loader.baseDir = path;
-					loader.parse(reader.result, function (object) {
+					loader.parse(reader.result, async function (object) {
 						for(let i = 0; i < object.FrameInfo.length; i++) {
 							let model = object.FrameInfo[i];
 
@@ -878,7 +878,7 @@ Loaders.loadModel = async function (file, parent, callback) {
 		// PCD
 		else if(extension === "pcd") {
 			let reader = new FileReader();
-			reader.onload = function () {
+			reader.onload = async function () {
 				try {
 					let loader = new PCDLoader();
 					let pcd = loader.parse(reader.result, file.name);
@@ -898,7 +898,7 @@ Loaders.loadModel = async function (file, parent, callback) {
 		// SVG
 		else if(extension === "svg") {
 			let reader = new FileReader();
-			reader.onload = function () {
+			reader.onload = async function () {
 				try {
 					let loader = new SVGLoader();
 					let paths = loader.parse(reader.result);
@@ -934,7 +934,7 @@ Loaders.loadModel = async function (file, parent, callback) {
 		// STL
 		else if(extension === "stl") {
 			let reader = new FileReader();
-			reader.onload = function () {
+			reader.onload = async function () {
 				try {
 					let loader = new STLLoader();
 
@@ -956,7 +956,7 @@ Loaders.loadModel = async function (file, parent, callback) {
 		// threejs JSON
 		else if(extension === "json") {
 			let reader = new FileReader();
-			reader.onload = function () {
+			reader.onload = async function () {
 				try {
 					let loader = new JSONLoader();
 					let data = loader.parse(JSON.parse(reader.result));

@@ -65,6 +65,91 @@ const ENGINE_PROFILES = {
 ```
 
 
+Yes, the **File System Access API** allows web applications to read and write directly to real files and directories on the local machine.
+
+However, dealing with permissions across page reloads or browser restarts requires a specific approach.
+
+---
+
+### The Rules of Persistence
+
+1. **The JavaScript Engine Loses In-Memory State:** As soon as you refresh the page or close the tab, your active `FileSystemHandle` variables are completely destroyed.
+2. **You Do Not Have to Make the User Re-Select the File:** Instead of showing the `showOpenFilePicker()` dialog every time, you can **serialize** and save the file/directory handle inside **IndexedDB**.
+3. **The Permission Challenge:** Even if you load the handle back from IndexedDB after a fresh boot, the browser revokes active security permissions by default when the site's last tab is closed.
+
+---
+
+### How to Stay Connected Without Repeated Pickers
+
+To build an optimal experience, you must save the handle to IndexedDB first, and then explicitly call `.requestPermission()` on that reloaded handle when the user returns.
+
+#### 1. Save the Handle (e.g., during initialization/selection)
+
+```javascript
+import { openDB } from 'idb'; // Using a helper library like 'idb' makes this easier
+
+async function saveFileHandle(handle) {
+    const db = await openDB('FileStore', 1, {
+        upgrade(db) { db.createObjectStore('handles'); }
+    });
+    // IndexedDB natively serializes FileSystemFileHandle / FileSystemDirectoryHandle objects
+    await db.put('handles', handle, 'recent-project');
+}
+
+```
+
+#### 2. Restore and Verify Permission on Re-Open
+
+When your page spins back up, pull the handle out of IndexedDB. Modern Chromium engines (Chrome, Edge) support a **persistent permission prompt** where users can select "Allow on every visit", eliminating repeated prompts entirely if accepted.
+
+```javascript
+async function restoreProjectFile() {
+    const db = await openDB('FileStore', 1);
+    const savedHandle = await db.get('handles', 'recent-project');
+
+    if (!savedHandle) {
+        console.log("No previous session found. Triggering picker.");
+        return null;
+    }
+
+    // Check existing state: 'granted', 'denied', or 'prompt'
+    let permissionMode = { mode: 'readwrite' };
+    if (await savedHandle.queryPermission(permissionMode) === 'granted') {
+        return savedHandle; // Permission still intact (e.g., quick page refresh)
+    }
+
+    // If it's a new browser session, request permission using the saved handle.
+    // NOTE: This must be triggered inside a User Gesture (like a button click)
+    const status = await savedHandle.requestPermission(permissionMode);
+    if (status === 'granted') {
+        return savedHandle;
+    } else {
+        console.warn("User rejected file permission access request.");
+        return null;
+    }
+}
+
+```
+
+---
+
+### Alternative: The Origin Private File System (OPFS)
+
+If you just need a ultra-fast local storage endpoint for something like an engine database or scratchpad assets—and the user doesn't need to manually interact with the file via their OS File Explorer—use the **Origin Private File System (OPFS)** instead.
+
+```javascript
+// Access the private, completely sandboxed local storage
+const rootDir = await navigator.storage.getDirectory();
+const draftFile = await rootDir.getFileHandle("workspace.bin", { create: true });
+
+```
+
+* **No Permissions Needed:** It never throws prompts or requests access permissions from the user.
+* **Persistent:** It behaves like `LocalStorage` or `IndexedDB` and survives complete browser restarts seamlessly.
+* **WASM Optimization:** Inside a Web Worker, you can query `createSyncAccessHandle()` on it, allowing raw binary file manipulation without promise overhead.
+
+
+
 
 ### Fixing async call chain
 FileSytem.loadFile + variants
