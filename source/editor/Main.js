@@ -4,8 +4,8 @@
  * Does not export any of the internal editor modules, creates events on the document.body to load the editor code properly.
  */
 import GLSL from "glsl-editor/glsl.js";
-import {Editor} from "./Editor.js";
-
+import { Editor } from "./Editor.js";
+import * as THREE from "three";
 // Register the GLSL plugin in Codemirror
 GLSL(CodeMirror);
 
@@ -13,3 +13,5 @@ document.body.onload = Editor.initialize;
 document.body.onresize = Editor.resize;
 
 window.Buffer = window.ArrayBuffer;
+const _global = typeof window !== "undefined" ? window : global;
+_global["THREE"] = THREE;

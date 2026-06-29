@@ -9,6 +9,7 @@ const CircularDependencyPlugin = require('circular-dependency-plugin');
 
 const source = Path.resolve(__dirname, "source");
 const output = Path.resolve(__dirname, "docs/editor");
+const node = Path.resolve(__dirname, "node_modules");
 
 
 module.exports = [
@@ -93,66 +94,66 @@ module.exports = [
 						"package.json"
 					],
 					"styles.css": [
-						"source/editor/style.css",
-						"source/editor/theme/dark.css"
+						source + "/editor/style.css",
+						source + "/editor/theme/dark.css"
 					],
 					"draco_encoder.js": [
-						"source/lib/draco_encoder.js"
+						source + "/lib/draco_encoder.js"
 					],
 					"jshint.js": [
-						"node_modules/jshint/dist/jshint.js"
+						node + "/jshint/dist/jshint.js"
 					],
 					"acorn.js": [
-						"node_modules/acorn/dist/acorn.js",
-						"node_modules/acorn-loose/dist/acorn-loose.js",
-						"node_modules/acorn-walk/dist/walk.js"
+						node + "/acorn/dist/acorn.js",
+						node + "/acorn-loose/dist/acorn-loose.js",
+						node + "/acorn-walk/dist/walk.js"
 					],
 					"tern.js": [
-						"node_modules/tern/lib/signal.js",
-						"node_modules/tern/lib/tern.js",
-						"node_modules/tern/lib/def.js",
-						"node_modules/tern/lib/comment.js",
-						"node_modules/tern/lib/infer.js",
-						"node_modules/tern/plugin/doc_comment.js"
+						node + "/tern/lib/signal.js",
+						node + "/tern/lib/tern.js",
+						node + "/tern/lib/def.js",
+						node + "/tern/lib/comment.js",
+						node + "/tern/lib/infer.js",
+						node + "/tern/plugin/doc_comment.js"
 					],
 					"codemirror.js": [
-						"node_modules/codemirror/lib/codemirror.js",
-						"node_modules/codemirror/keymap/sublime.js",
-						"node_modules/codemirror/keymap/emacs.js",
-						"node_modules/codemirror/keymap/vim.js",
-						"node_modules/codemirror/mode/python/python.js",
-						"node_modules/codemirror/mode/javascript/javascript.js",
-						"node_modules/codemirror/mode/css/css.js",
-						"node_modules/codemirror/mode/xml/xml.js",
-						"node_modules/codemirror/mode/htmlmixed/htmlmixed.js",
-						"node_modules/codemirror/addon/edit/closebrackets.js",
-						"node_modules/codemirror/addon/edit/matchbrackets.js",
-						"node_modules/codemirror/addon/scroll/annotatescrollbar.js",
-						"node_modules/codemirror/addon/search/search.js",
-						"node_modules/codemirror/addon/search/searchcursor.js",
-						"node_modules/codemirror/addon/search/jump-to-line.js",
-						"node_modules/codemirror/addon/search/match-highlighter.js",
-						"node_modules/codemirror/addon/search/matchesonscrollbar.js",
-						"node_modules/codemirror/addon/hint/show-hint.js",
-						"node_modules/codemirror/addon/hint/anyword-hint.js",
-						"node_modules/codemirror/addon/dialog/dialog.js",
-						"node_modules/codemirror/addon/selection/mark-selection.js",
-						"node_modules/codemirror/addon/selection/active-line.js",
-						"node_modules/codemirror/addon/selection/selection-pointer.js",
-						"node_modules/codemirror/addon/lint/lint.js",
-						"node_modules/codemirror/addon/lint/javascript-lint.js",
-						"node_modules/codemirror/addon/tern/tern.js",
-						"node_modules/codemirror/addon/runmode/colorize.js",
-						"node_modules/codemirror/addon/runmode/runmode.js"
+						node + "/codemirror/lib/codemirror.js",
+						node + "/codemirror/keymap/sublime.js",
+						node + "/codemirror/keymap/emacs.js",
+						node + "/codemirror/keymap/vim.js",
+						node + "/codemirror/mode/python/python.js",
+						node + "/codemirror/mode/javascript/javascript.js",
+						node + "/codemirror/mode/css/css.js",
+						node + "/codemirror/mode/xml/xml.js",
+						node + "/codemirror/mode/htmlmixed/htmlmixed.js",
+						node + "/codemirror/addon/edit/closebrackets.js",
+						node + "/codemirror/addon/edit/matchbrackets.js",
+						node + "/codemirror/addon/scroll/annotatescrollbar.js",
+						node + "/codemirror/addon/search/search.js",
+						node + "/codemirror/addon/search/searchcursor.js",
+						node + "/codemirror/addon/search/jump-to-line.js",
+						node + "/codemirror/addon/search/match-highlighter.js",
+						node + "/codemirror/addon/search/matchesonscrollbar.js",
+						node + "/codemirror/addon/hint/show-hint.js",
+						node + "/codemirror/addon/hint/anyword-hint.js",
+						node + "/codemirror/addon/dialog/dialog.js",
+						node + "/codemirror/addon/selection/mark-selection.js",
+						node + "/codemirror/addon/selection/active-line.js",
+						node + "/codemirror/addon/selection/selection-pointer.js",
+						node + "/codemirror/addon/lint/lint.js",
+						node + "/codemirror/addon/lint/javascript-lint.js",
+						node + "/codemirror/addon/tern/tern.js",
+						node + "/codemirror/addon/runmode/colorize.js",
+						node + "/codemirror/addon/runmode/runmode.js"
 					],
 					"codemirror.css": [
-						"node_modules/codemirror/lib/codemirror.css",
-						"node_modules/codemirror/theme/**/*.css",
-						"node_modules/codemirror/addon/search/matchesonscrollbar.css",
-						"node_modules/codemirror/addon/tern/tern.css",
-						"node_modules/codemirror/addon/dialog/dialog.css",
-						"node_modules/codemirror/addon/lint/lint.css",
-						"node_modules/codemirror/addon/hint/show-hint.css"
+						node + "/codemirror/lib/codemirror.css",
+						node + "/codemirror/theme/**/*.css",
+						node + "/codemirror/addon/search/matchesonscrollbar.css",
+						node + "/codemirror/addon/tern/tern.css",
+						node + "/codemirror/addon/dialog/dialog.css",
+						node + "/codemirror/addon/lint/lint.css",
+						node + "/codemirror/addon/hint/show-hint.css"
 					]
 				}
 			})

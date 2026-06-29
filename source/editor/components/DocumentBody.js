@@ -13,7 +13,7 @@ import { Component } from "./Component.js";
 var DocumentBody =
 {
 	parent: null,
-	element: document.body,
+	element: document.getElementById('nunu'),
 	mode: Component.TOP_LEFT,
 	isComponent: true,
 	visible: true,

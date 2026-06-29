@@ -109,17 +109,13 @@ Nunu.CORDOVA = 202;
  * @static
  * @method copyNamespace
  */
-Nunu.copyNamespace = function (namespace, target)
-{
-	if(target === undefined)
-	{
+Nunu.copyNamespace = function (namespace, target) {
+	if(target === undefined) {
 		target = window;
 	}
 
-	for(var i in namespace)
-	{
-		if(!(i in target))
-		{
+	for(var i in namespace) {
+		if(!(i in target)) {
 			target[i] = namespace[i];
 		}
 	}
@@ -131,15 +127,12 @@ Nunu.copyNamespace = function (namespace, target)
  * @method getQueryParameters
  * @return {Object} Object with parameters read from the URL.
  */
-Nunu.getQueryParameters = function ()
-{
+Nunu.getQueryParameters = function () {
 	var values = location.search.substring(1).split("&");
 	var parameters = {};
-	for(var i = 0; i < values.length; i++)
-	{
+	for(var i = 0; i < values.length; i++) {
 		var pair = values[i].split("=");
-		if(pair.length > 1)
-		{
+		if(pair.length > 1) {
 			var name = unescape(pair[0]).replace(new RegExp("\"", "g"), "");
 			var value = unescape(pair[1]).replace(new RegExp("\"", "g"), "");
 			parameters[name] = value;
@@ -160,13 +153,11 @@ Nunu.getQueryParameters = function ()
  * @param {Function} onMessage On message worker callback.
  * @return {Worker} Returns a worker instance (for comunication).
  */
-Nunu.createWorker = function (code, onMessage)
-{
+Nunu.createWorker = function (code, onMessage) {
 	var blob = new Blob([code], { type: "application/javascript" });
 	var worker = new Worker(URL.createObjectURL(blob));
 
-	if(onMessage !== undefined)
-	{
+	if(onMessage !== undefined) {
 		worker.onmessage = onMessage;
 	}
 
@@ -179,8 +170,7 @@ Nunu.createWorker = function (code, onMessage)
  * @method webAudioAvailable
  * @return {boolean} True if WebAudio is available.
  */
-Nunu.webAudioAvailable = function ()
-{
+Nunu.webAudioAvailable = function () {
 	return window.AudioContext !== undefined || window.webkitAudioContext !== undefined;
 };
 
@@ -190,10 +180,8 @@ Nunu.webAudioAvailable = function ()
  * @method webglAvailable
  * @return {boolean} True if WebGL is available.
  */
-Nunu.webGLAvailable = function ()
-{
-	try
-	{
+Nunu.webGLAvailable = function () {
+	try {
 		var canvas = document.createElement("canvas");
 		var context = canvas.getContext("webgl") || canvas.getContext("experimental-webgl");
 		var extensions = context.getSupportedExtensions();
@@ -216,14 +204,11 @@ Nunu.webGLAvailable = function ()
  * @method getPlatform
  * @return {number} Indicates the platform type.
  */
-Nunu.getPlatform = function ()
-{
-	if(window.nw !== undefined)
-	{
+Nunu.getPlatform = function () {
+	if(window.nw !== undefined) {
 		return Nunu.NWJS;
 	}
-	else if(window.cordova !== undefined)
-	{
+	else if(window.cordova !== undefined) {
 		return Nunu.CORDOVA;
 	}
 
@@ -240,14 +225,11 @@ Nunu.getPlatform = function ()
  *
  * @method openWebpage
  */
-Nunu.openWebpage = function (url)
-{
-	if(Nunu.runningOnDesktop())
-	{
+Nunu.openWebpage = function (url) {
+	if(Nunu.runningOnDesktop()) {
 		window.require("nw.gui").Shell.openExternal(url);
 	}
-	else
-	{
+	else {
 		window.open(url);
 	}
 };
@@ -262,48 +244,39 @@ Nunu.openWebpage = function (url)
  * @param {boolean} fullscreen If true the application will enter fullscreen mode, if false it will exit, if undefine it will toggle the value.
  * @param {Component} element DOM element to put into fullscreen.
  */
-Nunu.setFullscreen = function (fullscreen, element)
-{
+Nunu.setFullscreen = function (fullscreen, element) {
 	var isFullscreen = Nunu.isFullscreen();
 
-	if(fullscreen === undefined)
-	{
+	if(fullscreen === undefined) {
 		fullscreen = !isFullscreen;
 	}
 
-	if(fullscreen === true)
-	{
-		if(element === undefined)
-		{
+	if(fullscreen === true) {
+		if(element === undefined) {
 			element = document.body;
 		}
 
-		if(isFullscreen === false)
-		{
+		if(isFullscreen === false) {
 			element.requestFullscreen = element.requestFullscreen || element.mozRequestFullScreen || element.webkitRequestFullscreen || element.msRequestFullscreen;
 
-			if(element.requestFullscreen !== undefined)
-			{
+			if(element.requestFullscreen !== undefined) {
 				element.requestFullscreen();
 			}
 		}
 	}
-	else
-	{
-		if(isFullscreen === true)
-		{
+	else {
+		if(isFullscreen === true) {
 			document.exitFullscreen = document.exitFullscreen || document.mozCancelFullScreen || document.webkitExitFullscreen;
 
-			if(document.exitFullscreen !== undefined)
-			{
+			if(document.exitFullscreen !== undefined) {
 				document.exitFullscreen();
 			}
 		}
 	}
 };
 
-Nunu.isFullscreen = isFullscreen
-Nunu.runningOnDesktop = runningOnDesktop
+Nunu.isFullscreen = isFullscreen;
+Nunu.runningOnDesktop = runningOnDesktop;
 
 
 export { Nunu };
