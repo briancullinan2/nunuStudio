@@ -1,7 +1,8 @@
 import { runningOnDesktop, isFullscreen } from "../core/utils/Environment.js";
 import {
 	Texture, BoxGeometry, MeshStandardMaterial, SpriteMaterial,
-	MathUtils, Material, BufferGeometry, Shape
+	MathUtils, Material, BufferGeometry, Shape,
+	Object3D
 } from "three";
 
 /**
@@ -466,6 +467,60 @@ Editor.addObject = async function (object, parent) {
 };
 
 
+Editor.finishAddingAsset = async function (object3D) {
+
+	if(!(object3D && Editor.program && object3D instanceof Object3D)) {
+		return;
+	}
+
+
+	// Recurse into groups/hierarchies to catch split models or collections
+	object3D.traverse(function (child) {
+		var mats, i, j, mapType;
+
+		// Steal Material references
+		if(child.material) {
+			mats = Array.isArray(child.material) ? child.material : [child.material];
+			for(i = 0; i < mats.length; i++) {
+				if(mats[i].uuid && !Editor.program.materials[mats[i].uuid]) {
+					Editor.program.materials[mats[i].uuid] = mats[i];
+				}
+			}
+		}
+
+		// Steal Geometry definitions
+		if(child.geometry && child.geometry.uuid) {
+			if(!Editor.program.geometries[child.geometry.uuid]) {
+				Editor.program.geometries[child.geometry.uuid] = child.geometry;
+			}
+		}
+
+		// Steal Textures if tied to standard diffuse maps, normals, etc.
+		if(child.material) {
+			mats = Array.isArray(child.material) ? child.material : [child.material];
+			var mapTypes = ["map", "bumpMap", "normalMap", "specularMap", "emissiveMap", "roughnessMap", "metalnessMap"];
+
+			for(i = 0; i < mats.length; i++) {
+				for(j = 0; j < mapTypes.length; j++) {
+					mapType = mapTypes[j];
+					if(mats[i][mapType] && mats[i][mapType].uuid) {
+						if(!Editor.program.textures[mats[i][mapType].uuid]) {
+							Editor.program.textures[mats[i][mapType].uuid] = mats[i][mapType];
+						}
+					}
+				}
+			}
+		}
+	});
+
+
+	if(Editor.gui.assetExplorer) {
+		Editor.gui.assetExplorer.updateObjectsView();
+	}
+
+};
+
+
 /**
  * Intercepts an incoming 3D object/model hierarchy to strip out materials,
  * geometries, and textures directly into the global program registries without
@@ -475,56 +530,15 @@ Editor.addObject = async function (object, parent) {
  * @method addAsset
  * @param {Object3D} object3D The model or collection hierarchy.
  */
-Editor.addAsset = function (object3D) {
+Editor.addAsset = async function (object3D) {
 	console.log("nunuStudio [Editor]: Bypassing scene placement for model asset:", object3D);
 
-	if(object3D && Editor.program) {
-		// Recurse into groups/hierarchies to catch split models or collections
-		object3D.traverse(function (child) {
-			var mats, i, j, mapType;
+	if(object3D instanceof File) {
+		const { Loaders } = await import("./Loaders.js");
 
-			// Steal Material references
-			if(child.material) {
-				mats = Array.isArray(child.material) ? child.material : [child.material];
-				for(i = 0; i < mats.length; i++) {
-					if(mats[i].uuid && !Editor.program.materials[mats[i].uuid]) {
-						Editor.program.materials[mats[i].uuid] = mats[i];
-					}
-				}
-			}
-
-			// Steal Geometry definitions
-			if(child.geometry && child.geometry.uuid) {
-				if(!Editor.program.geometries[child.geometry.uuid]) {
-					Editor.program.geometries[child.geometry.uuid] = child.geometry;
-				}
-			}
-
-			// Steal Textures if tied to standard diffuse maps, normals, etc.
-			if(child.material) {
-				mats = Array.isArray(child.material) ? child.material : [child.material];
-				var mapTypes = ["map", "bumpMap", "normalMap", "specularMap", "emissiveMap", "roughnessMap", "metalnessMap"];
-
-				for(i = 0; i < mats.length; i++) {
-					for(j = 0; j < mapTypes.length; j++) {
-						mapType = mapTypes[j];
-						if(mats[i][mapType] && mats[i][mapType].uuid) {
-							if(!Editor.program.textures[mats[i][mapType].uuid]) {
-								Editor.program.textures[mats[i][mapType].uuid] = mats[i][mapType];
-							}
-						}
-					}
-				}
-			}
-		});
+		await Loaders.loadModel(object3D, null, this.finishAddingAsset);
 	}
 
-	// Force the Asset Panel interface views to synchronize immediately
-	if(Editor.gui && Editor.gui.assetExplorer !== null) {
-		Editor.gui.assetExplorer.updateObjects();
-	} else if(Editor.updateObjectsViews !== undefined) {
-		Editor.updateObjectsViews();
-	}
 };
 
 

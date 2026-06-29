@@ -30,7 +30,7 @@ Object.defineProperties(DocumentBody,
 		{
 			get: function () {
 				// Reads from the lightweight cache instead of forcing a full browser style recalc loop
-				this._size.set(canvasSize.innerWidth, canvasSize.innerHeight);
+				this._size.set(DocumentBody.innerWidth, DocumentBody.innerHeight);
 				return this._size;
 			},
 			set: function () { }
