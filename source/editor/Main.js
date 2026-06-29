@@ -14,4 +14,5 @@ document.body.onresize = Editor.resize;
 
 window.Buffer = window.ArrayBuffer;
 const _global = typeof window !== "undefined" ? window : global;
+_global["Editor"] = Editor;
 _global["THREE"] = THREE;
