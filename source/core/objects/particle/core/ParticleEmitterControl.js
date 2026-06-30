@@ -1,4 +1,4 @@
-import {Vector3, Color, Math as TMath} from "three";
+import {Vector3, Color, MathUtils as TMath} from "three";
 import {ParticleEmitter} from "../ParticleEmitter.js";
 import {ParticleDistributions} from "../ParticleDistributions.js";
 import {ShaderUtils} from "./ShaderUtils.js";

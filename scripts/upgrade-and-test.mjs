@@ -15,31 +15,40 @@ const backupPath = path.resolve(__dirname, '../package.json.bak');
 // ============================================================================
 // ## SYSTEM UTILITIES & FILE I/O Wrappers
 // ============================================================================
-function runCommand(cmd) {
+function runCommand(cmd)
+{
 	console.log(`Executing: ${cmd}`);
-	try {
+	try
+	{
 		execSync(cmd, { stdio: 'inherit', cwd: path.resolve(__dirname, '..') });
 		return true;
-	} catch (error) {
+	} catch(error)
+	{
 		console.error(`Command failed: ${cmd}`);
 		return false;
 	}
 }
 
-function readJsonFile(filePath) {
-	try {
+function readJsonFile(filePath)
+{
+	try
+	{
 		return JSON.parse(fs.readFileSync(filePath, 'utf8'));
-	} catch (error) {
+	} catch(error)
+	{
 		console.error(`Error reading file at ${filePath}:`, error.message);
 		return null;
 	}
 }
 
-function writeJsonFile(filePath, data) {
-	try {
+function writeJsonFile(filePath, data)
+{
+	try
+	{
 		fs.writeFileSync(filePath, JSON.stringify(data, null, 2), 'utf8');
 		return true;
-	} catch (error) {
+	} catch(error)
+	{
 		console.error(`Error writing file to ${filePath}:`, error.message);
 		return false;
 	}
@@ -48,7 +57,8 @@ function writeJsonFile(filePath, data) {
 // ============================================================================
 // ## DETERMINISTIC SEMVER COMPARISON UTILITIES
 // ============================================================================
-export function parseSemver(v) {
+export function parseSemver(v)
+{
 	const clean = v.replace(/[^0-9.]/g, '');
 	const parts = clean.split('.').map(Number);
 	return {
@@ -58,31 +68,37 @@ export function parseSemver(v) {
 	};
 }
 
-function compareSemver(a, b) {
+function compareSemver(a, b)
+{
 	const semverA = parseSemver(a);
 	const semverB = parseSemver(b);
-	if (semverA.major !== semverB.major) return semverA.major - semverB.major;
-	if (semverA.minor !== semverB.minor) return semverA.minor - semverB.minor;
+	if(semverA.major !== semverB.major) return semverA.major - semverB.major;
+	if(semverA.minor !== semverB.minor) return semverA.minor - semverB.minor;
 	return semverA.patch - semverB.patch;
 }
 
 // ============================================================================
 // ## WORKSPACE STATE RECOVERY
 // ============================================================================
-function createWorkspaceBackup() {
+function createWorkspaceBackup()
+{
 	fs.copyFileSync(packageJsonPath, backupPath);
 	console.log('Created pristine workspace package.json backup.');
 }
 
-function restoreBackup() {
-	if (fs.existsSync(backupPath)) {
+function restoreBackup()
+{
+	if(fs.existsSync(backupPath))
+	{
 		fs.copyFileSync(backupPath, packageJsonPath);
 		console.log('Restored package.json from backup state.');
 	}
 }
 
-function cleanBackupFile() {
-	if (fs.existsSync(backupPath)) {
+function cleanBackupFile()
+{
+	if(fs.existsSync(backupPath))
+	{
 		fs.unlinkSync(backupPath);
 	}
 }
@@ -90,8 +106,10 @@ function cleanBackupFile() {
 // ============================================================================
 // ## REGISTRY AND CONFIG PROCESSING FUNCTIONS
 // ============================================================================
-function fetchPackageRegistryData(packageName) {
-	try {
+function fetchPackageRegistryData(packageName)
+{
+	try
+	{
 		console.log(`Querying registry data up front for: ${packageName}`);
 		const versionsOutput = execSync(`npm view ${packageName} versions --json`, { cwd: path.resolve(__dirname, '..') });
 		const latestOutput = execSync(`npm view ${packageName} version`, { cwd: path.resolve(__dirname, '..') });
@@ -105,14 +123,17 @@ function fetchPackageRegistryData(packageName) {
 			versions: cleanVersions,
 			latest: latestOutput.toString().trim()
 		};
-	} catch (error) {
+	} catch(error)
+	{
 		console.warn(`Could not trace registry history for "${packageName}".`);
 		return null;
 	}
 }
 
-function resolveNextTargetVersions(currentVersion, registryData) {
-	if (!registryData || !registryData.versions.length) {
+function resolveNextTargetVersions(currentVersion, registryData)
+{
+	if(!registryData || !registryData.versions.length)
+	{
 		return { pointVersion: currentVersion, majorVersion: currentVersion, versions: [] };
 	}
 
@@ -121,17 +142,20 @@ function resolveNextTargetVersions(currentVersion, registryData) {
 
 	let currentIndex = versions.indexOf(cleanCurrent);
 
-	if (currentIndex === -1) {
+	if(currentIndex === -1)
+	{
 		currentIndex = versions.findIndex(v => compareSemver(v, cleanCurrent) > 0) - 1;
-		if (currentIndex < 0) currentIndex = 0;
+		if(currentIndex < 0) currentIndex = 0;
 	}
 
 	const pointVersion = (currentIndex + 1 < versions.length) ? versions[currentIndex + 1] : registryData.latest;
 	const currentMajor = parseSemver(cleanCurrent).major;
 	let nextMajorVersion = registryData.latest;
 
-	for (let i = currentIndex + 1; i < versions.length; i++) {
-		if (parseSemver(versions[i]).major > currentMajor) {
+	for(let i = currentIndex + 1; i < versions.length; i++)
+	{
+		if(parseSemver(versions[i]).major > currentMajor)
+		{
 			nextMajorVersion = versions[i];
 			break;
 		}
@@ -140,46 +164,57 @@ function resolveNextTargetVersions(currentVersion, registryData) {
 	return { cleanCurrent: versions[currentIndex] || cleanCurrent, pointVersion, majorVersion: nextMajorVersion, versions };
 }
 
-function collectUpgradeTargets(pkgJson) {
+function collectUpgradeTargets(pkgJson)
+{
 	const targets = [];
-	if (pkgJson.dependencies) {
-		Object.keys(pkgJson.dependencies).forEach(name => {
+	if(pkgJson.dependencies)
+	{
+		Object.keys(pkgJson.dependencies).forEach(name =>
+		{
 			targets.push({ name, isDevDep: false, currentVersion: pkgJson.dependencies[name] });
 		});
 	}
-	if (pkgJson.devDependencies) {
-		Object.keys(pkgJson.devDependencies).forEach(name => {
+	if(pkgJson.devDependencies)
+	{
+		Object.keys(pkgJson.devDependencies).forEach(name =>
+		{
 			targets.push({ name, isDevDep: true, currentVersion: pkgJson.devDependencies[name] });
 		});
 	}
 	return targets;
 }
 
-function applyVersionToPackage(filePath, targetName, version, isDevDep) {
+function applyVersionToPackage(filePath, targetName, version, isDevDep)
+{
 	const pkg = readJsonFile(filePath);
-	if (!pkg) return false;
+	if(!pkg) return false;
 
-	if (isDevDep) {
-		if (!pkg.devDependencies) pkg.devDependencies = {};
+	if(isDevDep)
+	{
+		if(!pkg.devDependencies) pkg.devDependencies = {};
 		pkg.devDependencies[targetName] = version;
-	} else {
-		if (!pkg.dependencies) pkg.dependencies = {};
+	} else
+	{
+		if(!pkg.dependencies) pkg.dependencies = {};
 		pkg.dependencies[targetName] = version;
 	}
 	return writeJsonFile(filePath, pkg);
 }
 
-function verifyVersionSuccess(targetName, version) {
-	try {
+function verifyVersionSuccess(targetName, version)
+{
+	try
+	{
 		const installSuccess = runCommand(`npm install ${targetName}@${version}`);
-		if (!installSuccess) return false;
+		if(!installSuccess) return false;
 
 		const buildSuccess = runCommand('npm run build-editor');
-		if (!buildSuccess) return false;
+		if(!buildSuccess) return false;
 
 		const testSuccess = runCommand('npm test');
 		return testSuccess;
-	} catch (error) {
+	} catch(error)
+	{
 		console.error(`Execution crash during verification of ${targetName}@${version}:`, error.message);
 		return false;
 	}
@@ -188,7 +223,8 @@ function verifyVersionSuccess(targetName, version) {
 // ============================================================================
 // ## PIPELINE EXECUTION MATRICES
 // ============================================================================
-function evaluatePackageUpgrades(target, packageJsonPath, backupPath) {
+function evaluatePackageUpgrades(target, packageJsonPath, backupPath)
+{
 	console.log(`\n====================================================================`);
 	console.log(`UPGRADING: ${target.name} (${target.isDevDep ? 'devDependency' : 'dependency'})`);
 	console.log(`====================================================================`);
@@ -197,84 +233,110 @@ function evaluatePackageUpgrades(target, packageJsonPath, backupPath) {
 	const versionPool = Array.isArray(target.versions) ? target.versions : [];
 	const candidateVersions = [];
 
-	if (target.pointVersion) candidateVersions.push(target.pointVersion);
-	if (target.majorVersion && !candidateVersions.includes(target.majorVersion)) {
+	if(target.pointVersion) candidateVersions.push(target.pointVersion);
+	if(target.majorVersion && !candidateVersions.includes(target.majorVersion))
+	{
 		candidateVersions.push(target.majorVersion);
 	}
 
-	if (versionPool.length > 0) {
+	if(versionPool.length > 0)
+	{
 		let lastIndex = -1;
-		if (target.majorVersion) {
+		if(target.majorVersion)
+		{
 			lastIndex = versionPool.indexOf(target.majorVersion);
 		}
-		if (lastIndex === -1 && target.pointVersion) {
+		if(lastIndex === -1 && target.pointVersion)
+		{
 			lastIndex = versionPool.indexOf(target.pointVersion);
 		}
 
 		let addedCount = 0;
 		const startIndex = lastIndex !== -1 ? lastIndex + 1 : 0;
-		for (let i = startIndex; i < versionPool.length && addedCount < 3; i++) {
+		for(let i = startIndex; i < versionPool.length && addedCount < 3; i++)
+		{
 			const poolVer = versionPool[i];
-			if (!candidateVersions.includes(poolVer)) {
+			if(!candidateVersions.includes(poolVer))
+			{
 				candidateVersions.push(poolVer);
 				addedCount++;
 			}
 		}
 	}
 
-	if (!candidateVersions.includes('latest')) {
+	if(!candidateVersions.includes('latest'))
+	{
 		candidateVersions.push('latest');
 	}
 
 	const uniqueCandidates = [...new Set(candidateVersions)];
 	let highestWorkingVersion = null;
 
-	for (const version of uniqueCandidates) {
-		if (version === target.currentVersion) {
+	for(const version of uniqueCandidates)
+	{
+		const normalizedCurrent = target.currentVersion.replace(/[^0-9.]/g, '');
+
+		if(version === normalizedCurrent || version === target.currentVersion)
+		{
 			console.log(`Already current version: ${version}, skipping.`);
 			continue;
-		} else if (target.currentVersion === target.absoluteLatest) {
+		} else if(normalizedCurrent === target.absoluteLatest)
+		{
 			console.log(`Already latest version: ${version}, skipping.`);
 			break;
-		} else {
+		} else
+		{
 			console.log(`Testing candidate version: ${version}`);
 		}
 
-		try {
-			if (!applyVersionToPackage(packageJsonPath, target.name, version, target.isDevDep)) {
+		try
+		{
+			if(!applyVersionToPackage(packageJsonPath, target.name, version, target.isDevDep))
+			{
 				console.warn(`Failed to write candidate configuration for ${version}. Skipping.`);
 				continue;
 			}
 
-			if (verifyVersionSuccess(target.name, version)) {
+			if(verifyVersionSuccess(target.name, version))
+			{
 				console.log(`Candidate ${version} passed verification step.`);
 				highestWorkingVersion = version;
-				try {
+				try
+				{
 					fs.copyFileSync(packageJsonPath, backupPath);
-				} catch (backupErr) {
+				} catch(backupErr)
+				{
 					console.error(`Failed to update stable reference backup configuration:`, backupErr.message);
 				}
-			} else {
+			} else
+			{
 				console.warn(`Candidate ${version} verification sequence failed.`);
-				try {
+				try
+				{
 					fs.copyFileSync(backupPath, packageJsonPath);
-				} catch (restoreErr) {
+				} catch(restoreErr)
+				{
 					console.error(`Failed to restore baseline structural configuration:`, restoreErr.message);
 				}
 			}
-		} catch (iterationError) {
+		} catch(iterationError)
+		{
 			console.error(`Unexpected system fault processing candidate ${version}:`, iterationError.message);
-			try {
+			try
+			{
 				fs.copyFileSync(backupPath, packageJsonPath);
-			} catch (restoreErr) {
+			} catch(restoreErr)
+			{
 				console.error(`Failed to restore baseline structural configuration after fault:`, restoreErr.message);
 			}
 		}
 	}
 
-	if (highestWorkingVersion) {
+	if(highestWorkingVersion)
+	{
 		return { outcome: 'UPGRADED', version: highestWorkingVersion };
-	} else {
+	} else
+	{
 		return { outcome: 'HELD (FALLBACK)', version: target.currentVersion };
 	}
 }
@@ -282,12 +344,13 @@ function evaluatePackageUpgrades(target, packageJsonPath, backupPath) {
 // ============================================================================
 // ## MAIN WATERFALL PIPELINE EXECUTION ENTRY
 // ============================================================================
-async function main() {
+async function main()
+{
 	console.log('Starting upfront-validated dependency upgrade script...');
 	createWorkspaceBackup();
 
 	const initialPkg = readJsonFile(packageJsonPath);
-	if (!initialPkg) throw new Error("Could not parse root package.json file.");
+	if(!initialPkg) throw new Error("Could not parse root package.json file.");
 
 	const rawTargets = collectUpgradeTargets(initialPkg);
 	const targets = [];
@@ -296,10 +359,12 @@ async function main() {
 	// ### PHASE 1: COLLECT AND VERIFY TARGETS (NON-DESTRUCTIVE)
 	// ------------------------------------------------------------------------
 	console.log('\n--- PHASE 1: COLLECTING VALID VERSIONS FROM REGISTRY ---');
-	for (const target of rawTargets) {
+	for(const target of rawTargets)
+	{
 		const registryData = fetchPackageRegistryData(target.name);
 
-		if (!registryData) {
+		if(!registryData)
+		{
 			console.warn(`Skipping upfront resolution for ${target.name} due to fetch error.`);
 			continue;
 		}
@@ -319,11 +384,14 @@ async function main() {
 	}
 
 	const finalPkg = readJsonFile(backupPath);
-	for (const target of targets) {
-		if (target.isDevDep) {
-			if (finalPkg.devDependencies) finalPkg.devDependencies[target.name] = target.cleanCurrent;
-		} else {
-			if (finalPkg.dependencies) finalPkg.dependencies[target.name] = target.cleanCurrent;
+	for(const target of targets)
+	{
+		if(target.isDevDep)
+		{
+			if(finalPkg.devDependencies) finalPkg.devDependencies[target.name] = target.cleanCurrent;
+		} else
+		{
+			if(finalPkg.dependencies) finalPkg.dependencies[target.name] = target.cleanCurrent;
 		}
 	}
 
@@ -334,10 +402,12 @@ async function main() {
 		runCommand('npm run build-editor') &&
 		runCommand('npm test');
 
-	if (!success) {
+	if(!success)
+	{
 		console.error(`❌ Could not find working configuration. Not reverting to backup, intervention required.`);
 		return;
-	} else {
+	} else
+	{
 		createWorkspaceBackup();
 	}
 
@@ -347,42 +417,52 @@ async function main() {
 	console.log('\n--- PHASE 2: RUNNING EMIT AND TESTING SEQUENCES ---');
 	const report = [];
 
-	for (const target of targets) {
-		try {
+	for(const target of targets)
+	{
+		try
+		{
 			const result = evaluatePackageUpgrades(target, packageJsonPath, backupPath);
 			report.push({ name: target.name, outcome: result.outcome, version: result.version });
-		} catch (targetError) {
+		} catch(targetError)
+		{
 			console.error(`Fatal exception tracking pipeline iteration for ${target.name}:`, targetError.message);
 			report.push({ name: target.name, outcome: 'CRASHED (HELD)', version: target.currentVersion });
-			try {
+			try
+			{
 				fs.copyFileSync(backupPath, packageJsonPath);
-			} catch (restoreErr) {
+			} catch(restoreErr)
+			{
 				console.error(`Critical failure executing generic fallback recovery:`, restoreErr.message);
 			}
 		}
 	}
 
-	try {
+	try
+	{
 		cleanBackupFile();
-	} catch (cleanupError) {
+	} catch(cleanupError)
+	{
 		console.error(`Non-blocking cleanup exception encountered during post-pipeline handling:`, cleanupError.message);
 	}
 
 	console.log(`\n====================================================================`);
-	console.log(`## FINAL UPGRADE PIPELINE STATUS REPORT`);
+	console.log(`## UPGRADE PIPELINE STATUS REPORT`);
 	console.log(`====================================================================`);
 	console.table(report);
 
 	console.log('\nSyncing directory dependencies to verified lock configuration...');
-	try {
+	try
+	{
 		runCommand('npm install');
-	} catch (finalInstallError) {
+	} catch(finalInstallError)
+	{
 		console.error(`Final system sync returned operational warning or failure:`, finalInstallError.message);
 	}
 	console.log('Upfront batch optimization sequence finalized.');
 }
 
-main().catch(err => {
+main().catch(err =>
+{
 	console.error('Fatal execution crash within upgrade pipeline wrapper:', err);
 	restoreBackup();
 	runCommand('npm install');

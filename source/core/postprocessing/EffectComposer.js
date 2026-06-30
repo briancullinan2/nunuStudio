@@ -1,4 +1,4 @@
-import {Math as TMath, WebGLRenderTarget, LinearFilter, RGBAFormat} from "three";
+import {MathUtils as TMath, WebGLRenderTarget, LinearFilter, RGBAFormat} from "three";
 import {CopyShader} from "three/examples/jsm/shaders/CopyShader";
 import {ClearMaskPass, MaskPass} from "three/examples/jsm/postprocessing/MaskPass";
 import {RendererState} from "../renderer/RendererState.js";

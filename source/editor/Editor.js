@@ -1,49 +1,16 @@
-import {Object3D, Material, Texture, Geometry, BufferGeometry, Shape, Math, BoxBufferGeometry, MeshStandardMaterial, SpriteMaterial} from "three";
-import {StaticPair} from "@as-com/pson";
-import {EventManager} from "../core/utils/EventManager.js";
-import {Video} from "../core/resources/Video.js";
-import {TextFile} from "../core/resources/TextFile.js";
-import {Resource} from "../core/resources/Resource.js";
-import {Image} from "../core/resources/Image.js";
-import {Font} from "../core/resources/Font.js";
-import {Audio} from "../core/resources/Audio.js";
-import {Scene} from "../core/objects/Scene.js";
-import {Program} from "../core/objects/Program.js";
-import {Sky} from "../core/objects/misc/Sky.js";
-import {Mesh} from "../core/objects/mesh/Mesh.js";
-import {Nunu} from "../core/Nunu.js";
-import {ObjectLoader} from "../core/loaders/ObjectLoader.js";
-import {Keyboard} from "../core/input/Keyboard.js";
-import {FileSystem} from "../core/FileSystem.js";
-import {ResourceContainer} from "../core/resources/ResourceContainer.js";
-import {AmbientLight} from "../core/objects/lights/AmbientLight";
-import {Locale} from "./locale/LocaleManager.js";
-import {VirtualClipboard} from "./utils/VirtualClipboard.js";
-import {Settings} from "./Settings.js";
-import {Loaders} from "./Loaders.js";
-import {ResourceCrawler} from "./history/ResourceCrawler.js";
-import {History} from "./history/History.js";
-import {RemoveResourceAction} from "./history/action/resources/RemoveResourceAction.js";
-import {AddResourceAction} from "./history/action/resources/AddResourceAction.js";
-import {RemoveAction} from "./history/action/objects/RemoveAction.js";
-import {AddAction} from "./history/action/objects/AddAction.js";
-import {ChangeAction} from "./history/action/ChangeAction.js";
-import {ActionBundle} from "./history/action/ActionBundle.js";
-import {Action} from "./history/action/Action.js";
-import {SceneEditor} from "./gui/tab/scene-editor/SceneEditor.js";
-import {RunProject} from "./gui/tab/run/RunProject.js";
-import {CodeEditor} from "./gui/tab/code/CodeEditor.js";
-import {Interface} from "./gui/Interface.js";
-import {Global} from "./Global.js";
-import {LoadingModal} from "./components/modal/LoadingModal.js";
-import {DocumentBody} from "./components/DocumentBody.js";
+import { runningOnDesktop, isFullscreen } from "../core/utils/Environment.js";
+import {
+	Texture, BoxGeometry, MeshStandardMaterial, SpriteMaterial,
+	MathUtils, Material, BufferGeometry, Shape,
+	Object3D
+} from "three";
 
 /**
  * Main editor entry point.
  *
  * @class Editor
  */
-function Editor() {}
+function Editor() { }
 
 /**
  * Initialize the editor code, creates all GUI elements, loads configuration data, starts all the event lsiteners required.
@@ -53,11 +20,23 @@ function Editor() {}
  * @static
  * @method initialize
  */
-Editor.initialize = function()
-{
+Editor.initialize = async function () {
+	const { Nunu } = await import("../core/Nunu.js");
+	const { Settings } = await import("./Settings.js");
+	const { FileSystem } = await import("../core/FileSystem.js");
+	const { Global } = await import("./Global.js");
+	const { VirtualClipboard } = await import("./utils/VirtualClipboard.js");
+	const { Keyboard } = await import("../core/input/Keyboard.js");
+	const { TextFile } = await import("../core/resources/TextFile.js");
+	const { Loaders } = await import("./Loaders.js");
+	const { Interface } = await import("./gui/Interface.js");
+	const { EventManager } = await import("../core/utils/EventManager.js");
+	const { CodeEditor } = await import("./gui/tab/code/CodeEditor.js");
+	const { Locale } = await import("./locale/LocaleManager.js");
+	const { AmbientLight } = await import("../core/objects/lights/AmbientLight");
+
 	// Check WebGL Support
-	if (!Nunu.webGLAvailable())
-	{
+	if(!Nunu.webGLAvailable()) {
 		Editor.alert(Locale.webglNotSupported);
 		Editor.exit();
 	}
@@ -68,9 +47,9 @@ Editor.initialize = function()
 
 	// Register tern plugins
 	Editor.ternDefinitions = [];
-	Editor.ternDefinitions.push(JSON.parse(FileSystem.readFile(Global.FILE_PATH + "tern/threejs.json")));
-	Editor.ternDefinitions.push(JSON.parse(FileSystem.readFile(Global.FILE_PATH + "tern/browser.json")));
-	Editor.ternDefinitions.push(JSON.parse(FileSystem.readFile(Global.FILE_PATH + "tern/ecmascript.json")));
+	Editor.ternDefinitions.push(JSON.parse(await FileSystem.readFile(Global.FILE_PATH + "tern/threejs.json")));
+	Editor.ternDefinitions.push(JSON.parse(await FileSystem.readFile(Global.FILE_PATH + "tern/browser.json")));
+	Editor.ternDefinitions.push(JSON.parse(await FileSystem.readFile(Global.FILE_PATH + "tern/ecmascript.json")));
 
 	// Disable body overflow
 	document.body.style.overflow = "hidden";
@@ -79,40 +58,43 @@ Editor.initialize = function()
 	document.body.style.fontSize = "var(--font-main-size)";
 
 	// Disable context menu
-	document.body.oncontextmenu = function()
-	{
+	document.body.oncontextmenu = function () {
 		return false;
 	};
 
 	// Watch for changes in the screen pixel ratio (drag between screens)
-	window.matchMedia("screen and (min-resolution: 2dppx)").addListener(function()
-	{
+	window.matchMedia("screen and (min-resolution: 2dppx)").addListener(function () {
 		Editor.resize();
 	});
 
-	if (Nunu.runningOnDesktop())
-	{
+	if(Nunu.runningOnDesktop()) {
 		var gui = window.require("nw.gui");
+		var win = gui.Window.get(); // Cache the window reference
+
 		Editor.clipboard = gui.Clipboard.get();
 		Editor.args = gui.App.argv;
 
-		// Handle window close event
-		gui.Window.get().on("close", function()
-		{
-			if (confirm(Locale.unsavedChangesExit))
-			{
-				Editor.exit();
+		// Handle NW.js window close event correctly
+		win.on("close", function () {
+			// If it's a blank/default scene, bypass the prompt and force close
+			if(Editor.isDefaultScene()) {
+				win.close(true); // 'true' forces the close, bypassing this listener
+				return;
+			}
+
+			// Otherwise, ask the user
+			if(confirm(Locale.unsavedChangesExit)) {
+				Editor.exit();    // Run your internal cleanup if necessary
+				win.close(true); // Force close the native desktop window
 			}
 		});
 
 		// Try to update the editor
-		if (Editor.settings.general.autoUpdate)
-		{
+		if(Editor.settings.general.autoUpdate) {
 			Editor.updateNunu();
 		}
 	}
-	else
-	{
+	else {
 		// Clipboard
 		Editor.clipboard = new VirtualClipboard();
 
@@ -120,56 +102,59 @@ Editor.initialize = function()
 		Editor.args = [];
 
 		var parameters = Nunu.getQueryParameters();
-		for (var i in parameters)
-		{
+		for(var i in parameters) {
 			Editor.args.push(parameters[i]);
 		}
 
 		// Prevent some key combinations
 		var allowedKeys = [Keyboard.C, Keyboard.V, Keyboard.A, Keyboard.X];
-		document.onkeydown = function(event)
-		{
+		document.onkeydown = function (event) {
 			// If F1-F11 or CTRL+Key prevent default action
-			if (event.keyCode > Keyboard.F1 && event.keyCode < Keyboard.F11 || !event.altKey && event.ctrlKey && allowedKeys.indexOf(event.keyCode) === -1)
-			{
+			if(event.keyCode > Keyboard.F1 && event.keyCode < Keyboard.F11 || !event.altKey && event.ctrlKey && allowedKeys.indexOf(event.keyCode) === -1) {
 				event.preventDefault();
 			}
 		};
 
 		// Store settings when exiting the page
-		window.onbeforeunload = function(event)
-		{
+		window.onbeforeunload = function (event) {
+			// 1. Save settings
 			Editor.settings.store();
 
-			var message = Locale.unsavedChangesExit;
-			event.returnValue = message;
-			return message;
+			// 2. If it's the default scene, let them leave without a prompt
+			if(Editor.isDefaultScene()) {
+				// To allow normal exit, DO NOT return false.
+				// Returning a truthy or falsy value here can trigger the prompt in old browsers.
+				// Simply return undefined (or nothing) to let the browser close.
+				return;
+			}
+
+			// 3. Trigger the browser confirmation dialog
+			const message = Locale.unsavedChangesExit || "Unsaved changes";
+
+			event.preventDefault(); // Required by some modern specifications
+			event.returnValue = message; // Required by Chrome / Webkit
+			return message; // Required by Firefox / Safari
 		};
 	}
 
 	// Open ISP file if dragged to the window
-	document.body.ondrop = function(event)
-	{
+	document.body.ondrop = function (event) {
 		event.preventDefault();
 
-		for (var i = 0; i < event.dataTransfer.files.length; i++)
-		{
+		for(var i = 0; i < event.dataTransfer.files.length; i++) {
 			var file = event.dataTransfer.files[i];
 			var extension = FileSystem.getFileExtension(file.name);
 
 			// Project file
-			if (extension === "isp" || extension === "nsp")
-			{
-				if (Editor.confirm(Locale.changesWillBeLost + " " + Locale.loadProject))
-				{
+			if(extension === "isp" || extension === "nsp") {
+				if(Editor.confirm(Locale.changesWillBeLost + " " + Locale.loadProject)) {
 					Editor.loadProgram(file, extension === "nsp");
 					Editor.resetEditor();
 				}
 				break;
 			}
 			// Text file
-			else if (TextFile.fileIsText(file))
-			{
+			else if(TextFile.fileIsText(file)) {
 				Loaders.loadText(file);
 			}
 		}
@@ -189,84 +174,66 @@ Editor.initialize = function()
 
 	// Initialize User Interface
 	Editor.gui = new Interface();
+	await Editor.gui.loading;
 	Editor.gui.updateInterface();
 
 	// Check is some project file passed as argument
-	for (var i = 0; i < Editor.args.length; i++)
-	{
-		if (Editor.args[i].endsWith(".isp"))
-		{
-			Editor.loadProgram(Editor.args[i], false);
+	for(var i = 0; i < Editor.args.length; i++) {
+		if(Editor.args[i].endsWith(".isp")) {
+			await Editor.loadProgram(Editor.args[i], false);
 			break;
 		}
-		else if (Editor.args[i].endsWith(".nsp"))
-		{
-			Editor.loadProgram(Editor.args[i], true);
+		else if(Editor.args[i].endsWith(".nsp")) {
+			await Editor.loadProgram(Editor.args[i], true);
 			break;
 		}
 	}
 
 	// Create new program
-	if (Editor.program === null)
-	{
+	if(Editor.program === null) {
 		Editor.createNewProgram();
 	}
 
 	// Event manager
 	Editor.manager = new EventManager();
-	Editor.manager.add(document.body, "keydown", function(event)
-	{
+	Editor.manager.add(document.body, "keydown", function (event) {
 		var key = event.keyCode;
 
-		if (event.ctrlKey)
-		{
-			if (key === Keyboard.S)
-			{
-				if (Editor.openFile === null)
-				{
+		if(event.ctrlKey) {
+			if(key === Keyboard.S) {
+				if(Editor.openFile === null) {
 					Editor.gui.saveProgram();
 				}
-				else
-				{
+				else {
 					Editor.saveProgram(undefined, true);
 				}
 			}
-			else if (key === Keyboard.L)
-			{
+			else if(key === Keyboard.L) {
 				Editor.gui.loadProgram();
 			}
-			else if (key === Keyboard.W || key === Keyboard.F4)
-			{
+			else if(key === Keyboard.W || key === Keyboard.F4) {
 				Editor.gui.tab.closeActual();
 			}
-			else if (key === Keyboard.TAB || key === Keyboard.PAGE_DOWN)
-			{
+			else if(key === Keyboard.TAB || key === Keyboard.PAGE_DOWN) {
 				Editor.gui.tab.selectNextTab();
 			}
-			else if (key === Keyboard.PAGE_UP)
-			{
+			else if(key === Keyboard.PAGE_UP) {
 				Editor.gui.tab.selectPreviousTab();
 			}
-			else if (key === Keyboard.Z)
-			{
+			else if(key === Keyboard.Z) {
 				var tabs = Editor.gui.tab.getActiveTab();
-				for (var i = 0; i < tabs.length; i++)
-				{
-					if (tabs[i] instanceof CodeEditor)
-					{
+				for(var i = 0; i < tabs.length; i++) {
+					if(tabs[i] instanceof CodeEditor) {
 						return;
 					}
 				}
 
 				Editor.undo();
 			}
-			else if (key === Keyboard.Y)
-			{
+			else if(key === Keyboard.Y) {
 				var tabs = Editor.gui.tab.getActiveTab();
-				for (var i = 0; i < tabs.length; i++)
-				{
-					if (tabs[i] instanceof CodeEditor)
-					{
+				for(var i = 0; i < tabs.length; i++) {
+					if(tabs[i] instanceof CodeEditor) {
 						return;
 					}
 				}
@@ -274,32 +241,25 @@ Editor.initialize = function()
 				Editor.redo();
 			}
 		}
-		else if (key === Keyboard.DEL)
-		{
+		else if(key === Keyboard.DEL) {
 			var tabs = Editor.gui.tab.getActiveTab();
-			for (var i = 0; i < tabs.length; i++)
-			{
-				if (tabs[i] instanceof CodeEditor)
-				{
+			for(var i = 0; i < tabs.length; i++) {
+				if(tabs[i] instanceof CodeEditor) {
 					return;
 				}
 			}
 
-			if (Editor.hasObjectSelected())
-			{
+			if(Editor.hasObjectSelected()) {
 				var del = Editor.confirm(Locale.deleteObjects);
-				if (del)
-				{
+				if(del) {
 					Editor.deleteObject();
 				}
 			}
 		}
-		else if (key === Keyboard.F2)
-		{
+		else if(key === Keyboard.F2) {
 			Editor.renameObject();
 		}
-		else if (key === Keyboard.F5)
-		{
+		else if(key === Keyboard.F5) {
 			Editor.runProject();
 		}
 	});
@@ -314,18 +274,18 @@ Editor.initialize = function()
  * @static
  * @method runProject
  */
-Editor.runProject = function()
-{
+Editor.runProject = async function () {
+	const { RunProject } = await import("./gui/tab/run/RunProject.js");
+	const { Locale } = await import("./locale/LocaleManager.js");
+
 	var tab = Editor.gui.tab.getTab(RunProject, Editor.program);
 
-	if (tab === null)
-	{
-		tab = Editor.gui.tab.addTab(RunProject, true);
+	if(tab === null) {
+		tab = await Editor.gui.tab.addTab(RunProject, true);
 		tab.select();
 		Editor.gui.menuBar.run.setText(Locale.stop);
 	}
-	else
-	{
+	else {
 		tab.close();
 		Editor.gui.menuBar.run.setText(Locale.run);
 	}
@@ -337,26 +297,20 @@ Editor.runProject = function()
  * @method selectObject
  * @param {Object3D} object Object to select.
  */
-Editor.selectObject = function(object)
-{
-	for (var i = 0; i < Editor.selection.length; i++)
-	{
-		if (Editor.selection[i].gui !== undefined && Editor.selection[i].gui.node !== undefined)
-		{
+Editor.selectObject = function (object) {
+	for(var i = 0; i < Editor.selection.length; i++) {
+		if(Editor.selection[i].gui !== undefined && Editor.selection[i].gui.node !== undefined) {
 			Editor.selection[i].gui.node.setSelected(false);
 		}
 	}
 
 	Editor.selection = [object];
 
-	if (object.gui !== undefined && object.gui.node !== undefined)
-	{
-		if (object.gui.node.setSelected !== undefined)
-		{
+	if(object.gui !== undefined && object.gui.node !== undefined) {
+		if(object.gui.node.setSelected !== undefined) {
 			object.gui.node.setSelected(true);
 		}
-		if (object.gui.node.expandToRoot !== undefined)
-		{
+		if(object.gui.node.expandToRoot !== undefined) {
 			object.gui.node.expandToRoot();
 		}
 	}
@@ -371,18 +325,14 @@ Editor.selectObject = function(object)
  * @param {Object3D} object Object to add to selection.
  * @param {boolean} updateClient If false does not update the management client.
  */
-Editor.addToSelection = function(object)
-{
+Editor.addToSelection = function (object) {
 	Editor.selection.push(object);
 
-	if (object.gui !== undefined && object.gui.node !== undefined)
-	{
-		if (object.gui.node.setSelected !== undefined)
-		{
+	if(object.gui !== undefined && object.gui.node !== undefined) {
+		if(object.gui.node.setSelected !== undefined) {
 			object.gui.node.setSelected(true);
 		}
-		if (object.gui.node.expandToRoot !== undefined)
-		{
+		if(object.gui.node.expandToRoot !== undefined) {
 			object.gui.node.expandToRoot();
 		}
 	}
@@ -396,16 +346,11 @@ Editor.addToSelection = function(object)
  * @method unselectObject
  * @param {Object3D} object Object to remove from selection.
  */
-Editor.unselectObject = function(object)
-{
-	for (var i = 0; i < Editor.selection.length; i++)
-	{
-		if (Editor.selection[i].uuid === object.uuid)
-		{
-			if (Editor.selection[i].gui !== undefined && Editor.selection[i].gui.node !== undefined)
-			{
-				if (Editor.selection[i].gui.node.setSelected !== undefined)
-				{
+Editor.unselectObject = function (object) {
+	for(var i = 0; i < Editor.selection.length; i++) {
+		if(Editor.selection[i].uuid === object.uuid) {
+			if(Editor.selection[i].gui !== undefined && Editor.selection[i].gui.node !== undefined) {
+				if(Editor.selection[i].gui.node.setSelected !== undefined) {
 					Editor.selection[i].gui.node.setSelected(false);
 				}
 			}
@@ -424,8 +369,7 @@ Editor.unselectObject = function(object)
  * @method getPixelRatio
  * @return {number} Device pixel ratio.
  */
-Editor.getPixelRatio = function()
-{
+Editor.getPixelRatio = function () {
 	return Editor.settings.general.ignorePixelRatio ? 1.0 : window.devicePixelRatio;
 };
 
@@ -435,12 +379,9 @@ Editor.getPixelRatio = function()
  * @method isSelected
  * @param {Object3D} Check if object is selected.
  */
-Editor.isSelected = function(object)
-{
-	for (var i = 0; i < Editor.selection.length; i++)
-	{
-		if (Editor.selection[i].uuid === object.uuid)
-		{
+Editor.isSelected = function (object) {
+	for(var i = 0; i < Editor.selection.length; i++) {
+		if(Editor.selection[i].uuid === object.uuid) {
 			return true;
 		}
 	}
@@ -454,10 +395,8 @@ Editor.isSelected = function(object)
  * @static
  * @method resize
  */
-Editor.resize = function()
-{
-	if (!Nunu.isFullscreen())
-	{
+Editor.resize = function () {
+	if(!isFullscreen()) {
 		Editor.gui.updateInterface();
 	}
 };
@@ -469,8 +408,7 @@ Editor.resize = function()
  * @method hasObjectSelected
  * @return {boolean} True if there is an object selected.
  */
-Editor.hasObjectSelected = function()
-{
+Editor.hasObjectSelected = function () {
 	return Editor.selection.length > 0;
 };
 
@@ -479,14 +417,10 @@ Editor.hasObjectSelected = function()
  *
  * @method clearSelection
  */
-Editor.clearSelection = function()
-{
-	for (var i = 0; i < Editor.selection.length; i++)
-	{
-		if (Editor.selection[i].gui !== undefined && Editor.selection[i].gui.node !== undefined)
-		{
-			if (Editor.selection[i].gui.node.setSelected !== undefined)
-			{
+Editor.clearSelection = function () {
+	for(var i = 0; i < Editor.selection.length; i++) {
+		if(Editor.selection[i].gui !== undefined && Editor.selection[i].gui.node !== undefined) {
+			if(Editor.selection[i].gui.node.setSelected !== undefined) {
 				Editor.selection[i].gui.node.setSelected(false);
 			}
 		}
@@ -503,8 +437,7 @@ Editor.clearSelection = function()
  * @method addAction
  * @param {Action} action Action to add to the history.
  */
-Editor.addAction = function(action)
-{
+Editor.addAction = function (action) {
 	Editor.history.add(action);
 };
 
@@ -515,10 +448,8 @@ Editor.addAction = function(action)
  * @method getScene
  * @return {Scene} The scene currently active in the editor, null if none available.
  */
-Editor.getScene = function()
-{
-	if (Editor.program.children.length > 0)
-	{
+Editor.getScene = function () {
+	if(Editor.program.children.length > 0) {
 		return Editor.program.children[0];
 	}
 
@@ -535,26 +466,187 @@ Editor.getScene = function()
  * @param {Object3D} object Object to be added.
  * @param {Object3D} parent Parent object, if undefined the program scene is used.
  */
-Editor.addObject = function(object, parent)
-{
-	if (parent === undefined)
-	{
+Editor.addObject = async function (object, parent) {
+	const { AddAction } = await import("./history/action/objects/AddAction.js");
+	const { ResourceCrawler } = await import("./history/ResourceCrawler.js");
+	const { AddResourceAction } = await import("./history/action/resources/AddResourceAction.js");
+	const { ActionBundle } = await import("./history/action/ActionBundle.js");
+
+	if(parent === undefined) {
 		parent = Editor.getScene();
 	}
 
 	var actions = [new AddAction(object, parent)];
 	var resources = ResourceCrawler.searchObject(object, Editor.program);
 
-	for (var category in resources)
-	{
-		for (var resource in resources[category])
-		{
+	for(var category in resources) {
+		for(var resource in resources[category]) {
 			actions.push(new AddResourceAction(resources[category][resource], Editor.program, category));
 		}
 	}
 
 	Editor.addAction(new ActionBundle(actions));
 };
+
+
+Editor.isDefaultScene = function () {
+	const scene = Editor.getScene();
+	if(!scene) return true;
+
+	// A default canvas setup must have exactly 3 top-level elements
+	if(!scene.children || scene.children.length !== 3) {
+		return false;
+	}
+
+	if(Editor.history.length > 1) {
+		return false;
+	}
+
+	let hasSky = false;
+	let hasBox = false;
+	let hasGround = false;
+
+	for(let i = 0; i < scene.children.length; i++) {
+		const child = scene.children[i];
+
+		if(child.type === "Sky" && child.name === "sky") {
+			hasSky = true;
+		} else if(child.type === "Mesh" && child.name === "box" && child.isMesh) {
+			// Deep evaluate Box Mesh parameters
+			const geom = child.geometry;
+			const mat = child.material;
+
+			if(!geom || !mat || geom.type !== "BoxGeometry" || mat.type !== "MeshStandardMaterial") {
+				return false;
+			}
+
+			// Verify physical parameters: Default cube must be 1x1x1 unit size
+			const p = geom.parameters;
+			if(!p || p.width !== 1 || p.height !== 1 || p.depth !== 1) {
+				return false;
+			}
+
+			// Verify surface values: standard material defaults (roughness 0.6, metalness 0.2)
+			if(mat.roughness !== 0.6 || mat.metalness !== 0.2) {
+				return false;
+			}
+
+			// Verify no sub-objects or layout weights are chained below it
+			if(child.children && child.children.length > 0) {
+				return false;
+			}
+			hasBox = true;
+
+		} else if(child.type === "Mesh" && child.name === "ground" && child.isMesh) {
+			// Deep evaluate Ground Grid parameters
+			const geom = child.geometry;
+			if(!geom || geom.type !== "BoxGeometry") {
+				return false;
+			}
+
+			// Verify physical parameters: Default layout floor bounding canvas is 20x1x20 units
+			const p = geom.parameters;
+			if(!p || p.width !== 20 || p.height !== 1 || p.depth !== 20) {
+				return false;
+			}
+
+			if(child.children && child.children.length > 0) {
+				return false;
+			}
+			hasGround = true;
+		} else {
+			// An external asset or mutated container structure was injected
+			return false;
+		}
+	}
+
+	return hasSky && hasBox && hasGround;
+};
+
+
+Editor.finishAddingAsset = async function (source, object3D) {
+
+	if(!(object3D && Editor.program && object3D instanceof Object3D)) {
+		return;
+	}
+
+
+	// Recurse into groups/hierarchies to catch split models or collections
+	object3D.traverse(function (child) {
+		var mats, i, j, mapType;
+
+		// Steal Material references
+		if(child.material) {
+			child.material.source = source;
+			mats = Array.isArray(child.material) ? child.material : [child.material];
+			for(i = 0; i < mats.length; i++) {
+				if(mats[i].uuid && !Editor.program.materials[mats[i].uuid]) {
+					Editor.program.materials[mats[i].uuid] = mats[i];
+				}
+			}
+		}
+
+		// Steal Geometry definitions
+		if(child.geometry && child.geometry.uuid) {
+			if(!Editor.program.geometries[child.geometry.uuid]) {
+				child.geometry.insertable = true;
+				child.geometry.source = source;
+				Editor.program.geometries[child.geometry.uuid] = child.geometry;
+			}
+		}
+
+		// Steal Textures if tied to standard diffuse maps, normals, etc.
+		if(child.material) {
+			child.material.source = source;
+			mats = Array.isArray(child.material) ? child.material : [child.material];
+			var mapTypes = ["map", "bumpMap", "normalMap", "specularMap", "emissiveMap", "roughnessMap", "metalnessMap"];
+
+			for(i = 0; i < mats.length; i++) {
+				for(j = 0; j < mapTypes.length; j++) {
+					mapType = mapTypes[j];
+					if(mats[i][mapType] && mats[i][mapType].uuid) {
+						if(!Editor.program.textures[mats[i][mapType].uuid]) {
+							Editor.program.textures[mats[i][mapType].uuid] = mats[i][mapType];
+						}
+					}
+				}
+			}
+		}
+	});
+
+
+	if(Editor.gui.assetExplorer) {
+		Editor.gui.assetExplorer.updateObjectsView();
+	}
+
+};
+
+
+/**
+ * Intercepts an incoming 3D object/model hierarchy to strip out materials,
+ * geometries, and textures directly into the global program registries without
+ * adding the structural 3D entity container nodes to the active viewport scene graph.
+ *
+ * @static
+ * @method addAsset
+ * @param {Object3D} object3D The model or collection hierarchy.
+ */
+Editor.addAsset = async function (object3D) {
+	console.log("nunuStudio [Editor]: Bypassing scene placement for model asset:", object3D);
+
+	if(object3D instanceof File) {
+		const { Loaders } = await import("./Loaders.js");
+
+		await Loaders.loadModel(object3D, null, this.finishAddingAsset.bind(this, object3D.source));
+	} else
+
+		if(object3D instanceof Object3D) {
+			await this.finishAddingAsset(object3D.source, object3D);
+		}
+
+};
+
+
 
 /**
  * Add objects array to a parent, and creates an action in the editor history.
@@ -566,25 +658,25 @@ Editor.addObject = function(object, parent)
  * @param {Array} object Object to be added.
  * @param {Object3D} parent Parent object, if undefined the program scene is used.
  */
-Editor.addObjects = function(objects, parent) 
-{
-	if (parent === undefined) 
-	{
+Editor.addObjects = async function (objects, parent) {
+	const { AddAction } = await import("./history/action/objects/AddAction.js");
+	const { ResourceCrawler } = await import("./history/ResourceCrawler.js");
+	const { AddResourceAction } = await import("./history/action/resources/AddResourceAction.js");
+	const { ActionBundle } = await import("./history/action/ActionBundle.js");
+
+	if(parent === undefined) {
 		parent = Editor.getScene();
 	}
 
 	var actions = [];
 
-	for (var i = 0; i < objects.length; i++) 
-	{
+	for(var i = 0; i < objects.length; i++) {
 		actions.push(new AddAction(objects[i], parent));
 
 		var resources = ResourceCrawler.searchObject(objects[i], Editor.program);
 
-		for (var category in resources) 
-		{
-			for (var resource in resources[category]) 
-			{
+		for(var category in resources) {
+			for(var resource in resources[category]) {
 				actions.push(new AddResourceAction(resources[category][resource], Editor.program, category));
 			}
 		}
@@ -593,7 +685,6 @@ Editor.addObjects = function(objects, parent)
 	Editor.addAction(new ActionBundle(actions));
 };
 
-
 /**
  * Rename object, if none passed as argument selected object is used.
  *
@@ -601,30 +692,26 @@ Editor.addObjects = function(objects, parent)
  * @method renameObject
  * @param {Object3D} object Object to be renamed.
  */
-Editor.renameObject = function(object)
-{
-	if (object === undefined)
-	{
-		if (Editor.hasObjectSelected())
-		{
+Editor.renameObject = async function (object) {
+	const { Locale } = await import("./locale/LocaleManager.js");
+	const { ChangeAction } = await import("./history/action/ChangeAction.js");
+
+	if(object === undefined) {
+		if(Editor.hasObjectSelected()) {
 			object = Editor.selection[0];
 		}
-		else
-		{
+		else {
 			return;
 		}
 	}
 
-	if (!object.locked)
-	{
+	if(!object.locked) {
 		var name = Editor.prompt(Locale.renameObject, object.name);
-		if (name !== null && name !== "")
-		{
+		if(name !== null && name !== "") {
 			Editor.addAction(new ChangeAction(object, "name", name));
 		}
 	}
 };
-
 
 /**
  * Delete object from the editor, and creates an action in the editor history.
@@ -632,71 +719,67 @@ Editor.renameObject = function(object)
  * @method deleteObject
  * @param {Array} objects List of objects.
  */
-Editor.deleteObject = function(object)
-{
+Editor.deleteObject = async function (object) {
+	const { Program } = await import("../core/objects/Program.js");
+	const { RemoveAction } = await import("./history/action/objects/RemoveAction.js");
+	const { RemoveResourceAction } = await import("./history/action/resources/RemoveResourceAction.js");
+	const { Font } = await import("../core/resources/Font.js");
+	const { Audio } = await import("../core/resources/Audio.js");
+	const { Video } = await import("../core/resources/Video.js");
+	const { Resource } = await import("../core/resources/Resource.js");
+	const { ActionBundle } = await import("./history/action/ActionBundle.js");
+
 	var selected = object === undefined ? Editor.selection : [object];
 
 	// List of delete actions
 	var actions = [];
 
 	// Delect selection
-	for (var i = 0; i < selected.length; i++)
-	{
+	for(var i = 0; i < selected.length; i++) {
 		// Object3D
-		if (selected[i].isObject3D && !selected[i].locked && !(selected[i] instanceof Program))
-		{
+		if(selected[i].isObject3D && !selected[i].locked && !(selected[i] instanceof Program)) {
 			actions.push(new RemoveAction(selected[i]));
 		}
 		// Material
-		else if (selected[i] instanceof Material)
-		{
+		else if(selected[i] instanceof Material) {
 			Editor.addAction(new RemoveResourceAction(selected[i], Editor.program, "materials"));
 		}
 		// Texture
-		else if (selected[i] instanceof Texture)
-		{
+		else if(selected[i] instanceof Texture) {
 			Editor.addAction(new RemoveResourceAction(selected[i], Editor.program, "textures"));
 		}
 		// Font
-		else if (selected[i] instanceof Font)
-		{
+		else if(selected[i] instanceof Font) {
 			Editor.addAction(new RemoveResourceAction(selected[i], Editor.program, "fonts"));
 		}
 		// Audio
-		else if (selected[i] instanceof Audio)
-		{
+		else if(selected[i] instanceof Audio) {
 			Editor.addAction(new RemoveResourceAction(selected[i], Editor.program, "audio"));
 		}
 		// Video
-		else if (selected[i] instanceof Video)
-		{
+		else if(selected[i] instanceof Video) {
 			Editor.addAction(new RemoveResourceAction(selected[i], Editor.program, "videos"));
 		}
 		// Geometries
-		else if (selected[i] instanceof Geometry || selected[i] instanceof BufferGeometry)
-		{
+		else if(selected[i] instanceof BufferGeometry || selected[i] instanceof BufferGeometry) {
 			Editor.addAction(new RemoveResourceAction(selected[i], Editor.program, "geometries"));
 		}
 		// Shapes
-		else if (selected[i] instanceof Shape)
-		{
+		else if(selected[i] instanceof Shape) {
 			Editor.addAction(new RemoveResourceAction(selected[i], Editor.program, "shapes"));
 		}
 		// Resources
-		else if (selected[i] instanceof Resource)
-		{
+		else if(selected[i] instanceof Resource) {
 			Editor.addAction(new RemoveResourceAction(selected[i], Editor.program, "resources"));
 		}
 		// Unknown
-		else
-		{
+		else {
 			console.warn("nunuStudio: Cant delete type of object.");
 		}
 	}
 
 	// Check if any action was added
-	if (actions.length > 0)
-	{
+	if(actions.length > 0) {
 		Editor.addAction(new ActionBundle(actions));
 	}
 };
@@ -710,29 +793,27 @@ Editor.deleteObject = function(object)
  * @method copyObject
  * @param {Object3D} object Object to copy.
  */
-Editor.copyObject = function(object) 
-{
+Editor.copyObject = async function (object) {
+	const { Program } = await import("../core/objects/Program.js");
+	const { Scene } = await import("../core/objects/Scene.js");
+
 	var objects = object === undefined ? Editor.selection : [object];
 
 	// filter out locked objects and program/scene
-	objects = objects.filter(function(object) 
-	{
+	objects = objects.filter(function (object) {
 		return !(object.locked || object instanceof Program || object instanceof Scene);
 	});
 
-	if (objects.length === 0) 
-	{
+	if(objects.length === 0) {
 		return;
 	}
 
 	Editor.clipboard.set(
-		JSON.stringify(objects.map(function(object) 
-		{
+		JSON.stringify(objects.map(function (object) {
 			return object.toJSON();
 		})),
 		"text"
 	);
-
 
 };
 
@@ -745,24 +826,23 @@ Editor.copyObject = function(object)
  * @method copyObject
  * @param {Object3D} object Object to copy.
  */
-Editor.cutObject = function(object) 
-{
+Editor.cutObject = async function (object) {
+	const { Program } = await import("../core/objects/Program.js");
+	const { Scene } = await import("../core/objects/Scene.js");
+
 	var objects = object === undefined ? Editor.selection : [object];
 
 	// filter out locked objects and program/scene
-	objects = objects.filter(function(object) 
-	{
+	objects = objects.filter(function (object) {
 		return !(object.locked || object instanceof Program || object instanceof Scene);
 	});
 
-	if (objects.length === 0) 
-	{
+	if(objects.length === 0) {
 		return;
 	}
 
 	Editor.clipboard.set(
-		JSON.stringify(objects.map(function(object) 
-		{
+		JSON.stringify(objects.map(function (object) {
 			return object.toJSON();
 		})
 		));
@@ -778,38 +858,34 @@ Editor.cutObject = function(object)
  * @method pasteObject
  * @param {Object3D} parent
  */
-Editor.pasteObject = function(target) 
-{
-	try 
-	{
+Editor.pasteObject = async function (target) {
+	const { Locale } = await import("./locale/LocaleManager.js");
+	const { ObjectLoader } = await import("../core/loaders/ObjectLoader.js");
+
+	try {
 		var content = Editor.clipboard.get("text");
 		var data = JSON.parse(content);
 
 		// Create object from data(objects)
 		var objs = [];
-		for (var i = 0; i < data.length; i++) 
-		{
-			var obj = new ObjectLoader().parse(data[i]);
-			obj.traverse(function(child) 
-			{
-				child.uuid = Math.generateUUID();
+		for(var i = 0; i < data.length; i++) {
+			var obj = await new ObjectLoader().parse(data[i]);
+			obj.traverse(function (child) {
+				child.uuid = MathUtils.generateUUID();
 			});
 			objs.push(obj);
 		}
 
 		// Add objs to target
-		if (target !== undefined && !target.locked) 
-		{
+		if(target !== undefined && !target.locked) {
 			Editor.addObjects(objs, target);
 		}
-		else 
-		{
+		else {
 			Editor.addObjects(objs);
 		}
 
 	}
-	catch (e) 
-	{
+	catch(e) {
 		Editor.alert(Locale.errorPaste);
 	}
 };
@@ -819,14 +895,13 @@ Editor.pasteObject = function(target)
  *
  * @method redo
  */
-Editor.redo = function()
-{
-	if (Editor.history.redo())
-	{
+Editor.redo = async function () {
+	const { Locale } = await import("./locale/LocaleManager.js");
+
+	if(Editor.history.redo()) {
 		Editor.updateObjectsViewsGUI();
 	}
-	else
-	{
+	else {
 		Editor.alert(Locale.nothingToRedo);
 	}
 };
@@ -836,14 +911,13 @@ Editor.redo = function()
  *
  * @method undo
  */
-Editor.undo = function()
-{
-	if (Editor.history.undo())
-	{
+Editor.undo = async function () {
+	const { Locale } = await import("./locale/LocaleManager.js");
+
+	if(Editor.history.undo()) {
 		Editor.updateObjectsViewsGUI();
 	}
-	else
-	{
+	else {
 		Editor.alert(Locale.nothingToUndo);
 	}
 };
@@ -854,8 +928,12 @@ Editor.undo = function()
  * @static
  * @method createDefaultResouces
  */
-Editor.createDefaultResouces = function()
-{
+Editor.createDefaultResouces = async function () {
+	const { Global } = await import("./Global.js");
+	const { Image } = await import("../core/resources/Image.js");
+	const { Font } = await import("../core/resources/Font.js");
+	const { Audio } = await import("../core/resources/Audio.js");
+
 	Editor.defaultImage = new Image(Global.FILE_PATH + "uv_color.jpg");
 	Editor.defaultFont = new Font(Global.FILE_PATH + "default.json");
 	Editor.defaultAudio = new Audio(Global.FILE_PATH + "default.mp3");
@@ -869,26 +947,24 @@ Editor.createDefaultResouces = function()
 	Editor.defaultImageTerrain = new Image(Global.FILE_PATH + "terrain.png");
 	Editor.defaultImageTerrain.name = "terrain";
 
-	Editor.defaultGeometry = new BoxBufferGeometry(1, 1, 1);
+	Editor.defaultGeometry = new BoxGeometry(1, 1, 1);
 	Editor.defaultGeometry.name = "box";
 
-	Editor.defaultMaterial = new MeshStandardMaterial({roughness: 0.6, metalness: 0.2});
+	Editor.defaultMaterial = new MeshStandardMaterial({ roughness: 0.6, metalness: 0.2 });
 	Editor.defaultMaterial.name = "standard";
 
-	Editor.defaultSpriteMaterial = new SpriteMaterial({map: Editor.defaultTexture, color: 0xFFFFFF});
+	Editor.defaultSpriteMaterial = new SpriteMaterial({ map: Editor.defaultTexture, color: 0xFFFFFF });
 	Editor.defaultSpriteMaterial.name = "sprite";
 
 	Editor.defaultTextureLensFlare = [];
-	for (var i = 0; i < 4; i++)
-	{
+	for(var i = 0; i < 4; i++) {
 		var texture = new Texture(new Image(Global.FILE_PATH + "lensflare/lensflare" + i + ".png"));
 		texture.name = "lensflare" + i;
 		Editor.defaultTextureLensFlare.push(texture);
 	}
 };
 
-Editor.updateSettings = function()
-{
+Editor.updateSettings = function () {
 	Editor.gui.tab.updateSettings();
 };
 
@@ -898,8 +974,7 @@ Editor.updateSettings = function()
  * @static
  * @method updateObjectsViewsGUI
  */
-Editor.updateObjectsViewsGUI = function()
-{
+Editor.updateObjectsViewsGUI = function () {
 	Editor.gui.tab.updateObjectsView();
 	Editor.gui.tab.updateMetadata();
 };
@@ -910,8 +985,7 @@ Editor.updateObjectsViewsGUI = function()
  * @static
  * @method updateSelectionGUI
  */
-Editor.updateSelectionGUI = function()
-{
+Editor.updateSelectionGUI = function () {
 	Editor.gui.tab.updateMetadata();
 	Editor.gui.tab.updateSelection();
 };
@@ -922,8 +996,7 @@ Editor.updateSelectionGUI = function()
  * @static
  * @method resetEditor
  */
-Editor.resetEditor = function()
-{
+Editor.resetEditor = function () {
 	Editor.clearSelection();
 
 	Editor.gui.tab.updateObjectsView();
@@ -936,13 +1009,14 @@ Editor.resetEditor = function()
  *
  * @method createNewProgram
  */
-Editor.createNewProgram = function()
-{
+Editor.createNewProgram = async function () {
+	const { Program } = await import("../core/objects/Program.js");
+
 	var program = new Program();
 
-	Editor.createDefaultResouces();
+	await Editor.createDefaultResouces();
 	Editor.setProgram(program);
-	Editor.addDefaultScene(Editor.defaultMaterial);
+	await Editor.addDefaultScene(Editor.defaultMaterial);
 	Editor.setOpenFile(null);
 };
 
@@ -954,11 +1028,14 @@ Editor.createNewProgram = function()
  * @method addDefaultScene
  * @param {Material} material Default material used by objects, if empty a new material is created
  */
-Editor.addDefaultScene = function(material)
-{
-	if (material === undefined)
-	{
-		material = new MeshStandardMaterial({roughness: 0.6, metalness: 0.2});
+Editor.addDefaultScene = async function (material) {
+	const { Scene } = await import("../core/objects/Scene.js");
+	const { Sky } = await import("../core/objects/misc/Sky.js");
+	const { Mesh } = await import("../core/objects/mesh/Mesh.js");
+	const { SceneEditor } = await import("./gui/tab/scene-editor/SceneEditor.js");
+
+	if(material === undefined) {
+		material = new MeshStandardMaterial({ roughness: 0.6, metalness: 0.2 });
 		material.name = "default";
 	}
 
@@ -976,11 +1053,11 @@ Editor.addDefaultScene = function(material)
 	scene.add(model);
 
 	// Floor
-	var ground = new BoxBufferGeometry(20, 1, 20);
+	var ground = new BoxGeometry(20, 1, 20);
 	ground.name = "ground";
 
 	model = new Mesh(ground, material);
- 	model.position.set(0, -1.0, 0);
+	model.position.set(0, -1.0, 0);
 	model.name = "ground";
 	scene.add(model);
 
@@ -988,7 +1065,7 @@ Editor.addDefaultScene = function(material)
 	Editor.addObject(scene, Editor.program);
 
 	// Open scene
-	var tab = Editor.gui.tab.addTab(SceneEditor, true);
+	var tab = await Editor.gui.tab.addTab(SceneEditor, true);
 	tab.attach(scene);
 };
 
@@ -999,23 +1076,23 @@ Editor.addDefaultScene = function(material)
  * @method saveProgramPath
  * @param {string} path Target directory to export the files into.
  */
-Editor.saveProgramPath = function(path)
-{
+Editor.saveProgramPath = async function (path) {
+	const { StaticPair } = await import("@as-com/pson");
+	const { ResourceContainer } = await import("../core/resources/ResourceContainer.js");
+	const { FileSystem } = await import("../core/FileSystem.js");
+
 	var pson = new StaticPair();
 	var data = Editor.program.toJSON();
 
-	for (var i = 0; i < ResourceContainer.libraries.length; i++)
-	{
+	for(var i = 0; i < ResourceContainer.libraries.length; i++) {
 		var lib = ResourceContainer.libraries[i];
 		var resources = data[lib];
 		data[lib] = [];
 
-		if (resources.length > 0)
-		{
+		if(resources.length > 0) {
 			FileSystem.makeDirectory(path + "\\" + lib);
 
-			for (var j = 0; j < resources.length; j++)
-			{
+			for(var j = 0; j < resources.length; j++) {
 				var fname = path + "\\" + lib + "\\" + resources[j].uuid;
 
 				data[lib].push({
@@ -1042,43 +1119,39 @@ Editor.saveProgramPath = function(path)
  * @param {boolean} keepDirectory
  * @param {boolean} supressMessage
  */
-Editor.saveProgram = function(fname, binary, keepDirectory, suppressMessage)
-{
-	try
-	{
-		if (fname === undefined && Editor.openFile !== null)
-		{
+Editor.saveProgram = async function (fname, binary, keepDirectory, suppressMessage) {
+	const { StaticPair } = await import("@as-com/pson");
+	const { FileSystem } = await import("../core/FileSystem.js");
+	const { Locale } = await import("./locale/LocaleManager.js");
+
+	try {
+		if(fname === undefined && Editor.openFile !== null) {
 			fname = Editor.openFile;
 		}
 
-		if (binary === true)
-		{
+		if(binary === true) {
 			fname = fname.replace(".isp", ".nsp");
 
 			var pson = new StaticPair();
 			var data = pson.toArrayBuffer(Editor.program.toJSON());
 			FileSystem.writeFileArrayBuffer(fname, data);
 		}
-		else
-		{
+		else {
 			fname = fname.replace(".nsp", ".isp");
 
 			var json = JSON.stringify(Editor.program.toJSON(), null, "\t");
 			FileSystem.writeFile(fname, json);
 		}
 
-		if (keepDirectory !== true && Editor.openFile !== fname)
-		{
+		if(keepDirectory !== true && Editor.openFile !== fname) {
 			Editor.setOpenFile(fname);
 		}
 
-		if (suppressMessage !== true)
-		{
+		if(suppressMessage !== true) {
 			Editor.alert(Locale.projectSaved);
 		}
 	}
-	catch (e)
-	{
+	catch(e) {
 		Editor.alert(Locale.errorSavingFile + "\n(" + e + ")");
 		console.error("nunuStudio: Error saving file", e);
 	}
@@ -1091,12 +1164,12 @@ Editor.saveProgram = function(fname, binary, keepDirectory, suppressMessage)
  * @method setProgram
  * @param {Program} program
  */
-Editor.setProgram = function(program)
-{
-	if (Editor.program !== program)
-	{
-		if (Editor.program !== null)
-		{
+Editor.setProgram = async function (program) {
+	const { History } = await import("./history/History.js");
+	const { SceneEditor } = await import("./gui/tab/scene-editor/SceneEditor.js");
+
+	if(Editor.program !== program) {
+		if(Editor.program !== null) {
 			Editor.program.dispose();
 		}
 
@@ -1116,9 +1189,8 @@ Editor.setProgram = function(program)
 		Editor.resetEditor();
 
 		// Add new scene tab to interface
-		if (program.children.length > 0)
-		{
-			var scene = Editor.gui.tab.addTab(SceneEditor, true);
+		if(program.children.length > 0) {
+			var scene = await Editor.gui.tab.addTab(SceneEditor, true);
 			scene.attach(program.children[0]);
 		}
 	}
@@ -1134,28 +1206,30 @@ Editor.setProgram = function(program)
  * @param {File} file
  * @param {boolean} binary Indicates if the file is binary.
  */
-Editor.loadProgram = function(file, binary)
-{
+Editor.loadProgram = async function (file, binary) {
+	const { LoadingModal } = await import("./components/modal/LoadingModal.js");
+	const { DocumentBody } = await import("./components/DocumentBody.js");
+	const { ObjectLoader } = await import("../core/loaders/ObjectLoader.js");
+	const { StaticPair } = await import("@as-com/pson");
+	const { Locale } = await import("./locale/LocaleManager.js");
+	const { FileSystem } = await import("../core/FileSystem.js");
+
 	var modal = new LoadingModal(DocumentBody);
 	modal.show();
 
-	function onload()
-	{
-		try
-		{
+	async function onload() {
+		try {
 			var loader = new ObjectLoader();
 
 			var program;
 
-			if (binary === true)
-			{
+			if(binary === true) {
 				var pson = new StaticPair();
 				var data = pson.decode(reader.result);
-				program = loader.parse(data);
+				program = await loader.parse(data);
 			}
-			else
-			{
-				program = loader.parse(JSON.parse(reader.result));
+			else {
+				program = await loader.parse(JSON.parse(reader.result));
 			}
 
 			Editor.setOpenFile(file);
@@ -1163,8 +1237,7 @@ Editor.loadProgram = function(file, binary)
 
 			Editor.alert(Locale.projectLoaded);
 		}
-		catch (e)
-		{
+		catch(e) {
 			Editor.alert(Locale.errorLoadingFile + "\n(" + e + ")");
 			console.error("nunuStudio: Error loading file", e);
 		}
@@ -1172,29 +1245,23 @@ Editor.loadProgram = function(file, binary)
 		modal.destroy();
 	};
 
-	if (file instanceof File)
-	{
+	if(file instanceof File) {
 		var reader = new FileReader();
 		reader.onload = onload;
-		if (binary === true)
-		{
+		if(binary === true) {
 			reader.readAsArrayBuffer(file);
 		}
-		else
-		{
+		else {
 			reader.readAsText(file);
 		}
 	}
-	else if (typeof file === "string")
-	{
+	else if(typeof file === "string") {
 		var reader = {};
-		if (binary === true)
-		{
-			reader.result = FileSystem.readFileArrayBuffer(file);
+		if(binary === true) {
+			reader.result = await FileSystem.readFileArrayBuffer(file);
 		}
-		else
-		{
-			reader.result = FileSystem.readFile(file);
+		else {
+			reader.result = await FileSystem.readFile(file);
 		}
 		onload();
 	}
@@ -1209,30 +1276,25 @@ Editor.loadProgram = function(file, binary)
  * @method setOpenFile
  * @param {string} file Path of file currently open.
  */
-Editor.setOpenFile = function(file)
-{
-	if (file !== undefined && file !== null)
-	{
-		if (file instanceof window.File)
-		{
-			if (Nunu.runningOnDesktop())
-			{
+Editor.setOpenFile = async function (file) {
+	const { Nunu } = await import("../core/Nunu.js");
+
+	if(file !== undefined && file !== null) {
+		if(file instanceof window.File) {
+			if(runningOnDesktop()) {
 				Editor.openFile = file.path;
 			}
-			else
-			{
+			else {
 				Editor.openFile = file.name;
 			}
 		}
-		else
-		{
+		else {
 			Editor.openFile = file;
 		}
 
 		document.title = Nunu.NAME + " " + VERSION + " (" + TIMESTAMP + ") (" + Editor.openFile + ")";
 	}
-	else
-	{
+	else {
 		Editor.openFile = null;
 		document.title = Nunu.NAME + " " + VERSION + " (" + TIMESTAMP + ")";
 	}
@@ -1246,8 +1308,7 @@ Editor.setOpenFile = function(file)
  * @param {string} message
  * @return {boolean} True or false depending on the confirm result.
  */
-Editor.confirm = function(message)
-{
+Editor.confirm = function (message) {
 	return window.confirm(message);
 };
 
@@ -1258,8 +1319,7 @@ Editor.confirm = function(message)
  * @method confirm
  * @param {string} message
  */
-Editor.alert = function(message)
-{
+Editor.alert = function (message) {
 	window.alert(message);
 };
 
@@ -1272,8 +1332,7 @@ Editor.alert = function(message)
  * @param {string} defaultValue
  * @return {string} Value inserted by the user.
  */
-Editor.prompt = function(message, defaultValue)
-{
+Editor.prompt = function (message, defaultValue) {
 	return window.prompt(message, defaultValue);
 };
 
@@ -1285,41 +1344,34 @@ Editor.prompt = function(message, defaultValue)
  * @static
  * @method updateNunu
  */
-Editor.updateNunu = function(silent)
-{
-	if (silent === undefined)
-	{
+Editor.updateNunu = async function (silent) {
+	const { FileSystem } = await import("../core/FileSystem.js");
+	const { Locale } = await import("./locale/LocaleManager.js");
+
+	if(silent === undefined) {
 		silent = true;
 	}
 
-	try
-	{
+	try {
 		var url = "https:// raw.githubusercontent.com/tentone/nunuStudio/master/build/nunu.editor.min.js";
 
-		FileSystem.readFile(url, false, function(data)
-		{
-			var token = "TIMESTAMP";
-			var pos = data.search(token);
-			var timestamp = data.slice(pos + token.length + 2, pos + token.length + 14);
+		const data = await FileSystem.readFile(url, false);
+		var token = "TIMESTAMP";
+		var pos = data.search(token);
+		var timestamp = data.slice(pos + token.length + 2, pos + token.length + 14);
 
-			if (parseInt(timestamp) > parseInt(Editor.TIMESTAMP))
-			{
-				FileSystem.writeFile("nunu.min.js", data);
-				Editor.alert(Locale.updatedRestart);
+		if(parseInt(timestamp) > parseInt(Editor.TIMESTAMP)) {
+			FileSystem.writeFile("nunu.min.js", data);
+			Editor.alert(Locale.updatedRestart);
+		}
+		else {
+			if(!silent) {
+				Editor.alert(Locale.alreadyUpdated);
 			}
-			else
-			{
-				if (!silent)
-				{
-					Editor.alert(Locale.alreadyUpdated);
-				}
-			}
-		});
+		}
 	}
-	catch (e)
-	{
-		if (!silent)
-		{
+	catch(e) {
+		if(!silent) {
 			Editor.alert(Locale.updateFailed);
 		}
 	}
@@ -1333,8 +1385,7 @@ Editor.updateNunu = function(silent)
  * @static
  * @method getRendererConfig
  */
-Editor.getRendererConfig = function()
-{
+Editor.getRendererConfig = function () {
 	return Editor.settings.render.followProject ? Editor.program.rendererConfig : Editor.settings.render;
 };
 
@@ -1344,10 +1395,8 @@ Editor.getRendererConfig = function()
  * @static
  * @method exit.
  */
-Editor.exit = function()
-{
-	if (Nunu.runningOnDesktop())
-	{
+Editor.exit = function () {
+	if(runningOnDesktop()) {
 		Editor.settings.store();
 
 		var gui = window.require("nw.gui");
@@ -1359,4 +1408,4 @@ Editor.exit = function()
 	}
 };
 
-export {Editor};
+export { Editor };

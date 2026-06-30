@@ -1,10 +1,10 @@
-import {Material, Texture, Quaternion} from "three";
-import {Editor} from "../../Editor.js";
-import {Action} from "./Action.js";
+import { Material, Texture, Quaternion } from "three";
+import { Editor } from "../../Editor.js";
+import { Action } from "./Action.js";
 
 /**
  * Stores change to one object attribute.
- * 
+ *
  * @class ChangeAction
  * @extends {Action}
  * @param {Object} object Object to be changed.
@@ -12,58 +12,62 @@ import {Action} from "./Action.js";
  * @param {Object} newValue New value for the object attribute.
  * @param {Object} oldValue Optionally we can pass the old value.
  */
-function ChangeAction(object, attribute, newValue, oldValue)
+class ChangeAction extends Action
 {
-	Action.call(this);
+	constructor(object, attribute, newValue, oldValue)
+	{
+		super();
 
-	this.object = object;
-	this.attribute = attribute;
-	this.newValue = newValue;
-	this.oldValue = oldValue !== undefined ? oldValue : ChangeAction.isVetorial(object[attribute]) ? object[attribute].clone() : object[attribute];
+		this.object = object;
+		this.attribute = attribute;
+		this.newValue = newValue;
+		this.oldValue = oldValue !== undefined ? oldValue : ChangeAction.isVetorial(object[attribute]) ? object[attribute].clone() : object[attribute];
+	}
+
+	apply()
+	{
+		if(ChangeAction.isVetorial(this.object[this.attribute]))
+		{
+			this.object[this.attribute].copy(this.newValue);
+		}
+		else
+		{
+			this.object[this.attribute] = this.newValue;
+		}
+
+		ChangeAction.updateGUI(this.object, this.attribute, this.newValue);
+	}
+
+	revert()
+	{
+		if(ChangeAction.isVetorial(this.object[this.attribute]))
+		{
+			this.object[this.attribute].copy(this.oldValue);
+		}
+		else
+		{
+			this.object[this.attribute] = this.oldValue;
+		}
+
+		ChangeAction.updateGUI(this.object, this.attribute, this.oldValue);
+	}
+
 }
 
-ChangeAction.prototype.apply = function()
+ChangeAction.updateGUI = function (object, attribute, newValue)
 {
-	if (ChangeAction.isVetorial(this.object[this.attribute]))
-	{
-		this.object[this.attribute].copy(this.newValue);
-	}
-	else
-	{
-		this.object[this.attribute] = this.newValue;
-	}
-
-	ChangeAction.updateGUI(this.object, this.attribute, this.newValue);
-};
-
-ChangeAction.prototype.revert = function()
-{
-	if (ChangeAction.isVetorial(this.object[this.attribute]))
-	{
-		this.object[this.attribute].copy(this.oldValue);
-	}
-	else
-	{
-		this.object[this.attribute] = this.oldValue;
-	}
-
-	ChangeAction.updateGUI(this.object, this.attribute, this.oldValue);
-};
-
-ChangeAction.updateGUI = function(object, attribute, newValue)
-{
-	if (object instanceof Material)
+	if(object instanceof Material)
 	{
 		object.needsUpdate = true;
 	}
-	else if (object instanceof Texture)
+	else if(object instanceof Texture)
 	{
 		object.needsUpdate = true;
 	}
 
 	Editor.updateObjectsViewsGUI();
 
-	if (Editor.isSelected(object))
+	if(Editor.isSelected(object))
 	{
 		Editor.gui.inspector.updateValues();
 	}
@@ -71,18 +75,18 @@ ChangeAction.updateGUI = function(object, attribute, newValue)
 
 /**
  * Check if a attribute is a THREE vectorial data type.
- * 
+ *
  * Vetorial types have some common methods (toArray, copy, fromArray).
  *
  * (Matrix3, Matrix4, Vector2, Vector3, Vector4, Quaternion, Euler).
- * 
+ *
  * @static
  * @method isVetorial
  * @param {Object} object To be checked.
  */
-ChangeAction.isVetorial = function(object)
+ChangeAction.isVetorial = function (object)
 {
-	if (object === null || object === undefined)
+	if(object === null || object === undefined)
 	{
 		return false;
 	}
@@ -90,4 +94,4 @@ ChangeAction.isVetorial = function(object)
 	return object.isVector3 === true || object.isEuler === true || object instanceof Quaternion || object.isVector2 === true || object.isVector4 === true || object.isMatrix3 === true || object.isMatrix4 === true;
 };
 
-export {ChangeAction};
+export { ChangeAction };

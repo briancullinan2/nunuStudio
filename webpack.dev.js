@@ -10,7 +10,11 @@ module.exports = [
 	merge(common[0], {
 		mode: "development",
 		optimization: {
-			minimize: false
+			minimize: false,
+			sideEffects: true,
+			moduleIds: "named",
+			//runtimeChunk: "single",
+			concatenateModules: false
 		},
 		devtool: 'inline-source-map',
 		performance: {

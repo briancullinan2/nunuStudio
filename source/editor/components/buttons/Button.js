@@ -1,125 +1,138 @@
-import {Component} from "../Component.js";
+import { Component } from "../Component.js";
 
 /**
  * Base button class.
- * 
+ *
  * @class Button
  * @extends {Component}
  * @param {Component} parent Parent element.
  */
-function Button(parent)
-{
-	Component.call(this, parent, "div");
+class Button extends Component {
+	constructor(parent) {
+		super(parent, "div");
 
-	this.element.style.cursor = "pointer";
+		this.element.style.cursor = "pointer";
 
-	/**
-	 * If the button is disabled, it cannot be clicked.
-	 *
-	 * @attribute disabled
-	 * @type {boolean}
-	 */
-	var disabled = false;
-	Object.defineProperty(this, "disabled",
-		{
-			get: function() {return disabled;},
-			set: function(value) {this.setDisabled(value);}
+		/**
+		 * If the button is disabled, it cannot be clicked.
+		 *
+		 * @attribute disabled
+		 * @type {boolean}
+		 */
+		var disabled = false;
+		Object.defineProperty(this, "disabled", {
+			get: function () { return disabled; },
+			set: function (value) { this.setDisabled(value); }
 		});
 
-	/**
-	 * Base style of the button shown normally.
-	 *
-	 * @attribute styleBase
-	 * @type {Object}
-	 */
-	this.styleBase = {backgroundColor: "var(--bar-color)"};
+		/**
+		 * Base style of the button shown normally.
+		 *
+		 * @attribute styleBase
+		 * @type {Object}
+		 */
+		this.styleBase = { backgroundColor: "var(--bar-color)" };
 
-	/**
-	 * Base style of the button shown when the mouse is over the button.
-	 *
-	 * @attribute stylePointerOver
-	 * @type {Object}
-	 */
-	this.stylePointerOver = {backgroundColor: "var(--button-over-color)"};
+		/**
+		 * Base style of the button shown when the mouse is over the button.
+		 *
+		 * @attribute stylePointerOver
+		 * @type {Object}
+		 */
+		this.stylePointerOver = { backgroundColor: "var(--button-over-color)" };
 
-	/**
-	 * Disabled style shown when the button is disabled.
-	 *
-	 * @attribute styleDisabled
-	 * @type {Object}
-	 */
-	this.styleDisabled = {backgroundColor: "var(--color-graph)"};
+		/**
+		 * Disabled style shown when the button is disabled.
+		 *
+		 * @attribute styleDisabled
+		 * @type {Object}
+		 */
+		this.styleDisabled = { backgroundColor: "var(--color-graph)" };
 
-	this.setStyles(this.styleBase);
-	this.preventDragEvents();
+		this.setStyles(this.styleBase);
+		this.preventDragEvents();
 
-	var self = this;
+		var self = this;
+		var parentController = parent;
 
-	this.addEvent("mouseenter", function()
-	{
-		if (!self.disabled)
-		{
+		this.addEvent("mouseenter", function () {
+			if(self.disabled) {
+				return;
+			}
+
 			self.setStyles(self.stylePointerOver);
-		}
-	});
 
-	this.addEvent("mouseleave", function()
-	{
-		if (!self.disabled)
-		{
+			// Crucial: Clear the parent panel's close sequence if we are interacting inside it
+			if(parentController && parentController.hoverTimeout) {
+				clearTimeout(parentController.hoverTimeout);
+				parentController.hoverTimeout = null;
+			}
+		});
+
+		this.addEvent("mouseleave", function () {
+			if(self.disabled) {
+				return;
+			}
+
 			self.setStyles(self.styleBase);
+
+			// Give the parent layout tree a brand new countdown sequence so it can gracefully close if they exit the grid completely
+			if(parentController && typeof parentController.setExpanded === "function") {
+				if(parentController.hoverTimeout) {
+					clearTimeout(parentController.hoverTimeout);
+				}
+
+				parentController.hoverTimeout = setTimeout(function () {
+					parentController.setExpanded(false);
+					if(parentController.constructor && parentController.constructor.activeMenu === parentController) {
+						parentController.constructor.activeMenu = null;
+					}
+				}, 300);
+			}
+		});
+	}
+
+	/**
+	 * Set disabled state of a button element.
+	 *
+	 * A disabled button cannot be pressed and does not react to interactions.
+	 *
+	 * @method setDisabled
+	 * @param {boolean} disabled
+	 */
+	updateDisabled() {
+		if(this.disabled) {
+			this.setStyles(this.styleDisabled);
 		}
-	});
+		else {
+			this.setStyles(this.styleBase);
+		}
+	}
+
+	/**
+	 * Updates the buttons styles can also change them providing new ones as parameters.
+	 *
+	 * @method updateSyles
+	 * @param {Object} styleBase Style to be applied as base.
+	 * @param {Object} stylePointerOver Style to be applied when mouse is over.
+	 * @param {Object} styleDisabled Style to be applied when the button is disabled.
+	 */
+	updateSyles(styleBase, stylePointerOver, styleDisabled) {
+		if(styleBase !== undefined) {
+			this.styleBase = styleBase;
+		}
+
+		if(stylePointerOver !== undefined) {
+			this.stylePointerOver = stylePointerOver;
+		}
+
+		if(styleDisabled !== undefined) {
+			this.styleDisabled = styleDisabled;
+		}
+
+		this.updateDisabled(this.disabled);
+	}
+
 }
 
-Button.prototype = Object.create(Component.prototype);
-
-/**
- * Set disabled state of a button element.
- *
- * A disabled button cannot be pressed and does not react to interactions.
- *
- * @method setDisabled
- * @param {boolean} disabled
- */
-Button.prototype.updateDisabled = function()
-{
-	if (this.disabled)
-	{
-		this.setStyles(this.styleDisabled);
-	}
-	else
-	{
-		this.setStyles(this.styleBase);
-	}
-};
-
-/**
- * Updates the buttons styles can also change them providing new ones as parameters.
- *
- * @method updateSyles
- * @param {Object} styleBase Style to be applied as base.
- * @param {Object} stylePointerOver Style to be applied when mouse is over.
- * @param {Object} styleDisabled Style to be applied when the button is disabled.
- */
-Button.prototype.updateSyles = function(styleBase, stylePointerOver, styleDisabled)
-{
-	if (styleBase !== undefined)
-	{
-		this.styleBase = styleBase;
-	}
-
-	if (stylePointerOver !== undefined)
-	{
-		this.stylePointerOver = stylePointerOver;
-	}
-
-	if (styleDisabled !== undefined)
-	{
-		this.styleDisabled = styleDisabled;
-	}
-
-	this.updateDisabled(this.disabled);
-};
-
-export {Button};
+export { Button };

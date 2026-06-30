@@ -1,19 +1,3 @@
-import {Locale} from "../locale/LocaleManager.js";
-import {Nunu} from "../../core/Nunu.js";
-import {FileSystem} from "../../core/FileSystem.js";
-import {Editor} from "../Editor.js";
-import {TabGroup} from "../components/tabs/TabGroup.js";
-import {TabGroupSplit} from "../components/tabs/splittable/TabGroupSplit.js";
-import {TabContainer} from "../components/tabs/splittable/TabContainer.js";
-import {DocumentBody} from "../components/DocumentBody.js";
-import {TreeView} from "./tab/tree-view/TreeView.js";
-import {ProfilingTab} from "./tab/profiling/ProfilingTab.js";
-import {InspectorContainer} from "./tab/inspector/InspectorContainer.js";
-import {ConsoleTab} from "./tab/console/ConsoleTab.js";
-import {AssetExplorer} from "./tab/asset/AssetExplorer.js";
-import {AnimationTab} from "./tab/animation/AnimationTab.js";
-import {MainMenu} from "./MainMenu.js";
-
 /**
  * The full GUI of the application.
  *
@@ -21,113 +5,138 @@ import {MainMenu} from "./MainMenu.js";
  *
  * @class Interface
  */
-function Interface()
-{
-	/**
-	 * Main tab container that has all the interface tabs.
-	 * 
-	 * @attribute tab
-	 * @type {TabContainer}
-	 */
-	this.tab = new TabContainer(DocumentBody);
-	this.tab.attach(new TabGroupSplit());
-
-	var main = this.tab.split(TabGroup.RIGHT).parent;
-	main.tabPosition = 0.7;
-
-	var left = main.elementA.split(TabGroup.BOTTOM).parent;
-	left.tabPosition = 0.7;
-	var leftBottom = left.elementB;
-
-	var right = main.elementB.split(TabGroup.BOTTOM).parent;
-	var rightTop = right.elementA;
-	var rightBottom = right.elementB;
-
-	this.assetExplorer = leftBottom.addTab(AssetExplorer, false);
-
-	this.console = leftBottom.addTab(ConsoleTab, false);
-
-	this.animation = leftBottom.addTab(AnimationTab, false);
-
-	if (DEVELOPMENT)
-	{
-		leftBottom.addTab(ProfilingTab, false);
+class Interface {
+	constructor() {
+		this.loading = this.initialize();
 	}
 
-	this.tree = rightTop.addTab(TreeView, false);
+	async initialize() {
+		const { TabContainer } = await import("../components/tabs/splittable/TabContainer.js");
+		const { DocumentBody } = await import("../components/DocumentBody.js");
+		const { TabGroupSplit } = await import("../components/tabs/splittable/TabGroupSplit.js");
+		const { TabGroup } = await import("../components/tabs/TabGroup.js");
+		const { AssetExplorer } = await import("./tab/asset/AssetExplorer.js");
+		const { ConsoleTab } = await import("./tab/console/ConsoleTab.js");
+		const { AnimationTab } = await import("./tab/animation/AnimationTab.js");
+		const { ProfilingTab } = await import("./tab/profiling/ProfilingTab.js");
+		const { TreeView } = await import("./tab/tree-view/TreeView.js");
+		const { InspectorContainer } = await import("./tab/inspector/InspectorContainer.js");
+		const { MainMenu } = await import("./MainMenu.js");
 
-	this.inspector = rightBottom.addTab(InspectorContainer, false);
+		/**
+		 * Main tab container that has all the interface tabs.
+		 *
+		 * @attribute tab
+		 * @type {TabContainer}
+		 */
+		this.tab = new TabContainer(DocumentBody);
+		this.tab.attach(new TabGroupSplit());
 
-	this.menuBar = new MainMenu(DocumentBody);
+		var main = this.tab.split(TabGroup.RIGHT).parent;
+		main.tabPosition = 0.7;
+
+		var left = main.elementA.split(TabGroup.BOTTOM).parent;
+		left.tabPosition = 0.7;
+		var leftBottom = left.elementB;
+
+		var right = main.elementB.split(TabGroup.BOTTOM).parent;
+		var rightTop = right.elementA;
+		var rightBottom = right.elementB;
+
+		this.assetExplorer = await leftBottom.addTab(AssetExplorer, false);
+
+		this.console = await leftBottom.addTab(ConsoleTab, false);
+
+		this.animation = await leftBottom.addTab(AnimationTab, false);
+
+		if(DEVELOPMENT) {
+			await leftBottom.addTab(ProfilingTab, false);
+		}
+
+		this.tree = await rightTop.addTab(TreeView, false);
+
+		this.inspector = await rightBottom.addTab(InspectorContainer, false);
+
+		this.menuBar = new MainMenu(DocumentBody);
+		await this.menuBar.loading;
+
+		// Force Asset Explorer to activate after all sister tabs have registered and layout changes settle
+		var self = this;
+		setTimeout(function () {
+			if(self.assetExplorer && typeof self.assetExplorer.activate === "function") {
+				leftBottom.selectTab(self.assetExplorer);
+			}
+		}, 100);
+	}
+
+	/**
+	 * Save program into file.
+	 *
+	 * Dpending on the plaftorm created the required GUI elements to select save file.
+	 *
+	 * @method saveProgram
+	 */
+	async saveProgram() {
+		const { Nunu } = await import("../../core/Nunu.js");
+		const { FileSystem } = await import("../../core/FileSystem.js");
+		const { Editor } = await import("../Editor.js");
+
+		if(Nunu.runningOnDesktop()) {
+			FileSystem.chooseFile(function (files) {
+				Editor.saveProgram(files[0].path, true);
+			}, ".nsp", true);
+		}
+		else {
+			FileSystem.chooseFileName(function (fname) {
+				Editor.saveProgram(fname, true);
+			}, ".nsp", Editor.openFile !== null ? Editor.openFile : "file");
+		}
+	}
+
+	/**
+	 * Load new project from file.
+	 *
+	 * Creates the necessary GUI elements to select the file.
+	 *
+	 * @method loadProgram
+	 */
+	async loadProgram() {
+		const { Editor } = await import("../Editor.js");
+		const { Locale } = await import("../locale/LocaleManager.js");
+		const { FileSystem } = await import("../../core/FileSystem.js");
+
+		if(Editor.confirm(Locale.changesWillBeLost + " " + Locale.loadProject)) {
+			FileSystem.chooseFile(function (files) {
+				if(files.length > 0) {
+					Editor.loadProgram(files[0], files[0].name.endsWith(".nsp"));
+				}
+			}, ".isp, .nsp");
+		}
+	}
+
+	/**
+	 * Create new program.
+	 *
+	 * @method newProgram
+	 */
+	async newProgram() {
+		const { Editor } = await import("../Editor.js");
+		const { Locale } = await import("../locale/LocaleManager.js");
+
+		if(Editor.confirm(Locale.changesWillBeLost + " " + Locale.createProject)) {
+			Editor.createNewProgram();
+		}
+	}
+
+	updateInterface() {
+		var width = window.innerWidth;
+		var height = window.innerHeight;
+
+		this.tab.position.set(0, this.menuBar.size.y);
+		this.tab.size.set(width, height - this.menuBar.size.y);
+		this.tab.updateInterface();
+	}
+
 }
 
-/**
- * Save program into file.
- *
- * Dpending on the plaftorm created the required GUI elements to select save file.
- *
- * @method saveProgram
- */
-Interface.prototype.saveProgram = function()
-{
-	if (Nunu.runningOnDesktop())
-	{
-		FileSystem.chooseFile(function(files)
-		{
-			Editor.saveProgram(files[0].path, true);
-		}, ".nsp", true);
-	}
-	else
-	{
-		FileSystem.chooseFileName(function(fname)
-		{
-			Editor.saveProgram(fname, true);
-		}, ".nsp", Editor.openFile !== null ? Editor.openFile : "file");
-	}
-};
-
-/** 
- * Load new project from file.
- *
- * Creates the necessary GUI elements to select the file.
- *
- * @method loadProgram
- */
-Interface.prototype.loadProgram = function()
-{
-	if (Editor.confirm(Locale.changesWillBeLost + " " + Locale.loadProject))
-	{
-		FileSystem.chooseFile(function(files)
-		{
-			if (files.length > 0)
-			{
-				Editor.loadProgram(files[0], files[0].name.endsWith(".nsp"));
-			}
-		}, ".isp, .nsp");
-	}
-};
-
-/**
- * Create new program.
- *
- * @method newProgram
- */
-Interface.prototype.newProgram = function()
-{
-	if (Editor.confirm(Locale.changesWillBeLost + " " + Locale.createProject))
-	{
-		Editor.createNewProgram();
-	}
-};
-
-Interface.prototype.updateInterface = function()
-{
-	var width = window.innerWidth;
-	var height = window.innerHeight;
-
-	this.tab.position.set(0, this.menuBar.size.y);
-	this.tab.size.set(width, height - this.menuBar.size.y);
-	this.tab.updateInterface();
-};
-
-export {Interface};
+export { Interface };

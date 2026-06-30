@@ -1,12 +1,12 @@
-import {DefaultLoadingManager, FileLoader} from "three";
-import {WebcamTexture} from "../texture/WebcamTexture.js";
-import {VideoTexture} from "../texture/VideoTexture.js";
-import {Texture} from "../texture/Texture.js";
-import {SpriteSheetTexture} from "../texture/SpriteSheetTexture.js";
-import {DataTexture} from "../texture/DataTexture.js";
-import {CubeTexture} from "../texture/CubeTexture.js";
-import {CompressedTexture} from "../texture/CompressedTexture.js";
-import {CanvasTexture} from "../texture/CanvasTexture.js";
+import { DefaultLoadingManager, FileLoader } from "three";
+import { WebcamTexture } from "../texture/WebcamTexture.js";
+import { VideoTexture } from "../texture/VideoTexture.js";
+import { Texture } from "../texture/Texture.js";
+import { SpriteSheetTexture } from "../texture/SpriteSheetTexture.js";
+import { DataTexture } from "../texture/DataTexture.js";
+import { CubeTexture } from "../texture/CubeTexture.js";
+import { CompressedTexture } from "../texture/CompressedTexture.js";
+import { CanvasTexture } from "../texture/CanvasTexture.js";
 
 /**
  * TextureLoader can be used to load external textures.
@@ -18,7 +18,7 @@ import {CanvasTexture} from "../texture/CanvasTexture.js";
 function TextureLoader(manager)
 {
 	this.manager = manager !== undefined ? manager : DefaultLoadingManager;
-	
+
 	this.path = "";
 	this.crossOrigin = "anonymous";
 
@@ -29,12 +29,12 @@ function TextureLoader(manager)
 
 /**
  * Set cross origin path for the loader.
- * 
+ *
  * @method setCrossOrigin
  * @param {string} url URL.
  * @return {TextureLoader} Self for chaining.
  */
-TextureLoader.prototype.setCrossOrigin = function(url)
+TextureLoader.prototype.setCrossOrigin = function (url)
 {
 	this.crossOrigin = url;
 	return this;
@@ -42,12 +42,12 @@ TextureLoader.prototype.setCrossOrigin = function(url)
 
 /**
  * Set base path for texture loading.
- * 
+ *
  * @method setPath
  * @param {string} path Path
  * @return {TextureLoader} Self for chaining.
  */
-TextureLoader.prototype.setPath = function(path)
+TextureLoader.prototype.setPath = function (path)
 {
 	this.path = path;
 	return this;
@@ -59,7 +59,7 @@ TextureLoader.prototype.setPath = function(path)
  * @method setImages
  * @param {Array} images
  */
-TextureLoader.prototype.setImages = function(images)
+TextureLoader.prototype.setImages = function (images)
 {
 	this.images = images;
 	return this;
@@ -71,7 +71,7 @@ TextureLoader.prototype.setImages = function(images)
  * @method setVideos
  * @param {Array} videos
  */
-TextureLoader.prototype.setVideos = function(videos)
+TextureLoader.prototype.setVideos = function (videos)
 {
 	this.videos = videos;
 	return this;
@@ -83,7 +83,7 @@ TextureLoader.prototype.setVideos = function(videos)
  * @method setFonts
  * @param {Array} fonts
  */
-TextureLoader.prototype.setFonts = function(fonts)
+TextureLoader.prototype.setFonts = function (fonts)
 {
 	this.fonts = fonts;
 	return this;
@@ -93,35 +93,35 @@ TextureLoader.prototype.setFonts = function(fonts)
  * Load texture from URL.
  *
  * Does the same as creating a new Texture object.
- * 
+ *
  * @method load
  * @param {string} url
  * @param {Function} onLoad
  * @param {Function} onProgress
  * @param {Function} onError
  */
-TextureLoader.prototype.load = function(url, onLoad, onProgress, onError)
+TextureLoader.prototype.load = async function (url, onLoad, onProgress, onError)
 {
 	try
 	{
-		var texture = new Texture(this.path + url);
+		var texture = await Texture.create(this.path + url);
 
-		if (onLoad !== undefined)
+		if(onLoad !== undefined)
 		{
 			onLoad(texture);
 		}
 
 		return texture;
 	}
-	catch (e)
+	catch(e)
 	{
-		if (onError !== undefined)
+		if(onError !== undefined)
 		{
 			onError(e);
 		}
 
 		console.warn("nunuStudio: Texture not found", e);
-		return new Texture();
+		return await Texture.create();
 	}
 };
 
@@ -134,12 +134,12 @@ TextureLoader.prototype.load = function(url, onLoad, onProgress, onError)
  * @param {Function} onProgress
  * @param {Function} onError
  */
-TextureLoader.prototype.loadJSON = function(url, onLoad, onProgress, onError)
+TextureLoader.prototype.loadJSON = function (url, onLoad, onProgress, onError)
 {
 	var self = this;
-	
+
 	var loader = new FileLoader(this.manager);
-	loader.load(url, function(text)
+	loader.load(url, function (text)
 	{
 		self.parse(JSON.parse(text), onLoad);
 	}, onProgress, onError);
@@ -152,20 +152,20 @@ TextureLoader.prototype.loadJSON = function(url, onLoad, onProgress, onError)
  * @param {string} url
  * @param {Function} onLoad
  */
-TextureLoader.prototype.parse = function(json, onLoad)
+TextureLoader.prototype.parse = async function (json, onLoad)
 {
 	var texture = null;
 	var category = json.category;
 
 	// Video texture
-	if (category === "Video")
+	if(category === "Video")
 	{
-		if (json.video === undefined)
+		if(json.video === undefined)
 		{
 			console.warn("nunuStudio: TextureLoader, No video specified for", json.uuid);
 		}
 
-		if (this.videos[json.video] === undefined)
+		if(this.videos[json.video] === undefined)
 		{
 			console.warn("nunuStudio: TextureLoader, Undefined video", json.video);
 		}
@@ -177,29 +177,29 @@ TextureLoader.prototype.parse = function(json, onLoad)
 		texture.setVolume(json.volume);
 	}
 	// Webcam texture
-	else if (category === "Webcam")
+	else if(category === "Webcam")
 	{
 		texture = new WebcamTexture();
 
-		if (json.mode !== undefined)
+		if(json.mode !== undefined)
 		{
 			texture.mode = json.mode;
 		}
 	}
 	// Compressed texture
-	else if (category === "Compressed")
+	else if(category === "Compressed")
 	{
-		if (json.isCubeTexture)
+		if(json.isCubeTexture)
 		{
 			texture = new CompressedTexture();
 			texture.image = [];
 			texture.isCubeTexture = true;
 
-			for (var j = 0; j < json.image.length; j++)
+			for(var j = 0; j < json.image.length; j++)
 			{
-				for (var i = 0; i < json.image[j].mipmaps.length; i++)
+				for(var i = 0; i < json.image[j].mipmaps.length; i++)
 				{
-					if (json.image[j].mipmaps[i].data.toArrayBuffer !== undefined)
+					if(json.image[j].mipmaps[i].data.toArrayBuffer !== undefined)
 					{
 						json.image[j].mipmaps[i].data = new Uint8Array(json.image[j].mipmaps[i].data.toArrayBuffer());
 					}
@@ -210,9 +210,9 @@ TextureLoader.prototype.parse = function(json, onLoad)
 		}
 		else
 		{
-			for (var i = 0; i < json.mipmaps.length; i++)
+			for(var i = 0; i < json.mipmaps.length; i++)
 			{
-				if (json.mipmaps[i].data.toArrayBuffer !== undefined)
+				if(json.mipmaps[i].data.toArrayBuffer !== undefined)
 				{
 					json.mipmaps[i].data = new Uint8Array(json.mipmaps[i].data.toArrayBuffer());
 				}
@@ -222,13 +222,13 @@ TextureLoader.prototype.parse = function(json, onLoad)
 		}
 	}
 	// Cube texture
-	else if (category === "Cube")
+	else if(category === "Cube")
 	{
 		var images = [];
 
-		for (var i = 0; i < json.images.length; i++)
+		for(var i = 0; i < json.images.length; i++)
 		{
-			if (this.images[json.images[i]] === undefined)
+			if(this.images[json.images[i]] === undefined)
 			{
 				console.warn("nunuStudio: TextureLoader, undefined image", json.images[i]);
 			}
@@ -242,12 +242,12 @@ TextureLoader.prototype.parse = function(json, onLoad)
 		texture.updateImages();
 	}
 	// Canvas texture
-	else if (category === "Canvas")
+	else if(category === "Canvas")
 	{
 		texture = new CanvasTexture(json.width, json.height);
 	}
 	// Data texture
-	else if (category === "DataTexture")
+	else if(category === "DataTexture")
 	{
 		var data = new Float32Array(json.image.data);
 		texture = new DataTexture(data, json.image.width, json.image.height);
@@ -255,18 +255,18 @@ TextureLoader.prototype.parse = function(json, onLoad)
 	// Texture
 	else
 	{
-		if (json.image === undefined)
+		if(json.image === undefined)
 		{
 			console.warn("nunuStudio: TextureLoader, no image specified for", json.uuid);
 		}
 
-		if (this.images[json.image] === undefined)
+		if(this.images[json.image] === undefined)
 		{
 			console.warn("nunuStudio: TextureLoader, undefined image", json.image);
 		}
 
 		// SpriteSheet texture
-		if (category === "SpriteSheet")
+		if(category === "SpriteSheet")
 		{
 			texture = new SpriteSheetTexture(this.images[json.image], json.framesHorizontal, json.framesVertical, json.totalFrames);
 			texture.loop = json.loop;
@@ -277,12 +277,12 @@ TextureLoader.prototype.parse = function(json, onLoad)
 		// Texture
 		else
 		{
-			texture = new Texture(this.images[json.image]);
+			texture = await Texture.create(this.images[json.image]);
 		}
 	}
 
 	texture.needsUpdate = true;
-	
+
 	texture.uuid = json.uuid;
 	texture.name = json.name;
 
@@ -291,25 +291,25 @@ TextureLoader.prototype.parse = function(json, onLoad)
 	texture.repeat.set(json.repeat[0], json.repeat[1]);
 	texture.offset.set(json.offset[0], json.offset[1]);
 
-	if (json.center !== undefined) {texture.center.set(json.center[0], json.center[1]);}
-	if (json.rotation !== undefined) {texture.rotation = json.rotation;}
+	if(json.center !== undefined) { texture.center.set(json.center[0], json.center[1]); }
+	if(json.rotation !== undefined) { texture.rotation = json.rotation; }
 
 	texture.wrapS = json.wrap[0];
 	texture.wrapT = json.wrap[1];
 
-	if (json.format !== undefined) {texture.format = json.format;}
-	if (json.type !== undefined) {texture.type = json.type;}
-	if (json.encoding !== undefined) {texture.encoding = json.encoding;}
+	if(json.format !== undefined) { texture.format = json.format; }
+	if(json.type !== undefined) { texture.type = json.type; }
+	if(json.encoding !== undefined) { texture.encoding = json.encoding; }
 
 	texture.minFilter = json.minFilter;
 	texture.magFilter = json.magFilter;
 	texture.anisotropy = json.anisotropy;
 
 	texture.flipY = json.flipY;
-	if (json.premultiplyAlpha !== undefined) {texture.premultiplyAlpha = json.premultiplyAlpha;}
-	if (json.unpackAlignment !== undefined) {texture.unpackAlignment = json.unpackAlignment;}
+	if(json.premultiplyAlpha !== undefined) { texture.premultiplyAlpha = json.premultiplyAlpha; }
+	if(json.unpackAlignment !== undefined) { texture.unpackAlignment = json.unpackAlignment; }
 
-	if (onLoad !== undefined)
+	if(onLoad !== undefined)
 	{
 		onLoad(texture);
 	}
@@ -317,4 +317,4 @@ TextureLoader.prototype.parse = function(json, onLoad)
 	return texture;
 };
 
-export {TextureLoader};
+export { TextureLoader };

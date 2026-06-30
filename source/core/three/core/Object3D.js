@@ -1,8 +1,7 @@
-import {Material, AnimationClip} from "three";
-import {ResourceContainer} from "../../resources/ResourceContainer.js";
-import {Scene} from "../../objects/Scene.js";
-import {Nunu} from "../../Nunu.js";
-import {AnimationMixer} from "../../animation/AnimationMixer.js";
+import { Material, AnimationClip } from "three";
+import { ResourceContainer } from "../../resources/ResourceContainer.js";
+import { Scene } from "../../objects/Scene.js";
+import { AnimationMixer } from "../../animation/AnimationMixer.js";
 
 /**
  * Folded attribute is used only for editing, if true the object shows as folded in the object explorer.
@@ -27,11 +26,11 @@ THREE.Object3D.prototype.locked = false;
  * @param {THREE.Object3D} object Object to look for.
  * @return {boolean} True if this object contains the object.
  */
-THREE.Object3D.prototype.contains = function(object)
+THREE.Object3D.prototype.contains = function (object)
 {
-	for (var i = 0; i < this.children.length; i++)
+	for(var i = 0; i < this.children.length; i++)
 	{
-		if (this.children[i].uuid === object.uuid || this.children[i].contains(object))
+		if(this.children[i].uuid === object.uuid || this.children[i].contains(object))
 		{
 			return true;
 		}
@@ -47,9 +46,9 @@ THREE.Object3D.prototype.contains = function(object)
  *
  * @method playAnimation
  */
-THREE.Object3D.prototype.playAnimation = function()
+THREE.Object3D.prototype.playAnimation = function ()
 {
-	if (this.mixer !== undefined)
+	if(this.mixer !== undefined)
 	{
 		this.mixer.play();
 	}
@@ -60,9 +59,9 @@ THREE.Object3D.prototype.playAnimation = function()
  *
  * @method stopAnimation
  */
-THREE.Object3D.prototype.stopAnimation = function()
+THREE.Object3D.prototype.stopAnimation = function ()
 {
-	if (this.mixer !== undefined)
+	if(this.mixer !== undefined)
 	{
 		this.mixer.stop();
 	}
@@ -75,9 +74,9 @@ THREE.Object3D.prototype.stopAnimation = function()
  *
  * @method initialize
  */
-THREE.Object3D.prototype.initialize = function()
+THREE.Object3D.prototype.initialize = function ()
 {
-	if (this.animations !== undefined)
+	if(this.animations !== undefined)
 	{
 		this.mixer = new AnimationMixer(this);
 		this.mixer.createActions(this.animations);
@@ -93,9 +92,9 @@ THREE.Object3D.prototype.initialize = function()
  * @method update
  * @param {number} delta Time since last update call.
  */
-THREE.Object3D.prototype.update = function(delta)
+THREE.Object3D.prototype.update = function (delta)
 {
-	if (this.mixer !== undefined)
+	if(this.mixer !== undefined)
 	{
 		this.mixer.update(delta);
 	}
@@ -108,7 +107,7 @@ THREE.Object3D.prototype.update = function(delta)
  * @param {number} x Screen width.
  * @param {number} y Screen height.
  */
-THREE.Object3D.prototype.resize = function(x, y) {};
+THREE.Object3D.prototype.resize = function (x, y) { };
 
 /**
  * Disposes the object from memory.
@@ -117,9 +116,9 @@ THREE.Object3D.prototype.resize = function(x, y) {};
  *
  * @method dispose
  */
-THREE.Object3D.prototype.dispose = function()
+THREE.Object3D.prototype.dispose = function ()
 {
-	if (this.mixer !== undefined)
+	if(this.mixer !== undefined)
 	{
 		this.mixer.dispose();
 	}
@@ -132,23 +131,23 @@ THREE.Object3D.prototype.dispose = function()
  * @param {THREE.Object3D} object
  * @param {number} index
  */
-THREE.Object3D.prototype.addAbove = function(object, children)
+THREE.Object3D.prototype.addAbove = function (object, children)
 {
-	if (object === this)
+	if(object === this)
 	{
-		console.error("Object3D.add: object can't be added as a child of itself.", object );
+		console.error("Object3D.add: object can't be added as a child of itself.", object);
 		return this;
 	}
 
-	if (object && object.isTHREE.Object3D)
+	if(object && object.isTHREE.Object3D)
 	{
-		if (object.parent !== null)
+		if(object.parent !== null)
 		{
 			object.parent.remove(object);
 		}
 
 		object.parent = this;
-		object.dispatchEvent({type: "added"});
+		object.dispatchEvent({ type: "added" });
 
 		var index = this.children.indexOf(children);
 
@@ -169,23 +168,23 @@ THREE.Object3D.prototype.addAbove = function(object, children)
  * @param {THREE.Object3D} object
  * @param {number} index
  */
-THREE.Object3D.prototype.addBellow = function(object, children)
+THREE.Object3D.prototype.addBelow = function (object, children)
 {
-	if (object === this)
+	if(object === this)
 	{
-		console.error("Object3D.add: object can't be added as a child of itself.", object );
+		console.error("Object3D.add: object can't be added as a child of itself.", object);
 		return this;
 	}
 
-	if (object && object.isTHREE.Object3D)
+	if(object && object.isTHREE.Object3D)
 	{
-		if (object.parent !== null)
+		if(object.parent !== null)
 		{
 			object.parent.remove(object);
 		}
 
 		object.parent = this;
-		object.dispatchEvent({type: "added"});
+		object.dispatchEvent({ type: "added" });
 
 		var index = this.children.indexOf(children) + 1;
 
@@ -205,15 +204,15 @@ THREE.Object3D.prototype.addBellow = function(object, children)
  * @method getScene
  * @return {THREE.Object3D} scene
  */
-THREE.Object3D.prototype.getScene = function()
+THREE.Object3D.prototype.getScene = function ()
 {
 	var node = this;
 
-	while (node.parent !== null)
+	while(node.parent !== null)
 	{
 		node = node.parent;
 
-		if (node instanceof Scene)
+		if(node instanceof Scene)
 		{
 			return node;
 		}
@@ -227,9 +226,9 @@ THREE.Object3D.prototype.getScene = function()
  *
  * @method removeAll
  */
-THREE.Object3D.prototype.removeAll = function()
+THREE.Object3D.prototype.removeAll = function ()
 {
-	while (this.children.length > 0)
+	while(this.children.length > 0)
 	{
 		this.remove(this.children[0]);
 	}
@@ -241,7 +240,7 @@ THREE.Object3D.prototype.removeAll = function()
  * @method isEmpty
  * @return {boolean} True is object is empty
  */
-THREE.Object3D.prototype.isEmpty = function()
+THREE.Object3D.prototype.isEmpty = function ()
 {
 	return this.children.length === 0;
 };
@@ -251,16 +250,16 @@ THREE.Object3D.prototype.isEmpty = function()
  *
  * @method destroy
  */
-THREE.Object3D.prototype.destroy = function()
+THREE.Object3D.prototype.destroy = function ()
 {
-	while (this.children.length > 0)
+	while(this.children.length > 0)
 	{
 		this.children[0].destroy();
 	}
 
-	if (this.parent !== null)
+	if(this.parent !== null)
 	{
-		if (this.dispose)
+		if(this.dispose)
 		{
 			this.dispose();
 		}
@@ -285,13 +284,13 @@ THREE.Object3D.prototype.destroy = function()
  * @param {boolean} recursive If true the method will call toJSON for all available children and store the result in children attribute.
  * @return {Object} json Output JSON will all data serialized, this can be stores in file or transfered to later be loaded using the ObjectLoader.
  */
-THREE.Object3D.prototype.toJSON = function(meta, resourceAccess, recursive)
+THREE.Object3D.prototype.toJSON = function (meta, resourceAccess, recursive)
 {
 	var isRootObject = meta === undefined;
 	var output = {};
 
 	// If root object initialize base structure
-	if (isRootObject)
+	if(isRootObject)
 	{
 		meta = new ResourceContainer();
 		output.metadata =
@@ -328,18 +327,18 @@ THREE.Object3D.prototype.toJSON = function(meta, resourceAccess, recursive)
 	object.userData = this.userData;
 
 	// Geometry data for meshes lines and points
-	if (this.geometry !== undefined)
+	if(this.geometry !== undefined)
 	{
 		object.geometry = serialize(meta.geometries, this.geometry);
 
 		// Serialize shapes
 		var parameters = this.geometry.parameters;
-		if (parameters !== undefined && parameters.shapes !== undefined)
+		if(parameters !== undefined && parameters.shapes !== undefined)
 		{
 			var shapes = parameters.shapes;
-			if (Array.isArray(shapes))
+			if(Array.isArray(shapes))
 			{
-				for (var i = 0, l = shapes.length; i < l; i ++)
+				for(var i = 0, l = shapes.length; i < l; i++)
 				{
 					var shape = shapes[i];
 					serialize(meta.shapes, shape);
@@ -353,16 +352,16 @@ THREE.Object3D.prototype.toJSON = function(meta, resourceAccess, recursive)
 	}
 
 	// Material
-	if (this.material !== undefined)
+	if(this.material !== undefined)
 	{
-		if (this.material instanceof Material)
+		if(this.material instanceof Material)
 		{
 			object.material = serialize(meta.materials, this.material);
 		}
-		else if (this.material instanceof Array)
+		else if(this.material instanceof Array)
 		{
 			var uuids = [];
-			for (var i = 0; i < this.material.length; i++)
+			for(var i = 0; i < this.material.length; i++)
 			{
 				uuids.push(serialize(meta.materials, this.material[i]));
 			}
@@ -371,11 +370,11 @@ THREE.Object3D.prototype.toJSON = function(meta, resourceAccess, recursive)
 	}
 
 	// Animations
-	if (this.animations !== undefined && this.animations.length > 0)
+	if(this.animations !== undefined && this.animations.length > 0)
 	{
 		object.animations = [];
 
-		for (var i = 0; i < this.animations.length; i++)
+		for(var i = 0; i < this.animations.length; i++)
 		{
 			object.animations.push(AnimationClip.toJSON(this.animations[i]));
 		}
@@ -385,19 +384,19 @@ THREE.Object3D.prototype.toJSON = function(meta, resourceAccess, recursive)
 	output.object = object;
 
 	// Resource access callback
-	if (resourceAccess !== undefined)
+	if(resourceAccess !== undefined)
 	{
 		resourceAccess(meta, object, output);
 	}
 
 	// Serialize children
-	if (recursive !== false && this.children.length > 0)
+	if(recursive !== false && this.children.length > 0)
 	{
 		object.children = [];
 
-		for (var i = 0; i < this.children.length; i ++)
+		for(var i = 0; i < this.children.length; i++)
 		{
-			if (!this.children[i].locked)
+			if(!this.children[i].locked)
 			{
 				object.children.push(this.children[i].toJSON(meta).object);
 			}
@@ -405,7 +404,7 @@ THREE.Object3D.prototype.toJSON = function(meta, resourceAccess, recursive)
 	}
 
 	// If root object add assets
-	if (isRootObject)
+	if(isRootObject)
 	{
 		output.geometries = extractFromCache(meta.geometries);
 		output.materials = extractFromCache(meta.materials);
@@ -424,7 +423,7 @@ THREE.Object3D.prototype.toJSON = function(meta, resourceAccess, recursive)
 	// Auxiliar function to add resource to respective library
 	function serialize(library, element)
 	{
-		if (library[element.uuid] === undefined)
+		if(library[element.uuid] === undefined)
 		{
 			library[element.uuid] = element.toJSON(meta);
 		}
@@ -437,7 +436,7 @@ THREE.Object3D.prototype.toJSON = function(meta, resourceAccess, recursive)
 	{
 		var values = [];
 
-		for (var key in cache)
+		for(var key in cache)
 		{
 			var data = cache[key];
 			delete data.metadata;

@@ -1,7 +1,7 @@
-import {Object3D} from "three";
-import {Action} from "../Action.js";
-import {Editor} from "../../../Editor.js";
-import {RemoveAction} from "./RemoveAction.js";
+import { Object3D } from "three";
+import { Action } from "../Action.js";
+import { Editor } from "../../../Editor.js";
+import { RemoveAction } from "./RemoveAction.js";
 
 /**
  * Add an object to the scene.
@@ -14,42 +14,46 @@ import {RemoveAction} from "./RemoveAction.js";
  * @param {Object3D} parent Parent to add the object.
  * @param {number} index Index to add the object to.
  */
-function AddAction(object, parent, index)
+class AddAction extends Action
 {
-	Action.call(this);
-	
-	this.object = object;
-	this.index = index !== undefined ? index : -1;
+	constructor(object, parent, index)
+	{
+		super();
 
-	this.parent = parent;
+		this.object = object;
+		this.index = index !== undefined ? index : -1;
+
+		this.parent = parent;
+	}
+
+	apply()
+	{
+		if(this.index !== -1)
+		{
+			this.parent.children.splice(this.index, 0, this.object);
+			this.object.parent = this.parent;
+		}
+		else
+		{
+			this.parent.add(this.object);
+			this.index = this.parent.children.indexOf(this.object);
+		}
+
+		AddAction.updateGUI(this.object, this.parent, this.index);
+	}
+
+	revert()
+	{
+		this.parent.remove(this.object);
+
+		RemoveAction.updateGUI(this.object, this.parent);
+	}
+
 }
 
-AddAction.prototype.apply = function()
-{
-	if (this.index !== -1)
-	{
-		this.parent.children.splice(this.index, 0, this.object);
-		this.object.parent = this.parent;
-	}
-	else
-	{
-		this.parent.add(this.object);
-		this.index = this.parent.children.indexOf(this.object);
-	}
-
-	AddAction.updateGUI(this.object, this.parent, this.index);
-};
-
-AddAction.prototype.revert = function()
-{
-	this.parent.remove(this.object);
-
-	RemoveAction.updateGUI(this.object, this.parent);
-};
-
-AddAction.updateGUI = function(object, parent, index)
+AddAction.updateGUI = function (object, parent, index)
 {
 	Editor.gui.tree.addObject(object, parent, index);
 };
 
-export {AddAction};
+export { AddAction };

@@ -26,73 +26,275 @@
 ## Added by Brian (Me)
 
 
+### TODO:
+* DONE: Offline capable.
+* DONE: Maximum frame rate limiter with a setting.
+* DONE: Default maximum camera distance, and a setting.
+* DONE: Improving the mouse menu hover, I found it sometimes disappears too quickly.
+* DONE: Fixing the texture on the "Move Gripper"/TransformGizmoTranslate to be two sided.
+* DONE: Throttling UI updates when loading large models into the scene and the project explorer.
+* DONE: Remove the use of canvas.size to prevent layout recalculations when adding elements even though the window size hasn't changed. This causes speed problems when loading a model with thousands of vertices, like an entire Quake 3 map.
+
+---
+
+* TODO: Offline mode setting.
+* TODO: Add keyboard -> racetrace -> angle -> move with arrow keys.
+* TODO: Change the ray tracer to be based on the active canvas orientation instead of the window.
+* TODO: Expose the loadObject() function externally to load external assets that users can double-click to add or clone to the scene.
+* TODO: Most excitingly, I'm attaching my Objaverse-XL pipeline to the asset search bar, allowing anyone to add any object they search for out of 9 million models streamed from GitHub and Sketchfab!
+* TODO: Add mobile/responsive support.
+* TODO: Add games settings panel that allows GitHub source and FileSystem API and this games list
+```javascript
+const ENGINE_PROFILES = {
+	MINECRAFT: {
+		unitsPerMeter: 1.0,
+		defaultGridSize: 1.0,      // 1x1 Voxel Block
+		minSnapIncrement: 0.0625,  // 1/16th of a block (1 Minecraft Texture Pixel)
+	},
+	QUAKE_3: {
+		unitsPerMeter: 26.2467,    // 8 units per foot
+		defaultGridSize: 2.4384,   // 64 Quake Units (Standard Wall Height / 8 Feet)
+		minSnapIncrement: 0.3048   // 8 Quake Units (1 Foot)
+	},
+	QUAKE_STANDARD: {
+		unitsPerMeter: 26.2467,    // 8 units per foot (0.0381 meters per unit)
+		defaultGridSize: 2.4384,   // 64 Units (Standard room grid)
+		minSnapIncrement: 0.0381   // 1 Unit (Micro-brush detail snap)
+	}
+}
+```
+
+
+Yes, the **File System Access API** allows web applications to read and write directly to real files and directories on the local machine.
+
+However, dealing with permissions across page reloads or browser restarts requires a specific approach.
+
+---
+
+### The Rules of Persistence
+
+1. **The JavaScript Engine Loses In-Memory State:** As soon as you refresh the page or close the tab, your active `FileSystemHandle` variables are completely destroyed.
+2. **You Do Not Have to Make the User Re-Select the File:** Instead of showing the `showOpenFilePicker()` dialog every time, you can **serialize** and save the file/directory handle inside **IndexedDB**.
+3. **The Permission Challenge:** Even if you load the handle back from IndexedDB after a fresh boot, the browser revokes active security permissions by default when the site's last tab is closed.
+
+---
+
+### How to Stay Connected Without Repeated Pickers
+
+To build an optimal experience, you must save the handle to IndexedDB first, and then explicitly call `.requestPermission()` on that reloaded handle when the user returns.
+
+#### 1. Save the Handle (e.g., during initialization/selection)
+
+```javascript
+import { openDB } from 'idb'; // Using a helper library like 'idb' makes this easier
+
+async function saveFileHandle(handle) {
+    const db = await openDB('FileStore', 1, {
+        upgrade(db) { db.createObjectStore('handles'); }
+    });
+    // IndexedDB natively serializes FileSystemFileHandle / FileSystemDirectoryHandle objects
+    await db.put('handles', handle, 'recent-project');
+}
+
+```
+
+#### 2. Restore and Verify Permission on Re-Open
+
+When your page spins back up, pull the handle out of IndexedDB. Modern Chromium engines (Chrome, Edge) support a **persistent permission prompt** where users can select "Allow on every visit", eliminating repeated prompts entirely if accepted.
+
+```javascript
+async function restoreProjectFile() {
+    const db = await openDB('FileStore', 1);
+    const savedHandle = await db.get('handles', 'recent-project');
+
+    if (!savedHandle) {
+        console.log("No previous session found. Triggering picker.");
+        return null;
+    }
+
+    // Check existing state: 'granted', 'denied', or 'prompt'
+    let permissionMode = { mode: 'readwrite' };
+    if (await savedHandle.queryPermission(permissionMode) === 'granted') {
+        return savedHandle; // Permission still intact (e.g., quick page refresh)
+    }
+
+    // If it's a new browser session, request permission using the saved handle.
+    // NOTE: This must be triggered inside a User Gesture (like a button click)
+    const status = await savedHandle.requestPermission(permissionMode);
+    if (status === 'granted') {
+        return savedHandle;
+    } else {
+        console.warn("User rejected file permission access request.");
+        return null;
+    }
+}
+
+```
+
+---
+
+### Alternative: The Origin Private File System (OPFS)
+
+If you just need a ultra-fast local storage endpoint for something like an engine database or scratchpad assets—and the user doesn't need to manually interact with the file via their OS File Explorer—use the **Origin Private File System (OPFS)** instead.
+
+```javascript
+// Access the private, completely sandboxed local storage
+const rootDir = await navigator.storage.getDirectory();
+const draftFile = await rootDir.getFileHandle("workspace.bin", { create: true });
+
+```
+
+* **No Permissions Needed:** It never throws prompts or requests access permissions from the user.
+* **Persistent:** It behaves like `LocalStorage` or `IndexedDB` and survives complete browser restarts seamlessly.
+* **WASM Optimization:** Inside a Web Worker, you can query `createSyncAccessHandle()` on it, allowing raw binary file manipulation without promise overhead.
+
+
+
+
+### Fixing async call chain
+FileSytem.loadFile + variants
+App.loadProgram
+Script.compileCode will not work in SCP mode, needs my Void Zero interpreter
+new Audio()
+new Font() the thing that started this all because of Offline Mode
+new Image
+Image.toJSON
+Resource.export
+new Video
+Editor.initialize
+Editor.loadProgram
+Editor.updateNunu
+Loaders.loadSpineAnimation
+Loaders.loadModel
+ProjectExporters.exportWebProjectZip
+Settings.load
+Editor.runProject
+Editor.addObject
+Editor.addObjects
+Editor.renameObject
+Editor.deleteObject
+Editor.copyObject
+Editor.cutObject
+Editor.pasteObject
+Editor.redo
+Editor.undo
+Editor.createDefaultResouces
+Editor.createNewProgram
+Editor.saveProgramPath
+Editor.saveProgram
+Editor.setProgram
+Editor.loadProgram
+new SceneEditor
+extends TabComponent
+new TabComponent
+SceneEditor.updateCameraControls
+SceneEditor.updateSettings
+SceneEditor.focusObject
+SceneEditor.update
+SceneEditor.createMeasurement
+SceneEditor.render
+SceneEditor.selectObjectWithMouse
+SceneEditor.setCameraMode
+SceneEditor.selectTool
+SceneEditor.updateSelection
+new Interface
+extends Interface
+Interface.saveProgram
+Interface.loadProgram
+Interface.newProgram
+
+ParticleEmitter.reload
+TransformGizmo.updatePose
+AddResourcesAction.revert
+TransformControls.setMode
+TransformGizmoRotate.transformObject
+
+
+projectMenu.addOption(Locale.executeScript callback inside MainMenu FileSystem.chooseFile(async and FileSystem.chooseFile does NOT need async because fire and forget onLoad callback will still allow access to the chooser
+
+text.addOption(Global.FILE_PATH + "icons/text/text.png", async function ()
+has a call to the font loader in SideBar.addOption (to be determined)
+
+
+ResourceManager.addResource
+ResourceManager.removeImage
+ResourceManager.removeVideo
+ResourceManager.removeTexture
+ResourceManager.addFont
+ResourceManager.addAudio
+ResourceManager.removeAudio
+Program.receiveDataApp
+Program.clone
+
+
+TabGroup.addTab
+TabGroup, this.buttons.element.ondrop
+
+
+\b(?:extends\s+(?:Object|TabComponent|Interface|Audio|Video|SceneEditor|TransformControls|TransformGizmoRotate)|new\s+(?:Audio|Font|Image|Video|SceneEditor|TabComponent|Interface|TransformControls|TransformGizmoRotate)|(?:loadFile|loadProgram|compileCode|toJSON|\.export|initialize|updateNunu|loadSpineAnimation|loadModel|exportWebProjectZip|load|runProject|addObject|addObjects|renameObject|deleteObject|copyObject|cutObject|pasteObject|redo|undo|createDefaultResouces|createNewProgram|saveProgramPath|saveProgram|setProgram|updateCameraControls|updateSettings|focusObject|update|createMeasurement|render|selectObjectWithMouse|setCameraMode|selectTool|updateSelection|newProgram|addOption|chooseFile|addResource|removeImage|removeVideo|removeTexture|addFont|addAudio|removeAudio|receiveDataApp|clone|reload|addTab|updatePose|revert|setMode|transformObject))\b
+
 
 This awesome auto package upgrader and a couple of automated tests/*.
+### UPGRADE PIPELINE STATUS REPORT
 
-====================================================================
-## FINAL UPGRADE PIPELINE STATUS REPORT
-====================================================================
-┌─────────┬──────────────────────────────────────┬───────────────────┬────────────┐
-│ (index) │ name                                 │ outcome           │ version    │
-├─────────┼──────────────────────────────────────┼───────────────────┼────────────┤
-│ 0       │ '@as-com/pson'                       │ 'HELD (FALLBACK)' │ '3.0.1'    │
-│ 1       │ '@esotericsoftware/spine-core'       │ 'UPGRADED'        │ 'latest'   │
-│ 2       │ '@esotericsoftware/spine-threejs'    │ 'UPGRADED'        │ 'latest'   │
-│ 3       │ '@tweenjs/tween.js'                  │ 'UPGRADED'        │ 'latest'   │
-│ 4       │ 'brython'                            │ 'UPGRADED'        │ 'latest'   │
-│ 5       │ 'cannon-es'                          │ 'UPGRADED'        │ 'latest'   │
-│ 6       │ 'codemirror'                         │ 'UPGRADED'        │ '6.65.7'   │
-│ 7       │ 'draco3d'                            │ 'UPGRADED'        │ 'latest'   │
-│ 8       │ 'draco3dgltf'                        │ 'UPGRADED'        │ 'latest'   │
-│ 9       │ 'escher.js'                          │ 'UPGRADED'        │ 'latest'   │
-│ 10      │ 'glsl-editor'                        │ 'HELD (FALLBACK)' │ '1.0.0'    │
-│ 11      │ 'iterator-result'                    │ 'HELD (FALLBACK)' │ '1.0.0'    │
-│ 12      │ 'jshint'                             │ 'UPGRADED'        │ 'latest'   │
-│ 13      │ 'jszip'                              │ 'UPGRADED'        │ 'latest'   │
-│ 14      │ 'math-ds'                            │ 'HELD (FALLBACK)' │ '1.2.1'    │
-│ 15      │ 'sparse-octree'                      │ 'UPGRADED'        │ 'latest'   │
-│ 16      │ 'tern'                               │ 'HELD (FALLBACK)' │ '0.24.3'   │
-│ 17      │ 'three'                              │ 'HELD (FALLBACK)' │ '^0.119.1' │
-│ 18      │ 'three-bmfont-text'                  │ 'HELD (FALLBACK)' │ '3.0.1'    │
-│ 19      │ 'three-to-cannon'                    │ 'UPGRADED'        │ 'latest'   │
-│ 20      │ 'troika-three-text'                  │ 'UPGRADED'        │ 'latest'   │
-│ 21      │ '@babel/core'                        │ 'UPGRADED'        │ 'latest'   │
-│ 22      │ '@babel/plugin-transform-classes'    │ 'UPGRADED'        │ 'latest'   │
-│ 23      │ '@babel/preset-env'                  │ 'UPGRADED'        │ 'latest'   │
-│ 24      │ '@babel/runtime'                     │ 'HELD (FALLBACK)' │ '^7.29.7'  │
-│ 25      │ '@shoutem/webpack-prepend-append'    │ 'HELD (FALLBACK)' │ '1.0.1'    │
-│ 26      │ '@types/node'                        │ 'UPGRADED'        │ 'latest'   │
-│ 27      │ '@types/webpack'                     │ 'UPGRADED'        │ 'latest'   │
-│ 28      │ 'acorn'                              │ 'UPGRADED'        │ 'latest'   │
-│ 29      │ 'ajv'                                │ 'UPGRADED'        │ 'latest'   │
-│ 30      │ 'babel-loader'                       │ 'UPGRADED'        │ 'latest'   │
-│ 31      │ 'babel-polyfill'                     │ 'HELD (FALLBACK)' │ '6.26.0'   │
-│ 32      │ 'copy-webpack-plugin'                │ 'UPGRADED'        │ 'latest'   │
-│ 33      │ 'cordova'                            │ 'UPGRADED'        │ 'latest'   │
-│ 34      │ 'css-loader'                         │ 'UPGRADED'        │ 'latest'   │
-│ 35      │ 'eslint'                             │ 'UPGRADED'        │ 'latest'   │
-│ 36      │ 'eslint-plugin-import'               │ 'UPGRADED'        │ 'latest'   │
-│ 37      │ 'eslint-plugin-jsdoc'                │ 'UPGRADED'        │ 'latest'   │
-│ 38      │ 'git-revision-webpack-plugin'        │ 'HELD (FALLBACK)' │ '5.0.0'    │
-│ 39      │ 'html-webpack-plugin'                │ 'UPGRADED'        │ 'latest'   │
-│ 40      │ 'http-server'                        │ 'HELD (FALLBACK)' │ '14.1.1'   │
-│ 41      │ 'jsdoc'                              │ 'UPGRADED'        │ 'latest'   │
-│ 42      │ 'nwjs-builder-phoenix'               │ 'HELD (FALLBACK)' │ '1.15.0'   │
-│ 43      │ 'puppeteer'                          │ 'HELD (FALLBACK)' │ '25.2.1'   │
-│ 44      │ 'raw-loader'                         │ 'HELD (FALLBACK)' │ '4.0.2'    │
-│ 45      │ 'style-loader'                       │ 'UPGRADED'        │ 'latest'   │
-│ 46      │ 'uglifyjs-webpack-plugin'            │ 'HELD (FALLBACK)' │ '2.2.0'    │
-│ 47      │ 'vitest'                             │ 'HELD (FALLBACK)' │ '4.1.9'    │
-│ 48      │ 'webpack'                            │ 'UPGRADED'        │ 'latest'   │
-│ 49      │ 'webpack-cleanup-plugin'             │ 'HELD (FALLBACK)' │ '0.5.1'    │
-│ 50      │ 'webpack-cli'                        │ 'UPGRADED'        │ 'latest'   │
-│ 51      │ 'webpack-dev-server'                 │ 'UPGRADED'        │ 'latest'   │
-│ 52      │ 'webpack-merge'                      │ 'UPGRADED'        │ 'latest'   │
-│ 53      │ 'webpack-merge-and-include-globally' │ 'HELD (FALLBACK)' │ '2.3.4'    │
-│ 54      │ 'webpack-node-externals'             │ 'HELD (FALLBACK)' │ '3.0.0'    │
-│ 55      │ 'yuidocjs'                           │ 'HELD (FALLBACK)' │ '0.10.2'   │
-└─────────┴──────────────────────────────────────┴───────────────────┴────────────┘
-
+| (index) | name | outcome | version |
+| --- | --- | --- | --- |
+| 0 | '@as-com/pson' | 'HELD (FALLBACK)' | '3.0.1' |
+| 1 | '@esotericsoftware/spine-core' | 'UPGRADED' | 'latest' |
+| 2 | '@esotericsoftware/spine-threejs' | 'UPGRADED' | 'latest' |
+| 3 | '@tweenjs/tween.js' | 'UPGRADED' | 'latest' |
+| 4 | 'brython' | 'UPGRADED' | 'latest' |
+| 5 | 'cannon-es' | 'UPGRADED' | 'latest' |
+| 6 | 'codemirror' | 'UPGRADED' | '6.65.7' |
+| 7 | 'draco3d' | 'UPGRADED' | 'latest' |
+| 8 | 'draco3dgltf' | 'UPGRADED' | 'latest' |
+| 9 | 'escher.js' | 'UPGRADED' | 'latest' |
+| 10 | 'glsl-editor' | 'HELD (FALLBACK)' | '1.0.0' |
+| 11 | 'iterator-result' | 'HELD (FALLBACK)' | '1.0.0' |
+| 12 | 'jshint' | 'UPGRADED' | 'latest' |
+| 13 | 'jszip' | 'UPGRADED' | 'latest' |
+| 14 | 'math-ds' | 'HELD (FALLBACK)' | '1.2.1' |
+| 15 | 'sparse-octree' | 'UPGRADED' | 'latest' |
+| 16 | 'tern' | 'HELD (FALLBACK)' | '0.24.3' |
+| 17 | 'three' | 'HELD (FALLBACK)' | '^0.119.1' |
+| 18 | 'three-bmfont-text' | 'HELD (FALLBACK)' | '3.0.1' |
+| 19 | 'three-to-cannon' | 'UPGRADED' | 'latest' |
+| 20 | 'troika-three-text' | 'UPGRADED' | 'latest' |
+| 21 | '@babel/core' | 'UPGRADED' | 'latest' |
+| 22 | '@babel/plugin-transform-classes' | 'UPGRADED' | 'latest' |
+| 23 | '@babel/preset-env' | 'UPGRADED' | 'latest' |
+| 24 | '@babel/runtime' | 'HELD (FALLBACK)' | '^7.29.7' |
+| 25 | '@shoutem/webpack-prepend-append' | 'HELD (FALLBACK)' | '1.0.1' |
+| 26 | '@types/node' | 'UPGRADED' | 'latest' |
+| 27 | '@types/webpack' | 'UPGRADED' | 'latest' |
+| 28 | 'acorn' | 'UPGRADED' | 'latest' |
+| 29 | 'ajv' | 'UPGRADED' | 'latest' |
+| 30 | 'babel-loader' | 'UPGRADED' | 'latest' |
+| 31 | 'babel-polyfill' | 'HELD (FALLBACK)' | '6.26.0' |
+| 32 | 'copy-webpack-plugin' | 'UPGRADED' | 'latest' |
+| 33 | 'cordova' | 'UPGRADED' | 'latest' |
+| 34 | 'css-loader' | 'UPGRADED' | 'latest' |
+| 35 | 'eslint' | 'UPGRADED' | 'latest' |
+| 36 | 'eslint-plugin-import' | 'UPGRADED' | 'latest' |
+| 37 | 'eslint-plugin-jsdoc' | 'UPGRADED' | 'latest' |
+| 38 | 'git-revision-webpack-plugin' | 'HELD (FALLBACK)' | '5.0.0' |
+| 39 | 'html-webpack-plugin' | 'UPGRADED' | 'latest' |
+| 40 | 'http-server' | 'HELD (FALLBACK)' | '14.1.1' |
+| 41 | 'jsdoc' | 'UPGRADED' | 'latest' |
+| 42 | 'nwjs-builder-phoenix' | 'HELD (FALLBACK)' | '1.15.0' |
+| 43 | 'puppeteer' | 'HELD (FALLBACK)' | '25.2.1' |
+| 44 | 'raw-loader' | 'HELD (FALLBACK)' | '4.0.2' |
+| 45 | 'style-loader' | 'UPGRADED' | 'latest' |
+| 46 | 'uglifyjs-webpack-plugin' | 'HELD (FALLBACK)' | '2.2.0' |
+| 47 | 'vitest' | 'HELD (FALLBACK)' | '4.1.9' |
+| 48 | 'webpack' | 'UPGRADED' | 'latest' |
+| 49 | 'webpack-cleanup-plugin' | 'HELD (FALLBACK)' | '0.5.1' |
+| 50 | 'webpack-cli' | 'UPGRADED' | 'latest' |
+| 51 | 'webpack-dev-server' | 'UPGRADED' | 'latest' |
+| 52 | 'webpack-merge' | 'UPGRADED' | 'latest' |
+| 53 | 'webpack-merge-and-include-globally' | 'HELD (FALLBACK)' | '2.3.4' |
+| 54 | 'webpack-node-externals' | 'HELD (FALLBACK)' | '3.0.0' |
+| 55 | 'yuidocjs' | 'HELD (FALLBACK)' | '0.10.2' |
 
 
 

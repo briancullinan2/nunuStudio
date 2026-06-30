@@ -1,9 +1,9 @@
-import {StaticPair} from "@as-com/pson";
+import { StaticPair } from "@as-com/pson";
 import JSZip from "jszip";
-import {Base64Utils} from "../core/utils/binary/Base64Utils.js";
-import {FileSystem} from "../core/FileSystem.js";
-import {Global} from "./Global.js";
-import {Editor} from "./Editor.js";
+import { Base64Utils } from "../core/utils/binary/Base64Utils.js";
+import { FileSystem } from "../core/FileSystem.js";
+import { Global } from "./Global.js";
+import { Editor } from "./Editor.js";
 
 /**
  * Responsable for package and export of project data to different platforms.
@@ -11,7 +11,7 @@ import {Editor} from "./Editor.js";
  * @static
  * @class Exporters
  */
-function ProjectExporters() {}
+function ProjectExporters() { }
 
 ProjectExporters.ANDROID_RUN = 100;
 ProjectExporters.ANDROID_EXPORT_UNSIGNED = 101;
@@ -36,7 +36,7 @@ ProjectExporters.TEMP = "./temp";
  * @method exportCordovaProject
  * @param {string} dir Directory to export the project to.
  */
-ProjectExporters.exportCordovaProject = function(dir)
+ProjectExporters.exportCordovaProject = function (dir)
 {
 	FileSystem.makeDirectory(dir);
 	FileSystem.copyFile(Global.RUNTIME_PATH + "logo.png", dir + "/logo.png");
@@ -54,7 +54,7 @@ ProjectExporters.exportCordovaProject = function(dir)
  * @method exportWebProject
  * @param {string} dir Directory to export the project to.
  */
-ProjectExporters.exportWebProject = function(dir)
+ProjectExporters.exportWebProject = function (dir)
 {
 	FileSystem.makeDirectory(dir);
 	FileSystem.copyFile(Global.RUNTIME_PATH + "vr.png", dir + "/vr.png");
@@ -75,27 +75,27 @@ ProjectExporters.exportWebProject = function(dir)
  * @method exportWebProjectZip
  * @param {string} fname Name of the file.
  */
-ProjectExporters.exportWebProjectZip = function(fname)
+ProjectExporters.exportWebProjectZip = async function (fname)
 {
 	var zip = new JSZip();
-	zip.file("index.html", FileSystem.readFile(Global.RUNTIME_PATH + "index.html"));
-	zip.file("nunu.min.js", FileSystem.readFile(Global.RUNTIME_PATH + "nunu.min.js"));
+	zip.file("index.html", await FileSystem.readFile(Global.RUNTIME_PATH + "index.html"));
+	zip.file("nunu.min.js", await FileSystem.readFile(Global.RUNTIME_PATH + "nunu.min.js"));
 
 	var pson = new StaticPair();
 	var data = pson.toArrayBuffer(Editor.program.toJSON());
 
-	zip.file("app.nsp", Base64Utils.fromArraybuffer(data), {base64: true});
-	zip.file("logo.png", FileSystem.readFileBase64(Global.RUNTIME_PATH + "logo.png"), {base64: true});
-	zip.file("fullscreen.png", FileSystem.readFileBase64(Global.RUNTIME_PATH + "fullscreen.png"), {base64: true});
-	zip.file("vr.png", FileSystem.readFileBase64(Global.RUNTIME_PATH + "vr.png"), {base64: true});
+	zip.file("app.nsp", Base64Utils.fromArraybuffer(data), { base64: true });
+	zip.file("logo.png", await FileSystem.readFileBase64(Global.RUNTIME_PATH + "logo.png"), { base64: true });
+	zip.file("fullscreen.png", await FileSystem.readFileBase64(Global.RUNTIME_PATH + "fullscreen.png"), { base64: true });
+	zip.file("vr.png", await FileSystem.readFileBase64(Global.RUNTIME_PATH + "vr.png"), { base64: true });
 
-	zip.generateAsync({type: "blob"}).then(function(content)
+	zip.generateAsync({ type: "blob" }).then(function (content)
 	{
 		var download = document.createElement("a");
 		download.download = fname;
 		download.href = window.URL.createObjectURL(content);
 		download.style.display = "none";
-		download.onclick = function()
+		download.onclick = function ()
 		{
 			document.body.removeChild(this);
 		};
@@ -113,7 +113,7 @@ ProjectExporters.exportWebProjectZip = function(fname)
  * @method exportNWJSProject
  * @param {string} dir Output directory.
  */
-ProjectExporters.exportNWJSProject = function(dir, target)
+ProjectExporters.exportNWJSProject = function (dir, target)
 {
 	// Export web project
 	ProjectExporters.exportWebProject(ProjectExporters.TEMP);
@@ -128,32 +128,32 @@ ProjectExporters.exportNWJSProject = function(dir, target)
 			author: Editor.program.author,
 			main: "index.html",
 			window:
-		{
-			frame: config.desktop.frame,
-			fullscreen: config.desktop.fullscreen,
-			resizable: config.desktop.resizable
-		},
-			webkit:
-		{plugin: false},
-			build:
-		{
-			output: dir,
-			outputPattern: "${PLATFORM}-${ARCH}",
-			packed: true,
-			// targets: ["zip", "nsis7z"],
-			win:
 			{
-				productName: Editor.program.name,
-				companyName: Editor.program.author
+				frame: config.desktop.frame,
+				fullscreen: config.desktop.fullscreen,
+				resizable: config.desktop.resizable
+			},
+			webkit:
+				{ plugin: false },
+			build:
+			{
+				output: dir,
+				outputPattern: "${PLATFORM}-${ARCH}",
+				packed: true,
+				// targets: ["zip", "nsis7z"],
+				win:
+				{
+					productName: Editor.program.name,
+					companyName: Editor.program.author
+				}
 			}
-		}
 		}));
 
 	// Build application
 	var system = window.require("child_process");
 
 	// Delete temporary folders
-	if (FileSystem.fileExists(ProjectExporters.TEMP))
+	if(FileSystem.fileExists(ProjectExporters.TEMP))
 	{
 		FileSystem.deleteFolder(ProjectExporters.TEMP);
 	}
@@ -166,7 +166,7 @@ ProjectExporters.exportNWJSProject = function(dir, target)
  * @method exportWindowsProject
  * @param {string} dir Output directory.
  */
-ProjectExporters.exportWindows = function(dir)
+ProjectExporters.exportWindows = function (dir)
 {
 	ProjectExporters.exportNWJSProject(dir, "win-x64");
 };
@@ -178,7 +178,7 @@ ProjectExporters.exportWindows = function(dir)
  * @method exportLinuxProject
  * @param {string} dir Output directory.
  */
-ProjectExporters.exportLinux = function(dir)
+ProjectExporters.exportLinux = function (dir)
 {
 	ProjectExporters.exportNWJSProject(dir, "linux-x64");
 };
@@ -190,7 +190,7 @@ ProjectExporters.exportLinux = function(dir)
  * @method exportMacOSProject
  * @param {string} dir Output directory.
  */
-ProjectExporters.exportMacOS = function(dir)
+ProjectExporters.exportMacOS = function (dir)
 {
 	ProjectExporters.exportNWJSProject(dir, "mac-x64");
 };
@@ -205,12 +205,12 @@ ProjectExporters.exportMacOS = function(dir)
  * @param {number} mode The app can be just run on the device, or exported as a signed or unsigned apk.
  * @param {string} outputPath Path to stored the output apk file in case there is one to store.
  */
-ProjectExporters.exportAndroid = function(mode, outputPath)
+ProjectExporters.exportAndroid = function (mode, outputPath)
 {
 	// Clean the temporary files created under the temporary folder.
 	function clenanUp()
 	{
-		if (FileSystem.fileExists(ProjectExporters.TEMP))
+		if(FileSystem.fileExists(ProjectExporters.TEMP))
 		{
 			FileSystem.deleteFolder(ProjectExporters.TEMP);
 		}
@@ -226,33 +226,33 @@ ProjectExporters.exportAndroid = function(mode, outputPath)
 
 	// Create cordova project
 	var output = system.execSync("cordova create temp " + packageName + " " + name).toString();
-	if (output.indexOf("Creating") === -1)
+	if(output.indexOf("Creating") === -1)
 	{
 		console.error("nunuStudio: Failed to create cordova project.");
 	}
 
 	ProjectExporters.exportCordovaProject(ProjectExporters.TEMP + "/www");
 
-	setTimeout(function()
+	setTimeout(function ()
 	{
 		// Android platform project
-		var output = system.execSync("cordova platform add android", {cwd: ProjectExporters.TEMP}).toString();
-		if (output.indexOf("Android project created") === -1)
+		var output = system.execSync("cordova platform add android", { cwd: ProjectExporters.TEMP }).toString();
+		if(output.indexOf("Android project created") === -1)
 		{
 			console.error("nunuStudio: Failed to create cordova android project.");
 		}
 
 		// Check requirements
-		output = system.execSync("cordova requirements", {cwd: ProjectExporters.TEMP}).toString();
+		output = system.execSync("cordova requirements", { cwd: ProjectExporters.TEMP }).toString();
 
-		if (output.indexOf("Java JDK: installed") === -1)
+		if(output.indexOf("Java JDK: installed") === -1)
 		{
 			Editor.alert("Missing java JDK (get it at http:// www.oracle.com/technetwork/java/javase/downloads/index.html)");
 			console.error("nunuStudio: Missing java JDK (get it at http:// www.oracle.com/technetwork/java/javase/downloads/index.html)");
 			clenanUp();
 			return;
 		}
-		if (output.indexOf("Android SDK: installed true") === -1)
+		if(output.indexOf("Android SDK: installed true") === -1)
 		{
 			Editor.alert("Missing Android SDK (get it at https:// developer.android.com/studio/)");
 			console.error("nunuStudio: Missing Android SDK (get it at https:// developer.android.com/studio/)");
@@ -271,11 +271,11 @@ ProjectExporters.exportAndroid = function(mode, outputPath)
 		*/
 
 		// Send code to device
-		if (mode === ProjectExporters.ANDROID_RUN)
+		if(mode === ProjectExporters.ANDROID_RUN)
 		{
 			// Build code
-			output = system.execSync("cordova build android", {cwd: ProjectExporters.TEMP}).toString();
-			if (output.indexOf("SUCCESSFUL") === -1)
+			output = system.execSync("cordova build android", { cwd: ProjectExporters.TEMP }).toString();
+			if(output.indexOf("SUCCESSFUL") === -1)
 			{
 				console.error("nunuStudio: Failed to build android project.");
 				clenanUp();
@@ -283,8 +283,8 @@ ProjectExporters.exportAndroid = function(mode, outputPath)
 			}
 
 			// Launch on device
-			output = system.execSync("cordova run android", {cwd: ProjectExporters.TEMP}).toString();
-			if (output.indexOf("SUCCESS") === -1)
+			output = system.execSync("cordova run android", { cwd: ProjectExporters.TEMP }).toString();
+			if(output.indexOf("SUCCESS") === -1)
 			{
 				console.error("nunuStudio: Failed to launch android application on device.");
 				clenanUp();
@@ -292,10 +292,10 @@ ProjectExporters.exportAndroid = function(mode, outputPath)
 			}
 		}
 		// Export test version
-		else if (mode === ProjectExporters.ANDROID_EXPORT_UNSIGNED)
+		else if(mode === ProjectExporters.ANDROID_EXPORT_UNSIGNED)
 		{
-			output = system.execSync("cordova build android", {cwd: ProjectExporters.TEMP}).toString();
-			if (output.indexOf("SUCCESSFUL") === -1)
+			output = system.execSync("cordova build android", { cwd: ProjectExporters.TEMP }).toString();
+			if(output.indexOf("SUCCESSFUL") === -1)
 			{
 				console.error("nunuStudio: Failed to build android project.");
 				clenanUp();
@@ -305,10 +305,10 @@ ProjectExporters.exportAndroid = function(mode, outputPath)
 			FileSystem.copyFile(ProjectExporters.TEMP + "/platforms/android/app/build/outputs/apk/debug/app-debug.apk", outputPath);
 		}
 		// Export signed version
-		else if (mode === ProjectExporters.ANDROID_EXPORT_SIGNED)
+		else if(mode === ProjectExporters.ANDROID_EXPORT_SIGNED)
 		{
-			output = system.execSync("cordova build android --release -- --keystore=\"..\\android.keystore\" --storePassword=android --alias=mykey", {cwd: ProjectExporters.TEMP}).toString();
-			if (output.indexOf("SUCCESSFUL") === -1)
+			output = system.execSync("cordova build android --release -- --keystore=\"..\\android.keystore\" --storePassword=android --alias=mykey", { cwd: ProjectExporters.TEMP }).toString();
+			if(output.indexOf("SUCCESSFUL") === -1)
 			{
 				console.error("nunuStudio: Failed to build android project.");
 				clenanUp();
@@ -324,4 +324,4 @@ ProjectExporters.exportAndroid = function(mode, outputPath)
 	}, 500);
 };
 
-export {ProjectExporters};
+export { ProjectExporters };

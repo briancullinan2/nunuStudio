@@ -4,6 +4,9 @@
  * @static
  * @class ObjectIcons
  */
+import { Global } from "../Global.js";
+
+
 var ObjectIcons = {};
 
 /**
@@ -13,7 +16,7 @@ var ObjectIcons = {};
  * @attribute path
  * @type {string}
  */
-ObjectIcons.path = "files/icons/";
+ObjectIcons.path = Global.FILE_PATH + "icons/";
 
 ObjectIcons.default = ObjectIcons.path + "misc/question.png";
 ObjectIcons.locked = ObjectIcons.path + "misc/padlock.png";

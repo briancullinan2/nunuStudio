@@ -13,6 +13,10 @@ module.exports = [
 		mode: "production",
 		optimization: {
 			minimize: true,
+			sideEffects: true,
+			moduleIds: "named",
+			//runtimeChunk: "single",
+			concatenateModules: false
 		},
 		performance: {
 			hints: false,
@@ -29,7 +33,8 @@ module.exports = [
 		output: {
 			hashFunction: "sha256",
 			filename: "bundle.js",
-			path: output
+			path: output,
+			library: "Nunu"
 		}
 	}),
 	common[1]

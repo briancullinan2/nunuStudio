@@ -1,11 +1,11 @@
-import {BufferUtils} from "./utils/binary/BufferUtils.js";
-import {Base64Utils} from "./utils/binary/Base64Utils.js";
-import {ArraybufferUtils} from "./utils/binary/ArraybufferUtils.js";
-import {Nunu} from "./Nunu.js";
+import { BufferUtils } from "./utils/binary/BufferUtils.js";
+import { Base64Utils } from "./utils/binary/Base64Utils.js";
+import { ArraybufferUtils } from "./utils/binary/ArraybufferUtils.js";
+import { runningOnDesktop } from "./utils/Environment.js";
 
 /**
  * FileSystem is used to read and write files using nunuStudio.
- * 
+ *
  * Its implements multiple solutions for each method depending on the platform (NodeJS, brower or cordova).
  *
  * Some operations are platform specific and might not work everywhere.
@@ -14,13 +14,13 @@ import {Nunu} from "./Nunu.js";
  * @class FileSystem
  * @static
  */
-function FileSystem() {}
+function FileSystem() { }
 
 try
 {
 	FileSystem.fs = window.require ? window.require("fs") : null;
 }
-catch (e) {}
+catch(e) { }
 
 /**
  * Check if a file corresponds to a remote location.
@@ -28,7 +28,7 @@ catch (e) {}
  * @method isLocalFile
  * @return {boolean} If the file is remote returns true, false otherwise.
  */
-FileSystem.isLocalFile = function(url)
+FileSystem.isLocalFile = function (url)
 {
 	return !(url.startsWith("http") || url.startsWith("blob") || url.startsWith("data"));
 };
@@ -37,7 +37,7 @@ FileSystem.isLocalFile = function(url)
  * Read a local or remote file as text data.
  *
  * When running on desktop uses nodejs to access files, on the web performs a http GET request.
- * 
+ *
  * @method readFile
  * @param {string} fname Path or URL of the file being read.
  * @param {boolean} sync If true the file will be read in sync.
@@ -46,74 +46,102 @@ FileSystem.isLocalFile = function(url)
  * @param {Function} onError onError call is called when a error occurs while reading the file.
  * @return {string} File text, or null if the request is async.
  */
-FileSystem.readFile = function(fname, sync, onLoad, onProgress, onError)
+FileSystem.readFile = async function (fname, sync, onLoad, onProgress, onError)
 {
-	if (sync === undefined)
+	// NodeJS Environment
+	if(FileSystem.fs && FileSystem.isLocalFile(fname))
 	{
-		sync = true;
-	}
-
-	// NodeJS
-	if (FileSystem.fs && FileSystem.isLocalFile(fname))
-	{
-		if (sync === true)
+		return new Promise(function (resolve)
 		{
-			var data = FileSystem.fs.readFileSync(fname, "utf8");
-
-			if (onLoad !== undefined)
+			FileSystem.fs.readFile(fname, "utf8", function (error, data)
 			{
-				onLoad(data);
-			}
-			
-			return data;
-		}
-		else
-		{
-			FileSystem.fs.readFile(fname, "utf8", function(error, data)
-			{
-				if (error !== null)
+				if(error !== null)
 				{
-					if (onError !== undefined)
+					if(onError !== undefined)
 					{
 						onError(error);
 					}
+					resolve(null);
 				}
-				else if (onLoad !== undefined)
+				else
 				{
-					onLoad(data);
+					if(onLoad !== undefined)
+					{
+						onLoad(data);
+					}
+					resolve(data);
 				}
 			});
-
-			return null;
-		}
+		});
 	}
-	// Browser
+	// Browser Environment
 	else
 	{
-		var file = new XMLHttpRequest();
-		file.overrideMimeType("text/plain");
-		file.open("GET", fname, !sync);
-		
-		if (onLoad !== undefined)
+		try
 		{
-			file.onload = function()
+			const response = await fetch(fname);
+
+			if(!response.ok)
 			{
-				onLoad(file.response);
-			};
-		}
+				throw new Error("HTTP error! status: " + response.status);
+			}
 
-		if (onProgress !== undefined)
+			let text = "";
+
+			// If no progress tracking is needed, read text directly
+			if(onProgress === undefined)
+			{
+				text = await response.text();
+			}
+			else
+			{
+				// Progress tracking implementation using streams
+				const contentLength = response.headers.get("content-length");
+				const total = contentLength ? parseInt(contentLength, 10) : 0;
+				let loaded = 0;
+
+				const reader = response.body.getReader();
+				const chunks = [];
+
+				while(true)
+				{
+					const result = await reader.read();
+
+					if(result.done)
+					{
+						break;
+					}
+
+					chunks.push(result.value);
+					loaded += result.value.length;
+
+					onProgress({
+						lengthComputable: total !== 0,
+						loaded: loaded,
+						total: total
+					});
+				}
+
+				// Combine chunks into a single string representation
+				const blob = new Blob(chunks);
+				text = await blob.text();
+			}
+
+			if(onLoad !== undefined)
+			{
+				onLoad(text);
+			}
+
+			return text;
+		}
+		catch(error)
 		{
-			file.onprogress = onProgress;
+			if(onError !== undefined)
+			{
+				onError(error);
+			}
+			return null;
 		}
-		if (onError !== undefined)
-		{
-			file.onerror = onError;
-		}
-
-		file.send(null);
-
-		return sync === true ? file.response : null;
 	}
 };
 
@@ -121,7 +149,7 @@ FileSystem.readFile = function(fname, sync, onLoad, onProgress, onError)
  * Read a local or remote file as arraybuffer data.
  *
  * When running on desktop uses nodejs to access files, on the web performs a http GET request.
- * 
+ *
  * @method readFileArrayBuffer
  * @param {string} fname Path or URL of the file being read.
  * @param {boolean} sync If true the file will be read in sync.
@@ -130,68 +158,106 @@ FileSystem.readFile = function(fname, sync, onLoad, onProgress, onError)
  * @param {Function} onError onError call is called when a error occurs while reading the file.
  * @return {ArrayBuffer} File data as array buffer, or null if the request is async.
  */
-FileSystem.readFileArrayBuffer = function(fname, sync, onLoad, onProgress, onError)
+FileSystem.readFileArrayBuffer = async function (fname, sync, onLoad, onProgress, onError)
 {
-	if (sync === undefined)
+	// NodeJS Environment
+	if(FileSystem.fs && FileSystem.isLocalFile(fname))
 	{
-		sync = true;
-	}
-
-	// NodeJS
-	if (FileSystem.fs && FileSystem.isLocalFile(fname))
-	{
-		if (sync === true)
+		return new Promise(function (resolve)
 		{
-			var buffer = FileSystem.fs.readFileSync(fname);
-			return ArraybufferUtils.fromBuffer(buffer);
-		}
-		else
-		{
-			FileSystem.fs.readFile(fname, function(error, buffer)
+			FileSystem.fs.readFile(fname, function (error, buffer)
 			{
-				if (error !== null)
+				if(error !== null)
 				{
-					if (onError !== undefined)
+					if(onError !== undefined)
 					{
 						onError(error);
 					}
+					resolve(null);
 				}
-				else if (onLoad !== undefined)
+				else
 				{
-					onLoad(ArraybufferUtils.fromBuffer(buffer));
+					var arrayBuffer = ArraybufferUtils.fromBuffer(buffer);
+					if(onLoad !== undefined)
+					{
+						onLoad(arrayBuffer);
+					}
+					resolve(arrayBuffer);
 				}
 			});
-
-			return null;
-		}
+		});
 	}
-	// Browser
+	// Browser Environment
 	else
 	{
-		var file = new XMLHttpRequest();
-		file.open("GET", fname, !sync);
-		file.overrideMimeType("text/plain; charset=x-user-defined");
-
-		if (onLoad !== undefined)
+		try
 		{
-			file.onload = function()
+			const response = await fetch(fname);
+
+			if(!response.ok)
 			{
-				onLoad(ArraybufferUtils.fromBinaryString(file.response));
-			};
-		}
+				throw new Error("HTTP error! status: " + response.status);
+			}
 
-		if (onProgress !== undefined)
+			let buffer;
+
+			// If no progress tracking is needed, read the buffer directly
+			if(onProgress === undefined)
+			{
+				buffer = await response.arrayBuffer();
+			}
+			else
+			{
+				// Progress tracking implementation using streams
+				const contentLength = response.headers.get("content-length");
+				const total = contentLength ? parseInt(contentLength, 10) : 0;
+				let loaded = 0;
+
+				const reader = response.body.getReader();
+				const chunks = [];
+
+				while(true)
+				{
+					const result = await reader.read();
+
+					if(result.done)
+					{
+						break;
+					}
+
+					chunks.push(result.value);
+					loaded += result.value.length;
+
+					onProgress({
+						lengthComputable: total !== 0,
+						loaded: loaded,
+						total: total
+					});
+				}
+
+				// Combine chunks into a single ArrayBuffer
+				const blob = new Blob(chunks);
+				buffer = await blob.arrayBuffer();
+			}
+
+			// Route through utility to preserve your binary-to-string format expectations if necessary
+			var finalData = ArraybufferUtils.fromBinaryString(buffer);
+
+			if(onLoad !== undefined)
+			{
+				onLoad(finalData);
+			}
+
+			return finalData;
+		}
+		catch(error)
 		{
-			file.onprogress = onProgress;
+			if(onError !== undefined)
+			{
+				onError(error);
+			}
+			return null;
 		}
-		if (onError !== undefined)
-		{
-			file.onerror = onError;
-		}
-
-		file.send(null);
-
-		return sync === true ? ArraybufferUtils.fromBinaryString(file.response) : null;
 	}
 };
 
@@ -199,7 +265,7 @@ FileSystem.readFileArrayBuffer = function(fname, sync, onLoad, onProgress, onErr
  * Read a local or remote file as base64 data.
  *
  * When running on desktop uses nodejs to access files, on the web performs a http GET request.
- * 
+ *
  * @method readFileBase64
  * @param {string} fname Path or URL of the file being read.
  * @param {boolean} sync If true the file will be read in sync.
@@ -208,73 +274,113 @@ FileSystem.readFileArrayBuffer = function(fname, sync, onLoad, onProgress, onErr
  * @param {Function} onError onError call is called when a error occurs while reading the file.
  * @return {string} File data as base64, or null if the request is async.
  */
-FileSystem.readFileBase64 = function(fname, sync, onLoad, onProgress, onError)
+FileSystem.readFileBase64 = async function (fname, sync, onLoad, onProgress, onError)
 {
-	if (sync === undefined)
+	// NodeJS Environment
+	if(FileSystem.fs && FileSystem.isLocalFile(fname))
 	{
-		sync = true;
-	}
-	
-	// NodeJS
-	if (FileSystem.fs && FileSystem.isLocalFile(fname))
-	{
-		if (sync === true)
+		return new Promise(function (resolve)
 		{
-			var buffer = FileSystem.fs.readFileSync(fname);
-			return new Buffer(buffer).toString("base64");
-		}
-		else
-		{
-			FileSystem.fs.readFile(fname, function(error, buffer)
+			FileSystem.fs.readFile(fname, function (error, buffer)
 			{
-				if (error !== null)
+				if(error !== null)
 				{
-					if (onError !== undefined)
+					if(onError !== undefined)
 					{
 						onError(error);
 					}
+					resolve(null);
 				}
-				else if (onLoad !== undefined)
+				else
 				{
-					onLoad(new Buffer(buffer).toString("base64"));
+					// Convert buffer to Base64 string cleanly without using deprecated new Buffer constructor
+					var base64String = buffer.toString("base64");
+					if(onLoad !== undefined)
+					{
+						onLoad(base64String);
+					}
+					resolve(base64String);
 				}
 			});
-
-			return null;
-		}
+		});
 	}
-	// Browser
+	// Browser Environment
 	else
 	{
-		var file = new XMLHttpRequest();
-		file.open("GET", fname, !sync);
-		file.overrideMimeType("text/plain; charset=x-user-defined");
-		
-		if (onLoad !== undefined)
-		{		
-			file.onload = function()
+		try
+		{
+			const response = await fetch(fname);
+
+			if(!response.ok)
 			{
-				onLoad(Base64Utils.fromBinaryString(file.response));
-			};
-		}
-		if (onProgress !== undefined)
-		{
-			file.onprogress = onProgress;
-		}
-		if (onError !== undefined)
-		{
-			file.onerror = onError;
-		}
+				throw new Error("HTTP error! status: " + response.status);
+			}
 
-		file.send(null);
+			let buffer;
 
-		return sync === true ? Base64Utils.fromBinaryString(file.response) : null;
+			// If no progress tracking is needed, read the buffer directly
+			if(onProgress === undefined)
+			{
+				buffer = await response.arrayBuffer();
+			}
+			else
+			{
+				// Progress tracking implementation using streams
+				const contentLength = response.headers.get("content-length");
+				const total = contentLength ? parseInt(contentLength, 10) : 0;
+				let loaded = 0;
+
+				const reader = response.body.getReader();
+				const chunks = [];
+
+				while(true)
+				{
+					const result = await reader.read();
+
+					if(result.done)
+					{
+						break;
+					}
+
+					chunks.push(result.value);
+					loaded += result.value.length;
+
+					onProgress({
+						lengthComputable: total !== 0,
+						loaded: loaded,
+						total: total
+					});
+				}
+
+				// Combine chunks into a single ArrayBuffer
+				const blob = new Blob(chunks);
+				buffer = await blob.arrayBuffer();
+			}
+
+			// Convert array buffer to Base64 using your internal utility pipeline
+			var base64Data = Base64Utils.fromBinaryString(buffer);
+
+			if(onLoad !== undefined)
+			{
+				onLoad(base64Data);
+			}
+
+			return base64Data;
+		}
+		catch(error)
+		{
+			if(onError !== undefined)
+			{
+				onError(error);
+			}
+			return null;
+		}
 	}
 };
 
 /**
  * Write text to a file.
- * 
+ *
  * When running on the web it writes file to a blob and auto downloads it.
  *
  * @method writeFile
@@ -283,16 +389,16 @@ FileSystem.readFileBase64 = function(fname, sync, onLoad, onProgress, onError)
  * @param {boolean} sync If true the file is written syncronously. (Only available for Nodejs).
  * @param {Function} onFinish Callback function called when the file is written.
  */
-FileSystem.writeFile = function(fname, data, sync, onFinish)
+FileSystem.writeFile = function (fname, data, sync, onFinish)
 {
-	if (FileSystem.fs)
+	if(FileSystem.fs)
 	{
-		if (FileSystem.fs.writeFileSync !== undefined)
+		if(FileSystem.fs.writeFileSync !== undefined)
 		{
-			if (sync !== false)
+			if(sync !== false)
 			{
 				FileSystem.fs.writeFileSync(fname, data, "utf8");
-				if (onFinish !== undefined)
+				if(onFinish !== undefined)
 				{
 					onFinish();
 				}
@@ -311,20 +417,20 @@ FileSystem.writeFile = function(fname, data, sync, onFinish)
 	}
 	else
 	{
-		var blob = new Blob([data], {type: "octet/stream"});
+		var blob = new Blob([data], { type: "octet/stream" });
 
 		var download = document.createElement("a");
 		download.download = fname;
 		download.href = window.URL.createObjectURL(blob);
 		download.style.display = "none";
-		download.onclick = function()
+		download.onclick = function ()
 		{
 			document.body.removeChild(this);
 		};
 		document.body.appendChild(download);
 		download.click();
 
-		if (onFinish !== undefined)
+		if(onFinish !== undefined)
 		{
 			onFinish();
 		}
@@ -342,19 +448,19 @@ FileSystem.writeFile = function(fname, data, sync, onFinish)
  * @param {boolean} sync If true the file is written syncronously. (Only available for Nodejs)
  * @param {Function} onFinish Callback function called when the file is written.
  */
-FileSystem.writeFileBase64 = function(fname, data, sync, onFinish)
+FileSystem.writeFileBase64 = function (fname, data, sync, onFinish)
 {
-	if (FileSystem.fs)
+	if(FileSystem.fs)
 	{
 		var buffer = Buffer.from(Base64Utils.removeHeader(data), "base64");
 
-		if (FileSystem.fs.writeFile !== undefined)
+		if(FileSystem.fs.writeFile !== undefined)
 		{
-			if (sync !== false)
+			if(sync !== false)
 			{
 				FileSystem.fs.writeFileSync(fname, buffer);
 
-				if (onFinish !== undefined)
+				if(onFinish !== undefined)
 				{
 					onFinish();
 				}
@@ -379,7 +485,7 @@ FileSystem.writeFileBase64 = function(fname, data, sync, onFinish)
 		var download = document.createElement("a");
 		download.download = fname;
 		download.href = window.URL.createObjectURL(blob);
-		download.onclick = function()
+		download.onclick = function ()
 		{
 			document.body.removeChild(this);
 		};
@@ -387,7 +493,7 @@ FileSystem.writeFileBase64 = function(fname, data, sync, onFinish)
 		document.body.appendChild(download);
 		download.click();
 
-		if (onFinish !== undefined)
+		if(onFinish !== undefined)
 		{
 			onFinish();
 		}
@@ -395,7 +501,7 @@ FileSystem.writeFileBase64 = function(fname, data, sync, onFinish)
 };
 
 /**
- * Write binary file using arraybuffer data. 
+ * Write binary file using arraybuffer data.
  *
  * If running on the web writes the file into a blob and auto downloads it.
  *
@@ -405,19 +511,19 @@ FileSystem.writeFileBase64 = function(fname, data, sync, onFinish)
  * @param {boolean} sync If true the file is written syncronously. (Only available for Nodejs)
  * @param {Function} onFinish Callback function called when the file is written.
  */
-FileSystem.writeFileArrayBuffer = function(fname, data, sync, onFinish)
-{	
-	if (FileSystem.fs)
+FileSystem.writeFileArrayBuffer = function (fname, data, sync, onFinish)
+{
+	if(FileSystem.fs)
 	{
 		var buffer = BufferUtils.fromArrayBuffer(data);
 
-		if (FileSystem.fs.writeFileSync !== undefined)
+		if(FileSystem.fs.writeFileSync !== undefined)
 		{
-			if (sync !== false)
+			if(sync !== false)
 			{
 				FileSystem.fs.writeFileSync(fname, buffer);
 
-				if (onFinish !== undefined)
+				if(onFinish !== undefined)
 				{
 					onFinish();
 				}
@@ -441,15 +547,15 @@ FileSystem.writeFileArrayBuffer = function(fname, data, sync, onFinish)
 		var download = document.createElement("a");
 		download.download = fname;
 		download.href = window.URL.createObjectURL(blob);
-		download.onclick = function()
+		download.onclick = function ()
 		{
 			document.body.removeChild(this);
 		};
 		download.style.display = "none";
 		document.body.appendChild(download);
 		download.click();
-		
-		if (onFinish !== undefined)
+
+		if(onFinish !== undefined)
 		{
 			onFinish();
 		}
@@ -465,13 +571,13 @@ FileSystem.writeFileArrayBuffer = function(fname, data, sync, onFinish)
  * @param {Function} onLoad onLoad callback that receives the path select to write the file.
  * @param {string} filter File type filter (e.g. ".zip,.rar").
  */
-FileSystem.chooseFileWrite = function(onLoad, filter)
+FileSystem.chooseFileWrite = function (onLoad, filter)
 {
-	if (Nunu.runningOnDesktop())
+	if(runningOnDesktop())
 	{
-		FileSystem.chooseFile(function(files)
+		FileSystem.chooseFile(function (files)
 		{
-			if (files.length > 0)
+			if(files.length > 0)
 			{
 				onLoad(files[0].path);
 			}
@@ -479,7 +585,7 @@ FileSystem.chooseFileWrite = function(onLoad, filter)
 	}
 	else
 	{
-		FileSystem.chooseFileName(function(fname)
+		FileSystem.chooseFileName(function (fname)
 		{
 			onLoad(fname);
 		}, filter);
@@ -488,28 +594,28 @@ FileSystem.chooseFileWrite = function(onLoad, filter)
 
 /**
  * Open file chooser dialog window for the user to select a directory.
- * 
+ *
  * Only works while using NWJS.
  *
  * @method chooseDirectory
  * @return {Promise<string>} Promise that resolves with the selected path.
  */
-FileSystem.chooseDirectory = function()
+FileSystem.chooseDirectory = function ()
 {
-	return new Promise(function(resolve, reject)
+	return new Promise(function (resolve, reject)
 	{
 		var chooser = document.createElement("input");
 		chooser.type = "file";
 		chooser.style.display = "none";
-		chooser.nwdirectory = true; 
+		chooser.nwdirectory = true;
 		document.body.appendChild(chooser);
-	
-		chooser.onchange = function()
+
+		chooser.onchange = function ()
 		{
 			resolve(chooser.value);
 			document.body.removeChild(chooser);
 		};
-		
+
 		chooser.onerror = reject;
 		chooser.onabort = reject;
 
@@ -529,26 +635,26 @@ FileSystem.chooseDirectory = function()
  * @param {string} saveas File format or name to be used, optinonally it can be a boolean value indicating savemode.
  * @param {boolean} multiFile If true the chooser will accept multiple files.
  */
-FileSystem.chooseFile = function(onLoad, filter, saveas, multiFile)
+FileSystem.chooseFile = function (onLoad, filter, saveas, multiFile)
 {
 	var chooser = document.createElement("input");
 	chooser.type = "file";
 	chooser.style.display = "none";
 	document.body.appendChild(chooser);
 
-	if (filter !== undefined)
+	if(filter !== undefined)
 	{
 		chooser.accept = filter;
 	}
 
-	if (multiFile === true)
+	if(multiFile === true)
 	{
 		chooser.multiple = true;
 	}
 
-	chooser.onchange = function()
-	{	
-		if (onLoad !== undefined)
+	chooser.onchange = function ()
+	{
+		if(onLoad !== undefined)
 		{
 			onLoad(chooser.files);
 		}
@@ -556,11 +662,11 @@ FileSystem.chooseFile = function(onLoad, filter, saveas, multiFile)
 		document.body.removeChild(chooser);
 	};
 
-	if (saveas !== undefined)
+	if(saveas !== undefined)
 	{
 		chooser.nwsaveas = saveas !== true ? saveas : "file";
 	}
-	
+
 	chooser.click();
 };
 
@@ -568,23 +674,23 @@ FileSystem.chooseFile = function(onLoad, filter, saveas, multiFile)
  * Used as an alternative to chooseFile for saving files in the browser.
  *
  * Uses a prompt to question the user the file name.
- * 
+ *
  * @method chooseFileName
  * @param {Function} onLoad onLoad callback
  * @param {string} saveas File extension
  */
-FileSystem.chooseFileName = function(onLoad, saveas, name)
+FileSystem.chooseFileName = function (onLoad, saveas, name)
 {
 	var fname = prompt("Save As", name !== undefined ? name : "file");
-	
-	if (fname !== null)
+
+	if(fname !== null)
 	{
-		if (saveas !== undefined && !fname.endsWith(saveas))
+		if(saveas !== undefined && !fname.endsWith(saveas))
 		{
 			fname += saveas;
 		}
-		
-		if (onLoad !== undefined)
+
+		if(onLoad !== undefined)
 		{
 			onLoad(fname);
 		}
@@ -593,18 +699,18 @@ FileSystem.chooseFileName = function(onLoad, saveas, name)
 
 /**
  * Copy file (cannot be used to copy folders).
- * 
+ *
  * Only works when running inside NWJS.
  *
  * @method copyFile
  * @param {string} src
  * @param {string} dst
  */
-FileSystem.copyFile = function(src, dst)
+FileSystem.copyFile = function (src, dst)
 {
-	if (FileSystem.fs)
+	if(FileSystem.fs)
 	{
-		if (FileSystem.fs.copyFileSync !== undefined)
+		if(FileSystem.fs.copyFileSync !== undefined)
 		{
 			FileSystem.fs.copyFileSync(src, dst);
 		}
@@ -620,39 +726,39 @@ FileSystem.copyFile = function(src, dst)
 
 /**
  * Make a directory (dont throw exeption if directory already exists).
- * 
+ *
  * Only works when running inside NWJS.
  *
  * @method makeDirectory
  * @param {string} dir
  */
-FileSystem.makeDirectory = function(dir)
+FileSystem.makeDirectory = function (dir)
 {
-	if (FileSystem.fs)
+	if(FileSystem.fs)
 	{
 		dir.replace(new RegExp("/", 'g'), "\\");
-		FileSystem.fs.mkdirSync(dir, {recursive: true});
+		FileSystem.fs.mkdirSync(dir, { recursive: true });
 	}
 };
 
 /**
  * Returns files in directory (returns empty array in case of error).
- * 
+ *
  * Only works when running inside NWJS.
  *
  * @method getFilesDirectory
  * @return {Array} Files in the directory
  */
-FileSystem.getFilesDirectory = function(dir)
+FileSystem.getFilesDirectory = function (dir)
 {
-	if (FileSystem.fs)
+	if(FileSystem.fs)
 	{
 		try
 		{
 			dir.replace(new RegExp("/", 'g'), "\\");
 			return FileSystem.fs.readdirSync(dir);
 		}
-		catch (e)
+		catch(e)
 		{
 			return [];
 		}
@@ -663,23 +769,23 @@ FileSystem.getFilesDirectory = function(dir)
 
 /**
  * Delete folders and all subfolders.
- * 
+ *
  * Only works when running inside NWJS.
  *
  * @method deleteFolder
  * @param {string} path
  */
-FileSystem.deleteFolder = function(path)
+FileSystem.deleteFolder = function (path)
 {
-	if (FileSystem.fs)
+	if(FileSystem.fs)
 	{
-		if (FileSystem.fs.existsSync(path))
+		if(FileSystem.fs.existsSync(path))
 		{
-			FileSystem.fs.readdirSync(path).forEach(function(file)
+			FileSystem.fs.readdirSync(path).forEach(function (file)
 			{
 				var curPath = path + "/" + file;
 
-				if (FileSystem.fs.lstatSync(curPath).isDirectory())
+				if(FileSystem.fs.lstatSync(curPath).isDirectory())
 				{
 					FileSystem.deleteFolder(curPath);
 				}
@@ -696,16 +802,16 @@ FileSystem.deleteFolder = function(path)
 
 /**
  * Copy folder and all its files (includes symbolic links).
- * 
+ *
  * Only works when running inside NWJS.
  *
  * @method copyFolder
  * @param {string} src
  * @param {string} dst
  */
-FileSystem.copyFolder = function(src, dst)
+FileSystem.copyFolder = function (src, dst)
 {
-	if (FileSystem.fs)
+	if(FileSystem.fs)
 	{
 		src.replace(new RegExp("/", 'g'), "\\");
 		dst.replace(new RegExp("/", 'g'), "\\");
@@ -713,19 +819,19 @@ FileSystem.copyFolder = function(src, dst)
 		FileSystem.makeDirectory(dst);
 		var files = FileSystem.fs.readdirSync(src);
 
-		for (var i = 0; i < files.length; i++)
+		for(var i = 0; i < files.length; i++)
 		{
 			var source = src + "\\" + files[i];
 			var destiny = dst + "\\" + files[i];
 			var current = FileSystem.fs.statSync(source);
-			
+
 			// Directory
-			if (current.isDirectory())
+			if(current.isDirectory())
 			{
 				FileSystem.copyFolder(source, destiny);
 			}
 			// Symbolic link
-			else if (current.isSymbolicLink())
+			else if(current.isSymbolicLink())
 			{
 				FileSystem.fs.symlinkSync(FileSystem.fs.readlinkSync(source), destiny);
 			}
@@ -740,16 +846,16 @@ FileSystem.copyFolder = function(src, dst)
 
 /**
  * Check if a file exists.
- * 
+ *
  * Only works inside of NWJS. When running inside the browser always returns false.
  *
  * @method fileExists
  * @param {string} file File path
  * @return {boolean} True is file exists
  */
-FileSystem.fileExists = function(file)
+FileSystem.fileExists = function (file)
 {
-	if (FileSystem.fs)
+	if(FileSystem.fs)
 	{
 		file.replace(new RegExp("/", 'g'), "\\");
 
@@ -761,18 +867,18 @@ FileSystem.fileExists = function(file)
 
 /**
  * Get file name without extension from file path string.
- * 
+ *
  * If input is a/b/c/abc.d output is abc.
- * 
+ *
  * @method getFileName
  * @param {string} file File path
  * @return {string} File name without path and extension
  */
-FileSystem.getFileName = function(file)
+FileSystem.getFileName = function (file)
 {
-	if (file !== undefined)
+	if(file !== undefined)
 	{
-		if (file instanceof File)
+		if(file instanceof File)
 		{
 			file = file.name;
 		}
@@ -782,24 +888,24 @@ FileSystem.getFileName = function(file)
 
 		return file.substring(a > b ? a + 1 : b + 1, file.lastIndexOf("."));
 	}
-	
+
 	return "";
 };
 
 /**
  * Get file name with extension from file path string.
- * 
+ *
  * If input is a/b/c/abc.d output is abc.d.
- * 
+ *
  * @method getFileNameWithExtension
  * @param {string} file File path
  * @return {string} File name without path with extension
  */
-FileSystem.getFileNameWithExtension = function(file)
+FileSystem.getFileNameWithExtension = function (file)
 {
-	if (file !== undefined)
+	if(file !== undefined)
 	{
-		if (file instanceof File)
+		if(file instanceof File)
 		{
 			file = file.name;
 		}
@@ -809,24 +915,24 @@ FileSystem.getFileNameWithExtension = function(file)
 
 		return file.substring(a > b ? a + 1 : b + 1, file.length);
 	}
-	
+
 	return "";
 };
 
 /**
  * Get file name without extension.
- * 
+ *
  * If input is a/b/c/abc.d output is a/b/c/abc.
  *
  * @method getNameWithoutExtension
  * @param {string} file File path
  * @return {string}
  */
-FileSystem.getNameWithoutExtension = function(file)
+FileSystem.getNameWithoutExtension = function (file)
 {
-	if (file !== undefined)
+	if(file !== undefined)
 	{
-		if (file instanceof File)
+		if(file instanceof File)
 		{
 			file = file.name;
 		}
@@ -839,22 +945,22 @@ FileSystem.getNameWithoutExtension = function(file)
 
 /**
  * Get directory where the file is placed.
- * 
+ *
  * If input is a/b/c/abc.d output is a/b/c/
  *
  * @method getFilePath
  * @param {string} file File path
  * @return {string}
  */
-FileSystem.getFilePath = function(file)
+FileSystem.getFilePath = function (file)
 {
-	if (file !== undefined)
+	if(file !== undefined)
 	{
-		if (file instanceof File)
+		if(file instanceof File)
 		{
 			file = file.name;
 		}
-		
+
 		var a = file.lastIndexOf("\\");
 		var b = file.lastIndexOf("/");
 
@@ -866,26 +972,26 @@ FileSystem.getFilePath = function(file)
 
 /**
  * Get file extension from file path string (always in lowercase).
- * 
+ *
  * If input is a/b/c/abc.d output is d.
  *
  * @method getFileExtension
  * @param {string} file File path
  * @return {string}
  */
-FileSystem.getFileExtension = function(file)
-{	
-	if (file !== undefined)
+FileSystem.getFileExtension = function (file)
+{
+	if(file !== undefined)
 	{
-		if (file instanceof File)
+		if(file instanceof File)
 		{
 			file = file.name;
 		}
 
 		return file.substring(file.lastIndexOf(".") + 1, file.length).toLowerCase();
 	}
-	
+
 	return "";
 };
 
-export {FileSystem};
+export { FileSystem };

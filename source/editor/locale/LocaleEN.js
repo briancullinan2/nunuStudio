@@ -212,6 +212,7 @@ var LocaleEN = {
 	premulAlpha: "Premul. Alpha",
 	vector: "Vector",
 	type: "Type",
+	source: "Source",
 	physics: "Physics",
 	size: "Size",
 	viewport: "Viewport",

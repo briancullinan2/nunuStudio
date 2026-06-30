@@ -1,118 +1,119 @@
-import {Locale} from "../../../../locale/LocaleManager.js";
-import {Nunu} from "../../../../../core/Nunu.js";
-import {FileSystem} from "../../../../../core/FileSystem.js";
-import {RemoveResourceAction} from "../../../../history/action/resources/RemoveResourceAction.js";
-import {ChangeAction} from "../../../../history/action/ChangeAction.js";
-import {TextEditor} from "../../code/TextEditor.js";
-import {Global} from "../../../../Global.js";
-import {Editor} from "../../../../Editor.js";
-import {ContextMenu} from "../../../../components/dropdown/ContextMenu.js";
-import {DocumentBody} from "../../../../components/DocumentBody.js";
-import {Asset} from "./Asset.js";
+import { Locale } from "../../../../locale/LocaleManager.js";
+import { Nunu } from "../../../../../core/Nunu.js";
+import { FileSystem } from "../../../../../core/FileSystem.js";
+import { RemoveResourceAction } from "../../../../history/action/resources/RemoveResourceAction.js";
+import { ChangeAction } from "../../../../history/action/ChangeAction.js";
+import { TextEditor } from "../../code/TextEditor.js";
+import { Global } from "../../../../Global.js";
+import { Editor } from "../../../../Editor.js";
+import { ContextMenu } from "../../../../components/dropdown/ContextMenu.js";
+import { DocumentBody } from "../../../../components/DocumentBody.js";
+import { Asset } from "./Asset.js";
 
-function FileAsset(parent)
+class FileAsset extends Asset
 {
-	Asset.call(this, parent);
-
-	this.setIcon(Global.FILE_PATH + "icons/misc/file.png");
-	
-	var self = this;
-
-	// Image
-        this.image = document.createElement("img");
-        this.image.draggable = false;
-	this.image.style.position = "absolute";
-	this.image.style.top = "5%";
-	this.image.style.left = "17%";
-	this.image.style.width = "66%";
-	this.image.style.height = "66%";
-	this.element.appendChild(this.image);
-
-	// Context menu event
-	this.element.oncontextmenu = function(event)
+	constructor(parent)
 	{
-		var context = new ContextMenu(DocumentBody);
-		context.size.set(130, 20);
-		context.position.set(event.clientX, event.clientY);
+		super(parent);
 
-		context.addOption(Locale.rename, function()
-		{
-			Editor.addAction(new ChangeAction(self.asset, "name", Editor.prompt(Locale.rename + " " + Locale.file, self.asset.name)));
-		});
-		
-		context.addOption(Locale.delete, function()
-		{
-			if (Editor.confirm(Locale.delete + " " + Locale.file))
-			{
-				Editor.addAction(new RemoveResourceAction(self.asset, Editor.program, "resources"));
-			}
-		});
+		this.setIcon(Global.FILE_PATH + "icons/misc/file.png");
 
-		context.addOption(Locale.export, function()
+		var self = this;
+
+		// Image
+		this.image = document.createElement("img");
+		this.image.draggable = false;
+		this.image.style.position = "absolute";
+		this.image.style.top = "5%";
+		this.image.style.left = "17%";
+		this.image.style.width = "66%";
+		this.image.style.height = "66%";
+		this.element.appendChild(this.image);
+
+		// Context menu event
+		this.element.oncontextmenu = function (event)
 		{
-			if (Nunu.runningOnDesktop())
+			var context = new ContextMenu(DocumentBody);
+			context.size.set(130, 20);
+			context.position.set(event.clientX, event.clientY);
+
+			context.addOption(Locale.rename, function ()
 			{
-				FileSystem.chooseFile(function(files)
+				Editor.addAction(new ChangeAction(self.asset, "name", Editor.prompt(Locale.rename + " " + Locale.file, self.asset.name)));
+			});
+
+			context.addOption(Locale.delete, function ()
+			{
+				if(Editor.confirm(Locale.delete + " " + Locale.file))
 				{
-					if (files.length > 0)
+					Editor.addAction(new RemoveResourceAction(self.asset, Editor.program, "resources"));
+				}
+			});
+
+			context.addOption(Locale.export, function ()
+			{
+				if(Nunu.runningOnDesktop())
+				{
+					FileSystem.chooseFile(function (files)
 					{
-						self.asset.export(files[0].path);
-					}
-				}, "." + self.asset.encoding, true);
-			}
-			else
-			{
-				FileSystem.chooseFileName(function(file)
+						if(files.length > 0)
+						{
+							self.asset.export(files[0].path);
+						}
+					}, "." + self.asset.encoding, true);
+				}
+				else
 				{
-					self.asset.export(file);
-				}, "." + self.asset.encoding);
+					FileSystem.chooseFileName(function (file)
+					{
+						self.asset.export(file);
+					}, "." + self.asset.encoding);
+				}
+			});
+
+			context.addOption(Locale.copy, function ()
+			{
+				Editor.clipboard.set(JSON.stringify(self.asset.toJSON()), "text");
+			});
+
+			context.addOption(Locale.cut, function ()
+			{
+				Editor.clipboard.set(JSON.stringify(self.asset.toJSON()), "text");
+				Editor.addAction(new RemoveResourceAction(self.asset, Editor.program, "resources"));
+			});
+
+			context.updateInterface();
+		};
+
+		// Open text editor
+		this.element.ondblclick = async function ()
+		{
+			var tab = Editor.gui.tab.getTab(TextEditor, self.asset);
+
+			if(tab === null)
+			{
+				tab = await Editor.gui.tab.addTab(TextEditor, true);
+				tab.attach(self.asset, self);
 			}
-		});
 
-		context.addOption(Locale.copy, function()
-		{
-			Editor.clipboard.set(JSON.stringify(self.asset.toJSON()), "text");
-		});
-		
-		context.addOption(Locale.cut, function()
-		{
-			Editor.clipboard.set(JSON.stringify(self.asset.toJSON()), "text");
-			Editor.addAction(new RemoveResourceAction(self.asset, Editor.program, "resources"));
-		});
+			tab.select();
+		};
+	}
 
-		context.updateInterface();
-	};
-
-
-	// Open text editor
-	this.element.ondblclick = function()
+	updateMetadata()
 	{
-		var tab = Editor.gui.tab.getTab(TextEditor, self.asset);
+		this.setText(this.asset.name);
 
-		if (tab === null)
+		if(this.asset.encoding === "js" || this.asset.encoding === "glsl")
 		{
-			tab = Editor.gui.tab.addTab(TextEditor, true);
-			tab.attach(self.asset, self);
+			this.image.src = Global.FILE_PATH + "icons/script/script.png";
 		}
-		
-		tab.select();
-	};
+		else
+		{
+			this.image.src = Global.FILE_PATH + "icons/misc/file.png";
+		}
+	}
+
 }
 
-FileAsset.prototype = Object.create(Asset.prototype);
-
-FileAsset.prototype.updateMetadata = function()
-{
-	this.setText(this.asset.name);
-
-	if (this.asset.encoding === "js" || this.asset.encoding === "glsl")
-	{
-		this.image.src = Global.FILE_PATH + "icons/script/script.png";
-	}
-	else
-	{
-		this.image.src = Global.FILE_PATH + "icons/misc/file.png";
-	}
-};
-
-export {FileAsset};
+export { FileAsset };

@@ -1,160 +1,161 @@
 {
-  "name": "nunu-studio",
-  "description": "nunuStudio is a web based game engine for 3D and 2D game development with support for VR and AR",
-  "main": "index.html",
-  "version": "0.98.47",
-  "author": "Tentone",
-  "license": "MIT",
-  "homepage": "https://www.nunustudio.org",
-  "directories": {
-    "doc": "docs"
-  },
-  "scripts": {
-    "test": "node --test tests/unit/MathUtils.test.mjs tests/unit/UnitConverter.test.mjs tests/unit/Key.test.mjs tests/integration/integration.test.mjs tests/waterfall/waterfall.test.mjs",
-    "test:unit": "node --test tests/unit/MathUtils.test.mjs tests/unit/UnitConverter.test.mjs tests/unit/Key.test.mjs",
-    "test:integration": "node --test tests/integration/integration.test.mjs",
-    "test:waterfall": "node --test tests/waterfall/waterfall.test.mjs",
-    "upgrade-test": "node scripts/upgrade-and-test.mjs",
-    "start-page": "cd ./source/page && npm run start",
-    "start": "webpack-dev-server --open --hot --config webpack.dev.js",
-    "start-https": "webpack-dev-server --open --hot --inline --host 0.0.0.0 --https --config webpack.dev.js",
-    "start-docker": "http-server ./docs/editor -p 8081 --cors -o",
-    "start-nwjs": "webpack --config webpack.dev.js && run --with-ffmpeg --mirror https://dl.nwjs.io/ ./docs/editor",
-    "serve": "http-server . -p 8081 --cors -o",
-    "docs-jsdoc": "jsdoc -d jsdocs -r ./source/core",
-    "docs": "yuidoc -o ./docs/docs  -N -C -t  ./source/theme-docs -x lib ./source/core/",
-    "pub": "npm publish --access public .",
-    "lint": "eslint --ext .js source/editor source/core",
-    "lint-fix": "eslint --ext .js --fix source/core source/editor",
-    "build": "npm version --no-commit-hooks patch && npm run build-runtime && npm run build-page",
-    "build-page": "cd ./source/page && npm run build && cd ../.. && npm run docs && npm run build-editor",
-    "build-runtime": "webpack --config webpack.runtime.js",
-    "build-editor": "webpack --config webpack.prod.js",
-    "build-nwjs-win": "build --mirror https://dl.nwjs.io/ --concurrent --with-ffmpeg --tasks win-x64 ./build/editor/",
-    "build-nwjs": "build --mirror https://dl.nwjs.io/ --concurrent --with-ffmpeg --tasks win-x64,mac-x64,linux-x64 ./build/editor/"
-  },
-  "repository": {
-    "type": "git",
-    "url": "git+https://github.com/tentone/nunuStudio.git"
-  },
-  "keywords": [
-    "webgl",
-    "3d",
-    "gamedev",
-    "webvr",
-    "webxr"
-  ],
-  "bugs": {
-    "url": "https://github.com/tentone/nunuStudio/issues"
-  },
-  "dependencies": {
-    "@as-com/pson": "3.0.1",
-    "@esotericsoftware/spine-core": "^4.3.9",
-    "@esotericsoftware/spine-threejs": "^4.3.9",
-    "@tweenjs/tween.js": "^25.0.0",
-    "brython": "^3.14.3",
-    "cannon-es": "^0.20.0",
-    "codemirror": "^6.65.7",
-    "draco3d": "^1.5.7",
-    "draco3dgltf": "^1.5.7",
-    "escher.js": "^0.1.18",
-    "glsl-editor": "1.0.0",
-    "iterator-result": "1.0.0",
-    "jshint": "^2.13.6",
-    "jszip": "^3.10.1",
-    "math-ds": "1.2.1",
-    "sparse-octree": "^7.1.8",
-    "tern": "0.24.3",
-    "three": "0.119.1",
-    "three-bmfont-text": "3.0.1",
-    "three-to-cannon": "^5.0.2",
-    "troika-three-text": "^0.52.4"
-  },
-  "devDependencies": {
-    "@babel/core": "^8.0.1",
-    "@babel/plugin-transform-classes": "^8.0.1",
-    "@babel/preset-env": "^8.0.2",
-    "@babel/runtime": "7.29.7",
-    "@shoutem/webpack-prepend-append": "1.0.1",
-    "@types/node": "^26.0.1",
-    "@types/webpack": "^5.28.5",
-    "acorn": "^8.17.0",
-    "ajv": "^8.20.0",
-    "babel-loader": "^10.1.1",
-    "babel-polyfill": "6.26.0",
-    "copy-webpack-plugin": "^14.0.0",
-    "cordova": "^13.0.0",
-    "css-loader": "^7.1.4",
-    "eslint": "^10.5.0",
-    "eslint-plugin-import": "^2.32.0",
-    "eslint-plugin-jsdoc": "^63.0.9",
-    "git-revision-webpack-plugin": "5.0.0",
-    "html-webpack-plugin": "^5.6.7",
-    "http-server": "14.1.1",
-    "jsdoc": "^4.0.5",
-    "nwjs-builder-phoenix": "1.15.0",
-    "puppeteer": "25.2.1",
-    "raw-loader": "4.0.2",
-    "style-loader": "^4.0.0",
-    "uglifyjs-webpack-plugin": "2.2.0",
-    "vitest": "4.1.9",
-    "webpack": "^5.108.1",
-    "webpack-cleanup-plugin": "0.5.1",
-    "webpack-cli": "^7.1.0",
-    "webpack-dev-server": "^5.2.5",
-    "webpack-merge": "^6.0.1",
-    "webpack-merge-and-include-globally": "2.3.4",
-    "webpack-node-externals": "3.0.0",
-    "yuidocjs": "0.10.2"
-  },
-  "js-flags": "--stack-size 65500",
-  "chromium-args": "--ignore-gpu-blacklist --disable-raf-throttling --enable-gpu-async-worker-context",
-  "window": {
-    "icon": "files/icon.ico",
-    "frame": true,
-    "width": 1280,
-    "height": 720,
-    "min_width": 800,
-    "min_height": 600,
-    "show_in_taskbar": true
-  },
-  "webkit": {
-    "plugin": false,
-    "double_tap_to_zoom_enabled": false
-  },
-  "build": {
-    "nwVersion": "0.51.2",
-    "appId": "io.tentone.nunustudio",
-    "output": "./build/desktop/",
-    "outputPattern": "${NAME}_${VERSION}_${PLATFORM}_${ARCH}",
-    "ffmpegIntegration": false,
-    "packed": false,
-    "nwFlavor": "sdk",
-    "targets": [
-      "zip"
-    ],
-    "excludes": [
-      "node_modules",
-      "package-lock.json"
-    ],
-    "strippedProperties": [
-      "scripts",
-      "dependencies",
-      "devDependencies",
-      "build"
-    ],
-    "win": {
-      "productName": "nunuStudio",
-      "companyName": "tentone",
-      "copyright": "MIT",
-      "icon": "files/icon.ico",
-      "versionStrings": {}
-    },
-    "mac": {
-      "name": "nunuStudio",
-      "displayName": "nunuStudio",
-      "companyName": "tentone",
-      "copyright": "MIT"
-    }
-  }
+	"name": "nunu-studio",
+	"description": "nunuStudio is a web based game engine for 3D and 2D game development with support for VR and AR",
+	"main": "index.html",
+	"version": "0.98.47",
+	"author": "Tentone",
+	"license": "MIT",
+	"homepage": "https://www.nunustudio.org",
+	"directories": {
+		"doc": "docs"
+	},
+	"scripts": {
+		"test": "node --test tests/unit/MathUtils.test.mjs tests/unit/UnitConverter.test.mjs tests/unit/Key.test.mjs tests/integration/integration.test.mjs tests/waterfall/waterfall.test.mjs",
+		"test:unit": "node --test tests/unit/MathUtils.test.mjs tests/unit/UnitConverter.test.mjs tests/unit/Key.test.mjs",
+		"test:integration": "node --test tests/integration/integration.test.mjs",
+		"test:waterfall": "node --test tests/waterfall/waterfall.test.mjs tests/waterfall/runtime.test.mjs",
+		"upgrade-test": "node scripts/upgrade-and-test.mjs",
+		"start-page": "cd ./source/page && npm run start",
+		"start": "webpack-dev-server --open --hot --config webpack.dev.js",
+		"start-https": "webpack-dev-server --open --hot --inline --host 0.0.0.0 --https --config webpack.dev.js",
+		"start-docker": "http-server ./docs/editor -p 8081 --cors -o",
+		"start-nwjs": "webpack --config webpack.dev.js && run --with-ffmpeg --mirror https://dl.nwjs.io/ ./docs/editor",
+		"serve": "http-server . -p 8081 --cors -o",
+		"docs-jsdoc": "jsdoc -d jsdocs -r ./source/core",
+		"docs": "yuidoc -o ./docs/docs  -N -C -t  ./source/theme-docs -x lib ./source/core/",
+		"pub": "npm publish --access public .",
+		"lint": "eslint --ext .js source/editor source/core",
+		"lint-fix": "eslint --ext .js --fix source/core source/editor",
+		"build": "npm version --no-commit-hooks patch && npm run build-runtime && npm run build-page",
+		"build-page": "cd ./source/page && npm run build && cd ../.. && npm run docs && npm run build-editor",
+		"build-runtime": "webpack --config webpack.runtime.js",
+		"build-editor": "webpack --config webpack.prod.js",
+		"build-nwjs-win": "build --mirror https://dl.nwjs.io/ --concurrent --with-ffmpeg --tasks win-x64 ./build/editor/",
+		"build-nwjs": "build --mirror https://dl.nwjs.io/ --concurrent --with-ffmpeg --tasks win-x64,mac-x64,linux-x64 ./build/editor/"
+	},
+	"repository": {
+		"type": "git",
+		"url": "git+https://github.com/tentone/nunuStudio.git"
+	},
+	"keywords": [
+		"webgl",
+		"3d",
+		"gamedev",
+		"webvr",
+		"webxr"
+	],
+	"bugs": {
+		"url": "https://github.com/tentone/nunuStudio/issues"
+	},
+	"dependencies": {
+		"@as-com/pson": "3.0.1",
+		"@esotericsoftware/spine-core": "^4.3.9",
+		"@esotericsoftware/spine-threejs": "^4.3.9",
+		"@tweenjs/tween.js": "^25.0.0",
+		"brython": "^3.14.3",
+		"cannon-es": "^0.20.0",
+		"codemirror": "^6.65.7",
+		"draco3d": "^1.5.7",
+		"draco3dgltf": "^1.5.7",
+		"escher.js": "^0.1.18",
+		"glsl-editor": "1.0.0",
+		"iterator-result": "1.0.0",
+		"jshint": "^2.13.6",
+		"jszip": "^3.10.1",
+		"math-ds": "1.2.1",
+		"sparse-octree": "^7.1.8",
+		"tern": "0.24.3",
+		"three": "^0.163.0",
+		"three-bmfont-text": "3.0.1",
+		"three-subdivision-modifier": "^1.0.5",
+		"three-to-cannon": "^5.0.2",
+		"troika-three-text": "^0.52.4"
+	},
+	"devDependencies": {
+		"@babel/core": "^8.0.1",
+		"@babel/plugin-transform-classes": "^8.0.1",
+		"@babel/preset-env": "^8.0.2",
+		"@babel/runtime": "7.29.7",
+		"@shoutem/webpack-prepend-append": "1.0.1",
+		"@types/node": "^26.0.1",
+		"@types/webpack": "^5.28.5",
+		"acorn": "^8.17.0",
+		"ajv": "^8.20.0",
+		"babel-loader": "^10.1.1",
+		"babel-polyfill": "6.26.0",
+		"circular-dependency-plugin": "^5.2.2",
+		"copy-webpack-plugin": "^14.0.0",
+		"cordova": "^13.0.0",
+		"css-loader": "^7.1.4",
+		"eslint": "^10.5.0",
+		"eslint-plugin-import": "^2.32.0",
+		"eslint-plugin-jsdoc": "^63.0.9",
+		"git-revision-webpack-plugin": "5.0.0",
+		"html-webpack-plugin": "^5.6.7",
+		"http-server": "14.1.1",
+		"jsdoc": "^4.0.5",
+		"nwjs-builder-phoenix": "1.15.0",
+		"puppeteer": "25.2.1",
+		"raw-loader": "4.0.2",
+		"style-loader": "^4.0.0",
+		"vitest": "4.1.9",
+		"webpack": "^5.108.1",
+		"webpack-cleanup-plugin": "0.5.1",
+		"webpack-cli": "^7.1.0",
+		"webpack-dev-server": "^5.2.5",
+		"webpack-merge": "^6.0.1",
+		"webpack-merge-and-include-globally": "2.3.4",
+		"webpack-node-externals": "3.0.0",
+		"yuidocjs": "0.10.2"
+	},
+	"js-flags": "--stack-size 65500",
+	"chromium-args": "--ignore-gpu-blacklist --disable-raf-throttling --enable-gpu-async-worker-context",
+	"window": {
+		"icon": "files/icon.ico",
+		"frame": true,
+		"width": 1280,
+		"height": 720,
+		"min_width": 800,
+		"min_height": 600,
+		"show_in_taskbar": true
+	},
+	"webkit": {
+		"plugin": false,
+		"double_tap_to_zoom_enabled": false
+	},
+	"build": {
+		"nwVersion": "0.51.2",
+		"appId": "io.tentone.nunustudio",
+		"output": "./build/desktop/",
+		"outputPattern": "${NAME}_${VERSION}_${PLATFORM}_${ARCH}",
+		"ffmpegIntegration": false,
+		"packed": false,
+		"nwFlavor": "sdk",
+		"targets": [
+			"zip"
+		],
+		"excludes": [
+			"node_modules",
+			"package-lock.json"
+		],
+		"strippedProperties": [
+			"scripts",
+			"dependencies",
+			"devDependencies",
+			"build"
+		],
+		"win": {
+			"productName": "nunuStudio",
+			"companyName": "tentone",
+			"copyright": "MIT",
+			"icon": "files/icon.ico",
+			"versionStrings": {}
+		},
+		"mac": {
+			"name": "nunuStudio",
+			"displayName": "nunuStudio",
+			"companyName": "tentone",
+			"copyright": "MIT"
+		}
+	}
 }

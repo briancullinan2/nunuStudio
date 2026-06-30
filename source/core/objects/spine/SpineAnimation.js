@@ -1,8 +1,8 @@
-import {Clock, Object3D} from "three";
-import {AtlasAttachmentLoader, SkeletonJson, SkeletonMesh, TextureAtlas} from "@esotericsoftware/spine-threejs";
-import {Texture} from "../../texture/Texture.js";
-import {Image} from "../../resources/Image.js";
-import {SpineTexture} from "./SpineTexture.js";
+import { Clock, Object3D } from "three";
+import { AtlasAttachmentLoader, SkeletonJson, SkeletonMesh, TextureAtlas } from "@esotericsoftware/spine-threejs";
+import { Texture } from "../../texture/Texture.js";
+import { Image } from "../../resources/Image.js";
+import { SpineTexture } from "./SpineTexture.js";
 
 /**
  * Spine animation object, to used with animation produced inside Esoteric spine. These animations are created using the Spine animation studio software.
@@ -13,276 +13,307 @@ import {SpineTexture} from "./SpineTexture.js";
  *
  * @class SpineAnimation
  * @extends {SkeletonMesh}
+ * @param {Object} skeleton Shared skeleton data fully resolved by the factory wrapper.
  * @param {Object} json Object containing the spine JSON encoded data for this animation.
  * @param {string} atlas Atlas file path.
- * @param {string} path Path to retrieve images from.
  * @param {Texture[]} textures List of textures provided for this animation.
  * @module Animations
  */
-function SpineAnimation(json, atlas, path, textures)
+class SpineAnimation extends SkeletonMesh
 {
-	if (textures === undefined)
+	constructor(skeleton, json, atlas, textures)
 	{
-		textures = [];
+		super(skeleton);
+
+		this.name = "spine";
+		this.type = "SpineAnimation";
+
+		this.scale.set(0.01, 0.01, 0.01);
+
+		/**
+		 * Spine animation data.
+		 *
+		 * @property json
+		 * @type {Object}
+		 */
+		this.json = json;
+
+		/**
+		 * Texture atlas information.
+		 *
+		 * @property atlas
+		 * @type {Object}
+		 */
+		this.atlas = atlas;
+
+		/**
+		 * Array of SpineTextures used by the animation.
+		 *
+		 * @property textures
+		 * @type {Array}
+		 */
+		this.textures = textures;
+
+		/**
+		 * The animation can have multiple skins that define diferent sets of textures for the same animation.
+		 *
+		 * @attribute skin
+		 * @type {Object}
+		 */
+		this.skin = this.getSkins().length > 0 ? this.getSkins()[0].name : null;
+
+		/**
+		 * Animation currently playing, animations are split into tracks.
+		 *
+		 * An animation (e.g. walk) can be composed of multiple tracks.
+		 *
+		 * @attribute animation
+		 * @type {Object}
+		 */
+		this.animation = this.getAnimations().length > 0 ? this.getAnimations()[0].name : null;
+
+		/**
+		 * Index of the animation track playing.
+		 *
+		 * @attribute track
+		 * @type {number}
+		 */
+		this.track = 0;
+
+		/**
+		 * Indicates the loop mode of the animation if set true the animation starts again after it ends.
+		 *
+		 * @attribute loop
+		 * @type {boolean}
+		 */
+		this.loop = true;
+
+		this.clock = new Clock();
+
+		this.play();
 	}
 
-	var textureAtlas = new TextureAtlas(atlas, function(file)
+	/**
+	 * Asynchronously pre-loads textures and sets up the asset linkages prior to execution context allocation.
+	 *
+	 * @static
+	 * @method create
+	 */
+	static async create(json, atlas, path, textures = [])
 	{
-		for (var i = 0; i < textures.length; i++)
+		// Intercept Spine's synchronous atlas requirements and resolve our custom textures first
+		const imageFiles = [];
+
+		// Use a dummy TextureAtlas parser sweep to extract the target filenames needed out of the atlas string layout
+		new TextureAtlas(atlas, function (file)
 		{
-			if (textures[i].name === file)
+			imageFiles.push(file);
+			return null;
+		});
+
+		// Resolve any missing files completely using async blocks before instantiating the real Atlas
+		for(const file of imageFiles)
+		{
+			let found = false;
+			for(let i = 0; i < textures.length; i++)
 			{
-				var texture = new SpineTexture(textures[i].texture);
-				break;
+				if(textures[i].name === file)
+				{
+					found = true;
+					break;
+				}
+			}
+
+			if(!found)
+			{
+				const nativeTex = await Texture.create(new Image(path + "/" + file));
+				const spineTex = new SpineTexture(nativeTex);
+				textures.push({ name: file, texture: spineTex.texture });
 			}
 		}
 
-		if (i === textures.length)
+		// Now that the texture dependencies are resolved, instantiation can run instantly and synchronously
+		const textureAtlas = new TextureAtlas(atlas, function (file)
 		{
-			var texture = new SpineTexture(new Texture(new Image(path + "/" + file)));
-			textures.push({name: file, texture: texture.texture});
+			let texture = null;
+			for(let i = 0; i < textures.length; i++)
+			{
+				if(textures[i].name === file)
+				{
+					texture = new SpineTexture(textures[i].texture);
+					break;
+				}
+			}
+
+			const element = texture.texture.image;
+			const image = texture.texture.customSource || texture.texture.source;
+
+			if(image.width > 0 && image.height > 0)
+			{
+				element.width = image.width;
+				element.height = image.height;
+			} else if(element.naturalWidth !== 0 && element.naturalHeight !== 0)
+			{
+				element.width = element.naturalWidth;
+				element.height = element.naturalHeight;
+				image.width = element.width;
+				image.height = element.height;
+			} else
+			{
+				const beginning = atlas.search("size: ");
+				const end = atlas.search("\nformat");
+				let size = atlas.substring(beginning + 6, end);
+				size = size.split(",");
+				element.width = parseInt(size[0]);
+				element.height = parseInt(size[1]);
+			}
+
+			return texture;
+		});
+
+		const loader = new AtlasAttachmentLoader(textureAtlas);
+		const skeleton = new SkeletonJson(loader).readSkeletonData(json);
+
+		return new SpineAnimation(skeleton, json, atlas, textures);
+	}
+
+	update(delta)
+	{
+		super.update(delta);
+		Object3D.prototype.update.call(this);
+	}
+
+	/**
+	 * Update mesh geometry from animation state before rendering.
+	 *
+	 * @method onBeforeRender
+	 */
+	onBeforeRender()
+	{
+		this.state.update(this.clock.getDelta());
+		this.state.apply(this.skeleton);
+		this.skeleton.updateWorldTransform();
+		this.updateGeometry();
+	}
+
+	/**
+	 * Play animation.
+	 *
+	 * @method play
+	 */
+	play()
+	{
+		if(this.animation !== null)
+		{
+			this.setAnimation(this.track, this.animation, this.loop);
 		}
 
-		var element = texture.texture.image;
-		var image = texture.texture.source;
-
-		if (image.width > 0 && image.height > 0)
+		if(this.skin !== null)
 		{
-			element.width = image.width;
-			element.height = image.height;
+			this.setSkin(this.skin);
 		}
-		else if (element.naturalWidth !== 0 && element.naturalHeight !== 0)
+	}
+
+	/**
+	 * Get all available animations.
+	 *
+	 * @method getAnimations
+	 * @return {Array} Animations
+	 */
+	getAnimations()
+	{
+		return this.state.data.skeletonData.animations;
+	}
+
+	/**
+	 * Set animation from track number and name.
+	 *
+	 * @method setAnimation
+	 * @param {number} track Track number.
+	 * @param {string} animation Animation name.
+	 * @param {boolean} loop If true the animation plays in loop.
+	 */
+	setAnimation(track, animation, loop)
+	{
+		try
 		{
-			element.width = element.naturalWidth;
-			element.height = element.naturalHeight;
-			image.width = element.width;
-			image.height = element.height;
+			if(track !== undefined) { this.track = track; }
+			if(animation !== undefined) { this.animation = animation; }
+			if(loop !== undefined) { this.loop = loop; }
+
+			this.state.setAnimation(this.track, this.animation, this.loop);
 		}
-		else
+		catch(e)
 		{
-			var beginning = atlas.search("size: ");
-			var end = atlas.search("\nformat");
-			var size = atlas.substring(beginning + 6, end);
-			size = size.split(",");
-			element.width = parseInt(size[0]);
-			element.height = parseInt(size[1]);
+			this.animation = null;
+			console.warn("nunuStudio: Error setting spine animation " + animation + " on track " + track);
+		}
+	}
+
+	/**
+	 * Get skins available for this animation.
+	 *
+	 * @method getSkins
+	 * @return {Array} List of skins available for this animation.
+	 */
+	getSkins()
+	{
+		return this.state.data.skeletonData.skins;
+	}
+
+	/**
+	 * Set skin to be used by this animation
+	 *
+	 * @method setSkin
+	 * @param {string} name Skin name.
+	 */
+	setSkin(name)
+	{
+		try
+		{
+			this.skeleton.setSkinByName(name);
+			this.skin = name;
+		}
+		catch(e)
+		{
+			this.skin = null;
+			console.warn("nunuStudio: Error setting spine skin " + name);
+		}
+	}
+
+	toJSON(meta)
+	{
+		// Store textures
+		var textures = [];
+		var self = this;
+		var data = Object3D.prototype.toJSON.call(this, meta, function (meta)
+		{
+			for(var i = 0; i < self.textures.length; i++)
+			{
+				var texture = self.textures[i].texture.toJSON(meta);
+				textures.push({ name: self.textures[i].name, texture: texture.uuid });
+			}
+		});
+
+		// Animation data
+		data.object.json = this.json;
+		data.object.atlas = this.atlas;
+		data.object.textures = textures;
+
+		// Default animation and skin
+		if(this.animation !== null)
+		{
+			data.object.animation = this.animation;
+			data.object.track = this.track;
+			data.object.loop = this.loop;
+		}
+		if(this.skin !== null)
+		{
+			data.object.skin = this.skin;
 		}
 
-		return texture;
-	});
-
-	var loader = new AtlasAttachmentLoader(textureAtlas);
-	var skeleton = new SkeletonJson(loader).readSkeletonData(json);
-
-	SkeletonMesh.call(this, skeleton);
-
-	this.name = "spine";
-	this.type = "SpineAnimation";
-
-	this.scale.set(0.01, 0.01, 0.01);
-
-	/**
-	 * Spine animation data.
-	 *
-	 * @property json
-	 * @type {Object}
-	 */
-	this.json = json;
-
-	/**
-	 * Texture atlas information.
-	 *
-	 * @property atlas
-	 * @type {Object}
-	 */
-	this.atlas = atlas;
-
-	/**
-	 * Array of SpineTextures used by the animation.
-	 *
-	 * @property textures
-	 * @type {Array}
-	 */
-	this.textures = textures;
-
-	/**
-	 * The animation can have multiple skins that define diferent sets of textures for the same animation.
-	 *
-	 * @attribute skin
-	 * @type {Object}
-	 */
-	this.skin = this.getSkins().length > 0 ? this.getSkins()[0].name : null;
-
-	/**
-	 * Animation currently playing, animations are split into tracks.
-	 *
-	 * An animation (e.g. walk) can be composed of multiple tracks.
-	 *
-	 * @attribute animation
-	 * @type {Object}
-	 */
-	this.animation = this.getAnimations().length > 0 ? this.getAnimations()[0].name : null;
-
-	/**
-	 * Index of the animation track playing.
-	 *
-	 * @attribute track
-	 * @type {number}
-	 */
-	this.track = 0;
-
-	/**
-	 * Indicates the loop mode of the animation if set true the animation starts again after it ends.
-	 *
-	 * @attribute loop
-	 * @type {boolean}
-	 */
-	this.loop = true;
-
-	this.clock = new Clock();
-
-	this.play();
+		return data;
+	}
 }
 
-SpineAnimation.prototype = Object.create(SkeletonMesh.prototype);
-
-SpineAnimation.prototype.update = function(delta)
-{
-	SkeletonMesh.prototype.update.call(this, delta);
-	Object3D.prototype.update.call(this);
-};
-
-/**
- * Update mesh geometry from animation state before rendering.
- *
- * @method onBeforeRender
- */
-SpineAnimation.prototype.onBeforeRender = function()
-{
-	this.state.update(this.clock.getDelta());
-	this.state.apply(this.skeleton);
-	this.skeleton.updateWorldTransform();
-	this.updateGeometry();
-};
-
-/**
- * Play animation.
- *
- * @method play
- */
-SpineAnimation.prototype.play = function()
-{
-	if (this.animation !== null)
-	{
-		this.setAnimation(this.track, this.animation, this.loop);
-	}
-
-	if (this.skin !== null)
-	{
-		this.setSkin(this.skin);
-	}
-};
-
-/**
- * Get all available animations.
- *
- * @method getAnimations
- * @return {Array} Animations
- */
-SpineAnimation.prototype.getAnimations = function()
-{
-	return this.state.data.skeletonData.animations;
-};
-
-/**
- * Set animation from track number and name.
- *
- * @method setAnimation
- * @param {number} track Track number.
- * @param {string} animation Animation name.
- * @param {boolean} loop If true the animation plays in loop.
- */
-SpineAnimation.prototype.setAnimation = function(track, animation, loop)
-{
-	try
-	{
-		if (track !== undefined) {this.track = track;}
-		if (animation !== undefined) {this.animation = animation;}
-		if (loop !== undefined) {this.loop = loop;}
-
-		this.state.setAnimation(this.track, this.animation, this.loop);
-	}
-	catch (e)
-	{
-		this.animation = null;
-
-		console.warn("nunuStudio: Error setting spine animation " + name + " on track " + track);
-	}
-};
-
-/**
- * Get skins available for this animation.
- *
- * @method getSkins
- * @return {Array} List of skins available for this animation.
- */
-SpineAnimation.prototype.getSkins = function()
-{
-	return this.state.data.skeletonData.skins;
-};
-
-/**
- * Set skin to be used by this animation
- *
- * @method setSkin
- * @param {string} name Skin name.
- */
-SpineAnimation.prototype.setSkin = function(name)
-{
-	try
-	{
-		this.skeleton.setSkinByName(name);
-		this.skin = name;
-	}
-	catch (e)
-	{
-		this.skin = null;
-		console.warn("nunuStudio: Error setting spine skin " + name);
-	}
-};
-
-SpineAnimation.prototype.toJSON = function(meta)
-{
-	// Store textures
-	var textures = [];
-	var self = this;
-	var data = Object3D.prototype.toJSON.call(this, meta, function(meta)
-	{
-		for (var i = 0; i < self.textures.length; i++)
-		{
-			var texture = self.textures[i].texture.toJSON(meta);
-			textures.push({name: self.textures[i].name, texture: texture.uuid});
-		}
-	});
-
-	// Animation data
-	data.object.json = this.json;
-	data.object.atlas = this.atlas;
-	data.object.textures = textures;
-
-	// Default animation and skin
-	if (this.animation !== null)
-	{
-		data.object.animation = this.animation;
-		data.object.track = this.track;
-		data.object.loop = this.loop;
-	}
-	if (this.skin !== null)
-	{
-		data.object.skin = this.skin;
-	}
-
-	return data;
-};
-
-export {SpineAnimation};
+export { SpineAnimation };

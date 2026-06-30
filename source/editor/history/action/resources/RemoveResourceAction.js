@@ -1,9 +1,9 @@
-import {ResourceManager} from "../../../../core/resources/ResourceManager.js";
-import {Resource} from "../../../../core/resources/Resource.js";
-import {ResourceCrawler} from "../../ResourceCrawler.js";
-import {Action} from "../Action.js";
-import {Editor} from "../../../Editor.js";
-import {AddResourceAction} from "./AddResourceAction.js";
+import { ResourceManager } from "../../../../core/resources/ResourceManager.js";
+import { Resource } from "../../../../core/resources/Resource.js";
+import { ResourceCrawler } from "../../ResourceCrawler.js";
+import { Action } from "../Action.js";
+import { Editor } from "../../../Editor.js";
+import { AddResourceAction } from "./AddResourceAction.js";
 
 /**
  * Remove a resource from the manager.
@@ -15,36 +15,40 @@ import {AddResourceAction} from "./AddResourceAction.js";
  * @param {ResourceManager} manager Manager to insert the resource into.
  * @param {string} category Category of the resource.
  */
-function RemoveResourceAction(resource, manager, category)
+class RemoveResourceAction extends Action
 {
-	Action.call(this);
-	
-	this.resource = resource;
-	this.category = category;
-	this.manager = manager;
-}
-
-RemoveResourceAction.prototype.apply = function()
-{
-	ResourceCrawler.removeResource(this.manager, this.resource, this.category);
-
-	if (this.resource.dispose !== undefined)
+	constructor(resource, manager, category)
 	{
-		this.resource.dispose();
+		super();
+
+		this.resource = resource;
+		this.category = category;
+		this.manager = manager;
 	}
 
-	RemoveResourceAction.updateGUI();
-};
+	apply()
+	{
+		ResourceCrawler.removeResource(this.manager, this.resource, this.category);
 
-RemoveResourceAction.prototype.revert = function()
-{
-	ResourceCrawler.addResource(this.manager, this.resource, this.category);
+		if(this.resource.dispose !== undefined)
+		{
+			this.resource.dispose();
+		}
 
-	AddResourceAction.updateGUI();
-};
+		RemoveResourceAction.updateGUI();
+	}
 
-RemoveResourceAction.updateGUI = function()
+	revert()
+	{
+		ResourceCrawler.addResource(this.manager, this.resource, this.category);
+
+		AddResourceAction.updateGUI();
+	}
+
+}
+
+RemoveResourceAction.updateGUI = function ()
 {
 	Editor.updateObjectsViewsGUI();
 };
-export {RemoveResourceAction};
+export { RemoveResourceAction };

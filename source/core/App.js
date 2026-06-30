@@ -1,11 +1,11 @@
-import {StaticPair} from "@as-com/pson";
-import {Component} from "../editor/components/Component.js";
-import {EventManager} from "./utils/EventManager.js";
-import {Program} from "./objects/Program.js";
-import {PerspectiveCamera} from "./objects/cameras/PerspectiveCamera.js";
-import {Nunu} from "./Nunu.js";
-import {ObjectLoader} from "./loaders/ObjectLoader.js";
-import {FileSystem} from "./FileSystem.js";
+import { StaticPair } from "@as-com/pson";
+import { Component } from "../editor/components/Component.js";
+import { EventManager } from "./utils/EventManager.js";
+import { Program } from "./objects/Program.js";
+import { PerspectiveCamera } from "./objects/cameras/PerspectiveCamera.js";
+import { Nunu } from "./Nunu.js";
+import { ObjectLoader } from "./loaders/ObjectLoader.js";
+import { FileSystem } from "./FileSystem.js";
 
 /**
  * app is the main class of the runtime system, is used to embed projects into external webpages and applications.
@@ -17,8 +17,7 @@ import {FileSystem} from "./FileSystem.js";
  * @constructor
  * @param {Component} canvas Canvas to be used by the runtime, if no canvas is provided a new one is created and added to the document.body, to create a new App without canvas a null value can be passed.
  */
-function App(canvas)
-{
+function App(canvas) {
 	/**
 	 * Program
 	 *
@@ -70,8 +69,7 @@ function App(canvas)
 	 */
 	this.events = new EventManager();
 
-	if (canvas === undefined)
-	{
+	if(canvas === undefined) {
 		this.canvas = document.createElement("canvas");
 		this.canvas.style.position = "absolute";
 		this.canvas.style.left = "0px";
@@ -91,25 +89,20 @@ function App(canvas)
  * @param {string} url URL for the nsp or isp file.
  * @param {string} canvas Canvas object or canvas id.
  */
-App.loadApp = function(url, canvas)
-{
-	if (typeof canvas === "string")
-	{
+App.loadApp = function (url, canvas) {
+	if(typeof canvas === "string") {
 		canvas = document.getElementById(canvas);
 	}
 
 	var app = new App(canvas);
 	app.loadRunProgram(url);
 
-	window.addEventListener("resize", function()
-	{
-		if (Nunu.isFullscreen())
-		{
+	window.addEventListener("resize", function () {
+		if(Nunu.isFullscreen()) {
 			app.canvas.width = window.innerWidth;
 			app.canvas.height = window.innerHeight;
 		}
-		else if (app.canvas.parentElement)
-		{
+		else if(app.canvas.parentElement) {
 			app.canvas.width = app.canvas.parentElement.offsetWidth;
 			app.canvas.height = app.canvas.parentElement.offsetHeight;
 		}
@@ -126,10 +119,8 @@ App.loadApp = function(url, canvas)
  *
  * @method run
  */
-App.prototype.run = function()
-{
-	if (this.program === null)
-	{
+App.prototype.run = async function () {
+	if(this.program === null) {
 		console.warn("nunuStudio: no program is loaded [app.loadPogram(fname)]");
 		return;
 	}
@@ -148,23 +139,20 @@ App.prototype.run = function()
 	this.program.setRenderer(this.renderer);
 
 	// Initialize program
-	this.program.initialize();
+	await this.program.initialize();
 
 	// Lock mouse pointer
-	if (this.program.lockPointer)
-	{
+	if(this.program.lockPointer) {
 		var canvas = this.canvas;
 		var mouse = this.mouse;
 
-		this.events.add(canvas, "click", function()
-		{
+		this.events.add(canvas, "click", function () {
 			mouse.setLock(true);
 		});
 	}
 
 	var self = this;
-	this.events.add(window, "beforeunload", function()
-	{
+	this.events.add(window, "beforeunload", function () {
 		self.exit();
 	});
 	this.events.create();
@@ -181,94 +169,51 @@ App.prototype.run = function()
  * @param {Function} onLoad onLoad callback
  * @param {Function} onProgress onProgress callback, receives progress (percentage) and the xhr onprogress event as parameters.
  */
-App.prototype.loadRunProgram = function(fname, onLoad, onProgress)
-{
-	this.loadProgramAsync(fname, function(app)
-	{
+App.prototype.loadRunProgram = function (fname, onLoad, onProgress) {
+	this.loadProgramAsync(fname, function (app) {
 		app.run();
 
-		if (onLoad !== undefined)
-		{
+		if(onLoad !== undefined) {
 			onLoad(app);
 		}
 	}, onProgress);
 };
 
+
 /**
- * Load program from file.
+ * Load program from file asynchronously.
  *
  * @method loadProgram
  * @param {string} fname Name of the file to load
+ * @param {Function} [onProgress] Optional onProgress callback, receives progress (percentage) and the mock progress event.
+ * @return {Promise<App>} Returns a promise that resolves with the App instance when loading is complete.
  */
-App.prototype.loadProgram = function(fname)
-{
-	// JSON project
-	if (fname.endsWith(".isp"))
-	{
-		var loader = new ObjectLoader();
-		var data = FileSystem.readFile(fname);
-		this.program = loader.parse(JSON.parse(data));
-	}
-	// Binary project
-	else if (fname.endsWith(".nsp"))
-	{
-		var loader = new ObjectLoader();
-		var data = FileSystem.readFileArrayBuffer(fname);
-		var pson = new StaticPair();
-	}
-	this.program = loader.parse(pson.decode(data));
-};
+App.prototype.loadProgram = async function (fname, onProgress) {
+	const loader = new ObjectLoader();
 
-/**
- * Load program from file, asynchronously.
- *
- * @method loadProgramAsync
- * @param {string} fname Name of the file to load
- * @param {Function} onLoad onLoad callback. Receives as argument the loaded application.
- * @param {Function} onProgress onProgress callback, receives progress (percentage) and the xhr onprogress event as parameters.
- */
-App.prototype.loadProgramAsync = function(fname, onLoad, onProgress)
-{
-	var self = this;
+	// Helper to wrap progress event calculation
+	const handleProgress = (event) => {
+		if(onProgress !== undefined) {
+			const progress = event.lengthComputable ? (event.loaded / event.total) * 100 : 0;
+			onProgress(progress, event);
+		}
+	};
 
 	// JSON project
-	if (fname.endsWith(".isp"))
-	{
-		FileSystem.readFile(fname, false, function(data)
-		{
-			var loader = new ObjectLoader();
-			self.program = loader.parse(JSON.parse(data));
-
-			if (onLoad !== undefined)
-			{
-				onLoad(self);
-			}
-		}, function(event)
-		{
-			var progress = event.lengthComputable ? event.loaded / event.total * 100 : 0;
-			onProgress(progress, event);
-		});
+	if(fname.endsWith(".isp")) {
+		const data = await FileSystem.readFile(fname, false, undefined, handleProgress);
+		this.program = await loader.parse(JSON.parse(data));
 	}
 	// Binary project
-	else if (fname.endsWith(".nsp"))
-	{
-		FileSystem.readFileArrayBuffer(fname, false, function(data)
-		{
-			var loader = new ObjectLoader();
-			var pson = new StaticPair();
-
-			self.program = loader.parse(pson.decode(data));
-			if (onLoad !== undefined)
-			{
-				onLoad(self);
-			}
-		}, function(event)
-		{
-			var progress = event.lengthComputable ? event.loaded / event.total * 100 : 0;
-			onProgress(progress, event);
-		});
+	else if(fname.endsWith(".nsp")) {
+		const data = await FileSystem.readFileArrayBuffer(fname, false, undefined, handleProgress);
+		const pson = new StaticPair();
+		this.program = await loader.parse(pson.decode(data));
 	}
+
+	return this;
 };
+
 
 /**
  * Update program state and render to the canvas.
@@ -277,8 +222,7 @@ App.prototype.loadProgramAsync = function(fname, onLoad, onProgress)
  *
  * @method update
  */
-App.prototype.update = function()
-{
+App.prototype.update = function () {
 	this.program.update();
 	this.program.render(this.renderer);
 };
@@ -294,28 +238,24 @@ App.prototype.update = function()
  *
  * @method exit
  */
-App.prototype.exit = function()
-{
+App.prototype.exit = function () {
 	// Destroy events
 	this.events.destroy();
 
 	// Dispose program
-	if (this.program !== null)
-	{
+	if(this.program !== null) {
 		this.program.dispose();
 		this.program = null;
 	}
 
 	// Dispose renderer
-	if (this.renderer !== null)
-	{
+	if(this.renderer !== null) {
 		this.renderer.dispose();
 		this.renderer = null;
 	}
 
 	// Run onExit callback if any
-	if (this.onExit !== undefined)
-	{
+	if(this.onExit !== undefined) {
 		this.onExit();
 	}
 };
@@ -327,13 +267,10 @@ App.prototype.exit = function()
  *
  * @method resume
  */
-App.prototype.resume = function()
-{
-	if (this.program !== null && !this.running)
-	{
+App.prototype.resume = function () {
+	if(this.program !== null && !this.running) {
 		var self = this;
-		this.renderer.setAnimationLoop(function()
-		{
+		this.renderer.setAnimationLoop(function () {
 			self.update();
 		});
 
@@ -346,8 +283,7 @@ App.prototype.resume = function()
  *
  * @method pause
  */
-App.prototype.pause = function()
-{
+App.prototype.pause = function () {
 	this.running = false;
 	this.renderer.setAnimationLoop(null);
 };
@@ -360,8 +296,7 @@ App.prototype.pause = function()
  * @method setCanvas
  * @param {Component} canvas Canvas
  */
-App.prototype.setCanvas = function(canvas)
-{
+App.prototype.setCanvas = function (canvas) {
 	this.canvas = canvas;
 	this.canvasFitWindow = false;
 };
@@ -373,30 +308,25 @@ App.prototype.setCanvas = function(canvas)
  *
  * @method resize
  */
-App.prototype.resize = function()
-{
-	if (this.canvas !== null && this.program !== null && this.renderer !== null)
-	{
+App.prototype.resize = function () {
+	if(this.canvas !== null && this.program !== null && this.renderer !== null) {
 		var width = 1;
 		var height = 1;
 
 		// Automatically fit window
-		if (this.canvasFitWindow)
-		{
+		if(this.canvasFitWindow) {
 			this.canvas.style.width = window.innerWidth + "px";
 			this.canvas.style.height = window.innerHeight + "px";
 			width = window.innerWidth;
 			height = window.innerHeight;
 		}
-		else
-		{
+		else {
 			width = this.canvas.offsetWidth;
 			height = this.canvas.offsetHeight;
 		}
 
 		// Device pixel ratio
-		if (this.program.handlePixelRatio)
-		{
+		if(this.program.handlePixelRatio) {
 			width *= window.devicePixelRatio;
 			height *= window.devicePixelRatio;
 		}
@@ -415,10 +345,8 @@ App.prototype.resize = function()
  * @param {Object} data Data to send
  * @method sendData
  */
-App.prototype.sendData = function(data)
-{
-	if (this.program !== null)
-	{
+App.prototype.sendData = function (data) {
+	if(this.program !== null) {
 		this.program.receiveDataApp(data);
 	}
 };
@@ -431,8 +359,7 @@ App.prototype.sendData = function(data)
  * @method setOnDataReceived
  * @param {Function} callback Function executed whenether the app running sends data to the host
  */
-App.prototype.setOnDataReceived = function(callback)
-{
+App.prototype.setOnDataReceived = function (callback) {
 	this.onDataReceived = callback;
 };
 
@@ -444,8 +371,7 @@ App.prototype.setOnDataReceived = function(callback)
  * @method setOnExit
  * @param {Function} callback onExit callback
  */
-App.prototype.setOnExit = function(callback)
-{
+App.prototype.setOnExit = function (callback) {
 	this.onExit = callback;
 };
 
@@ -455,8 +381,7 @@ App.prototype.setOnExit = function(callback)
  * @method vrAvailable
  * @return {boolean} True if VR mode available
  */
-App.prototype.vrAvailable = function()
-{
+App.prototype.vrAvailable = function () {
 	return this.program !== null && this.program.vrAvailable();
 };
 
@@ -465,21 +390,16 @@ App.prototype.vrAvailable = function()
  *
  * @method toggleVR
  */
-App.prototype.toggleVR = function()
-{
-	if (this.vrAvailable())
-	{
-		if (this.program.xrEnabled)
-		{
+App.prototype.toggleVR = function () {
+	if(this.vrAvailable()) {
+		if(this.program.xrEnabled) {
 			this.program.exitVR();
 		}
-		else
-		{
+		else {
 			this.program.enterVR();
 		}
 	}
-	else
-	{
+	else {
 		console.warn("nunuStudio: Loaded program is not VR enabled.");
 	}
 };
@@ -490,8 +410,7 @@ App.prototype.toggleVR = function()
  * @method arAvailable
  * @return {boolean} True if VR mode available
  */
-App.prototype.arAvailable = function()
-{
+App.prototype.arAvailable = function () {
 	return this.program !== null && this.program.arAvailable();
 };
 
@@ -500,21 +419,16 @@ App.prototype.arAvailable = function()
  *
  * @method toggleAR
  */
-App.prototype.toggleAR = function()
-{
-	if (this.arAvailable())
-	{
-		if (this.program.xrEnabled)
-		{
+App.prototype.toggleAR = function () {
+	if(this.arAvailable()) {
+		if(this.program.xrEnabled) {
 			this.program.exitAR();
 		}
-		else
-		{
+		else {
 			this.program.enterAR();
 		}
 	}
-	else
-	{
+	else {
 		console.warn("nunuStudio: Loaded program is not AR enabled.");
 	}
 };
@@ -525,16 +439,14 @@ App.prototype.toggleAR = function()
  * @method toggleFullscreen
  * @param {Component} element DOM element to go fullscreen by default the rendering canvas is used
  */
-App.prototype.toggleFullscreen = function(element)
-{
+App.prototype.toggleFullscreen = function (element) {
 	var fullscreen = Nunu.isFullscreen();
 
-	if (element === undefined)
-	{
+	if(element === undefined) {
 		element = this.canvas;
 	}
 
 	Nunu.setFullscreen(!fullscreen, element);
 };
 
-export {App};
+export { App };
