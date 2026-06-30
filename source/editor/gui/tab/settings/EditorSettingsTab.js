@@ -10,10 +10,8 @@ import { NumberBox } from "../../../components/input/NumberBox.js";
 import { DropdownList } from "../../../components/input/DropdownList.js";
 import { CheckBox } from "../../../components/input/CheckBox.js";
 
-class EditorSettingsTab extends TabComponent
-{
-	constructor(parent, closeable, container, index)
-	{
+class EditorSettingsTab extends TabComponent {
+	constructor(parent, closeable, container, index) {
 		super(parent, closeable, container, index, Locale.editor, Global.FILE_PATH + "icons/misc/scene.png");
 
 		this.element.style.overflow = "auto";
@@ -32,8 +30,7 @@ class EditorSettingsTab extends TabComponent
 		this.form.addText("Show performance").setAltText("Show performance information in the scene editor.");
 		this.showStats = new CheckBox(this.form);
 		this.showStats.size.set(18, 18);
-		this.showStats.setOnChange(function ()
-		{
+		this.showStats.setOnChange(function () {
 			Editor.settings.general.showStats = self.showStats.getValue();
 		});
 		this.form.add(this.showStats);
@@ -43,8 +40,7 @@ class EditorSettingsTab extends TabComponent
 		this.form.addText("Show grid");
 		this.gridEnabled = new CheckBox(this.form);
 		this.gridEnabled.size.set(18, 18);
-		this.gridEnabled.setOnChange(function ()
-		{
+		this.gridEnabled.setOnChange(function () {
 			Editor.settings.editor.gridEnabled = self.gridEnabled.getValue();
 		});
 		this.form.add(this.gridEnabled);
@@ -56,8 +52,7 @@ class EditorSettingsTab extends TabComponent
 		this.gridSize.size.set(60, 18);
 		this.gridSize.setRange(1.0, Number.MAX_SAFE_INTEGER);
 		this.gridSize.setStep(0.1);
-		this.gridSize.setOnChange(function ()
-		{
+		this.gridSize.setOnChange(function () {
 			Editor.settings.editor.gridSize = self.gridSize.getValue();
 		});
 		this.form.add(this.gridSize);
@@ -69,8 +64,7 @@ class EditorSettingsTab extends TabComponent
 		this.gridSpacing.size.set(60, 18);
 		this.gridSpacing.setRange(1.0, Number.MAX_SAFE_INTEGER);
 		this.gridSpacing.setStep(1.0);
-		this.gridSpacing.setOnChange(function ()
-		{
+		this.gridSpacing.setOnChange(function () {
 			Editor.settings.editor.gridSpacing = self.gridSpacing.getValue();
 		});
 		this.form.add(this.gridSpacing);
@@ -80,8 +74,7 @@ class EditorSettingsTab extends TabComponent
 		this.form.addText("Show axis");
 		this.axisEnabled = new CheckBox(this.form);
 		this.axisEnabled.size.set(18, 18);
-		this.axisEnabled.setOnChange(function ()
-		{
+		this.axisEnabled.setOnChange(function () {
 			Editor.settings.editor.axisEnabled = self.axisEnabled.getValue();
 		});
 		this.form.add(this.axisEnabled);
@@ -91,8 +84,7 @@ class EditorSettingsTab extends TabComponent
 		this.form.addText("Orientation cube");
 		this.cameraRotationCube = new CheckBox(this.form);
 		this.cameraRotationCube.size.set(18, 18);
-		this.cameraRotationCube.setOnChange(function ()
-		{
+		this.cameraRotationCube.setOnChange(function () {
 			Editor.settings.editor.cameraRotationCube = self.cameraRotationCube.getValue();
 		});
 		this.form.add(this.cameraRotationCube);
@@ -104,8 +96,7 @@ class EditorSettingsTab extends TabComponent
 		this.cameraRotationCubeSize.size.set(60, 18);
 		this.cameraRotationCubeSize.setRange(1.0, Number.MAX_SAFE_INTEGER);
 		this.cameraRotationCubeSize.setStep(1.0);
-		this.cameraRotationCubeSize.setOnChange(function ()
-		{
+		this.cameraRotationCubeSize.setOnChange(function () {
 			Editor.settings.editor.cameraRotationCubeSize = self.cameraRotationCubeSize.getValue();
 		});
 		this.form.add(this.cameraRotationCubeSize);
@@ -119,8 +110,7 @@ class EditorSettingsTab extends TabComponent
 		this.cameraDistanceZFar.size.set(60, 18);
 		this.cameraDistanceZFar.setRange(1.0, 10000000.0);
 		this.cameraDistanceZFar.setStep(1000.0);
-		this.cameraDistanceZFar.setOnChange(function ()
-		{
+		this.cameraDistanceZFar.setOnChange(function () {
 			Editor.settings.editor.cameraDistanceZFar = self.cameraDistanceZFar.getValue();
 		});
 		this.form.add(this.cameraDistanceZFar);
@@ -131,8 +121,7 @@ class EditorSettingsTab extends TabComponent
 		this.form.addText("Snap to grid");
 		this.snap = new CheckBox(this.form);
 		this.snap.size.set(18, 18);
-		this.snap.setOnChange(function ()
-		{
+		this.snap.setOnChange(function () {
 			Editor.settings.editor.snap = self.snap.getValue();
 		});
 		this.form.add(this.snap);
@@ -144,8 +133,7 @@ class EditorSettingsTab extends TabComponent
 		this.snapAngle.size.set(60, 18);
 		this.snapAngle.setRange(0.01, 3.14);
 		this.snapAngle.setStep(0.01);
-		this.snapAngle.setOnChange(function ()
-		{
+		this.snapAngle.setOnChange(function () {
 			Editor.settings.editor.snapAngle = self.snapAngle.getValue();
 		});
 		this.form.add(this.snapAngle);
@@ -157,8 +145,7 @@ class EditorSettingsTab extends TabComponent
 		this.transformationSpace.size.set(150, 18);
 		this.transformationSpace.addValue(Locale.local, "local");
 		this.transformationSpace.addValue(Locale.world, "world");
-		this.transformationSpace.setOnChange(function ()
-		{
+		this.transformationSpace.setOnChange(function () {
 			Editor.settings.editor.transformationSpace = self.transformationSpace.getValue();
 		});
 		this.form.add(this.transformationSpace);
@@ -168,8 +155,7 @@ class EditorSettingsTab extends TabComponent
 		this.form.addText("Keep pose move").setAltText("Recalculate the object transformation to keep its global position when it is moved.");
 		this.keepTransformMove = new CheckBox(this.form);
 		this.keepTransformMove.size.set(18, 18);
-		this.keepTransformMove.setOnChange(function ()
-		{
+		this.keepTransformMove.setOnChange(function () {
 			Editor.settings.editor.keepTransformMove = self.keepTransformMove.getValue();
 			Editor.gui.inspector.updateSelection();
 		});
@@ -188,8 +174,7 @@ class EditorSettingsTab extends TabComponent
 		this.form.addText("Show object UUID").setAltText("Show object UUID in the object panel.");
 		this.showUUID = new CheckBox(this.form);
 		this.showUUID.size.set(18, 18);
-		this.showUUID.setOnChange(function ()
-		{
+		this.showUUID.setOnChange(function () {
 			Editor.settings.general.showUUID = self.showUUID.getValue();
 			Editor.gui.inspector.updateSelection();
 		});
@@ -200,13 +185,24 @@ class EditorSettingsTab extends TabComponent
 		this.form.addText("Show object type");
 		this.showType = new CheckBox(this.form);
 		this.showType.size.set(18, 18);
-		this.showType.setOnChange(function ()
-		{
+		this.showType.setOnChange(function () {
 			Editor.settings.general.showType = self.showType.getValue();
 			Editor.gui.inspector.updateSelection();
 		});
 		this.form.add(this.showType);
 		this.form.nextRow();
+
+		// Show type
+		this.form.addText("Show object source");
+		this.showSource = new CheckBox(this.form);
+		this.showSource.size.set(18, 18);
+		this.showSource.setOnChange(function () {
+			Editor.settings.general.showSource = self.showSource.getValue();
+			Editor.gui.inspector.updateSelection();
+		});
+		this.form.add(this.showSource);
+		this.form.nextRow();
+
 
 		// Blank Space
 		this.form.addText("");
@@ -228,8 +224,7 @@ class EditorSettingsTab extends TabComponent
 		this.navigation.addValue(Locale.back, Settings.PLANAR_BACK);
 		this.navigation.addValue(Locale.top, Settings.PLANAR_TOP);
 		this.navigation.addValue(Locale.bottom, Settings.PLANAR_BOTTOM);
-		this.navigation.setOnChange(function ()
-		{
+		this.navigation.setOnChange(function () {
 			Editor.settings.editor.navigation = self.navigation.getValue();
 		});
 		this.form.add(this.navigation);
@@ -239,8 +234,7 @@ class EditorSettingsTab extends TabComponent
 		this.form.addText("Invert Vertical");
 		this.invertNavigationY = new CheckBox(this.form);
 		this.invertNavigationY.size.set(18, 18);
-		this.invertNavigationY.setOnChange(function ()
-		{
+		this.invertNavigationY.setOnChange(function () {
 			Editor.settings.editor.invertNavigationY = self.invertNavigationY.getValue();
 		});
 		this.form.add(this.invertNavigationY);
@@ -250,8 +244,7 @@ class EditorSettingsTab extends TabComponent
 		this.form.addText("Invert Horizontal");
 		this.invertNavigationX = new CheckBox(this.form);
 		this.invertNavigationX.size.set(18, 18);
-		this.invertNavigationX.setOnChange(function ()
-		{
+		this.invertNavigationX.setOnChange(function () {
 			Editor.settings.editor.invertNavigationX = self.invertNavigationX.getValue();
 		});
 		this.form.add(this.invertNavigationX);
@@ -263,8 +256,7 @@ class EditorSettingsTab extends TabComponent
 		this.mouseLookSensitivity.size.set(120, 18);
 		this.mouseLookSensitivity.setRange(0.0001, 0.02);
 		this.mouseLookSensitivity.setStep(0.0001);
-		this.mouseLookSensitivity.setOnChange(function ()
-		{
+		this.mouseLookSensitivity.setOnChange(function () {
 			Editor.settings.editor.mouseLookSensitivity = self.mouseLookSensitivity.getValue();
 		});
 		this.form.add(this.mouseLookSensitivity);
@@ -276,8 +268,7 @@ class EditorSettingsTab extends TabComponent
 		this.mouseMoveSpeed.size.set(120, 18);
 		this.mouseMoveSpeed.setRange(0.0001, 0.01);
 		this.mouseMoveSpeed.setStep(0.0001);
-		this.mouseMoveSpeed.setOnChange(function ()
-		{
+		this.mouseMoveSpeed.setOnChange(function () {
 			Editor.settings.editor.mouseMoveSpeed = self.mouseMoveSpeed.getValue();
 		});
 		this.form.add(this.mouseMoveSpeed);
@@ -289,8 +280,7 @@ class EditorSettingsTab extends TabComponent
 		this.mouseWheelSensitivity.size.set(120, 18);
 		this.mouseWheelSensitivity.setRange(0.0001, 0.01);
 		this.mouseWheelSensitivity.setStep(0.0001);
-		this.mouseWheelSensitivity.setOnChange(function ()
-		{
+		this.mouseWheelSensitivity.setOnChange(function () {
 			Editor.settings.editor.mouseWheelSensitivity = self.mouseWheelSensitivity.getValue();
 		});
 		this.form.add(this.mouseWheelSensitivity);
@@ -300,8 +290,7 @@ class EditorSettingsTab extends TabComponent
 		this.form.addText("Lock mouse");
 		this.lockMouse = new CheckBox(this.form);
 		this.lockMouse.size.set(18, 18);
-		this.lockMouse.setOnChange(function ()
-		{
+		this.lockMouse.setOnChange(function () {
 			Editor.settings.editor.lockMouse = self.lockMouse.getValue();
 		});
 		this.form.add(this.lockMouse);
@@ -311,8 +300,7 @@ class EditorSettingsTab extends TabComponent
 		this.form.addText("Keyboard navigation");
 		this.keyboardNavigation = new CheckBox(this.form);
 		this.keyboardNavigation.size.set(18, 18);
-		this.keyboardNavigation.setOnChange(function ()
-		{
+		this.keyboardNavigation.setOnChange(function () {
 			Editor.settings.editor.keyboardNavigation = self.keyboardNavigation.getValue();
 		});
 		this.form.add(this.keyboardNavigation);
@@ -324,8 +312,7 @@ class EditorSettingsTab extends TabComponent
 		this.keyboardNavigationSpeed.size.set(120, 18);
 		this.keyboardNavigationSpeed.setRange(0.1, 3);
 		this.keyboardNavigationSpeed.setStep(0.1);
-		this.keyboardNavigationSpeed.setOnChange(function ()
-		{
+		this.keyboardNavigationSpeed.setOnChange(function () {
 			Editor.settings.editor.keyboardNavigationSpeed = self.keyboardNavigationSpeed.getValue();
 		});
 		this.form.add(this.keyboardNavigationSpeed);
@@ -343,8 +330,7 @@ class EditorSettingsTab extends TabComponent
 		this.form.addText("Show preview");
 		this.cameraPreviewEnabled = new CheckBox(this.form);
 		this.cameraPreviewEnabled.size.set(18, 18);
-		this.cameraPreviewEnabled.setOnChange(function ()
-		{
+		this.cameraPreviewEnabled.setOnChange(function () {
 			Editor.settings.editor.cameraPreviewEnabled = self.cameraPreviewEnabled.getValue();
 		});
 		this.form.add(this.cameraPreviewEnabled);
@@ -356,8 +342,7 @@ class EditorSettingsTab extends TabComponent
 		this.cameraPreviewSize.size.set(120, 18);
 		this.cameraPreviewSize.setRange(1, 600);
 		this.cameraPreviewSize.setStep(0.05);
-		this.cameraPreviewSize.setOnChange(function ()
-		{
+		this.cameraPreviewSize.setOnChange(function () {
 			Editor.settings.editor.cameraPreviewSize = self.cameraPreviewSize.getValue();
 		});
 		this.form.add(this.cameraPreviewSize);
@@ -371,8 +356,7 @@ class EditorSettingsTab extends TabComponent
 		this.cameraPreviewPosition.addValue(Locale.bottomLeft, Viewport.BOTTOM_LEFT);
 		this.cameraPreviewPosition.addValue(Locale.topRight, Viewport.TOP_RIGHT);
 		this.cameraPreviewPosition.addValue(Locale.topLeft, Viewport.TOP_LEFT);
-		this.cameraPreviewPosition.setOnChange(function ()
-		{
+		this.cameraPreviewPosition.setOnChange(function () {
 			Editor.settings.editor.cameraPreviewPosition = self.cameraPreviewPosition.getValue();
 		});
 		this.form.add(this.cameraPreviewPosition);
@@ -392,8 +376,7 @@ class EditorSettingsTab extends TabComponent
 		this.filePreviewSize.size.set(60, 18);
 		this.filePreviewSize.setRange(50, 200);
 		this.filePreviewSize.setStep(1);
-		this.filePreviewSize.setOnChange(function ()
-		{
+		this.filePreviewSize.setOnChange(function () {
 			Editor.settings.general.filePreviewSize = self.filePreviewSize.getValue();
 			Editor.updateSettings();
 		});
@@ -403,12 +386,12 @@ class EditorSettingsTab extends TabComponent
 		this.form.updateInterface();
 	}
 
-	activate()
-	{
+	activate() {
 		// Inspector
 		this.filePreviewSize.setValue(Editor.settings.general.filePreviewSize);
 		this.showUUID.setValue(Editor.settings.general.showUUID);
 		this.showType.setValue(Editor.settings.general.showType);
+		this.showSource.setValue(Editor.settings.general.showSource);
 		this.showStats.setValue(Editor.settings.general.showStats);
 
 		// Editor
@@ -443,8 +426,7 @@ class EditorSettingsTab extends TabComponent
 		this.transformationSpace.setValue(Editor.settings.editor.transformationSpace);
 	}
 
-	updateSize()
-	{
+	updateSize() {
 		super.updateSize();
 
 		this.form.size.copy(this.size);

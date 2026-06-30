@@ -58,6 +58,7 @@ class Settings {
 			showStats: true,
 			showUUID: true,
 			showType: true,
+			showSource: true,
 			immediateMode: false,
 			historySize: 20,
 			ignorePixelRatio: false
