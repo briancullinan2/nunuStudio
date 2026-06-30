@@ -12,7 +12,7 @@ import { ThreeMFLoader } from "three/examples/jsm/loaders/3MFLoader";
 import { AssimpLoader } from "../editor/loaders/AssimpLoader.js";
 import { TDSLoader } from "three/examples/jsm/loaders/TDSLoader";
 import { ColladaLoader } from "three/examples/jsm/loaders/ColladaLoader";
-import { DRACOLoader } from "three/examples/jsm/loaders/DRACOLoader";
+import { DRACOLoader } from "../editor/loaders/DRACOLoader.js";
 import { GLTFLoader } from "three/examples/jsm/loaders/GLTFLoader";
 import { PLYLoader } from "three/examples/jsm/loaders/PLYLoader";
 import { VTKLoader } from "three/examples/jsm/loaders/VTKLoader";
@@ -642,7 +642,7 @@ Loaders.loadModel = async function (file, parent, successCallback, errorCallback
 			reader.onload = function () {
 				try {
 					let dracoLoader = new DRACOLoader();
-					dracoLoader.setDecoderPath(Global.FILE_PATH + "wasm/draco/");
+					dracoLoader.setDecoderPath(Global.FILE_PATH + "wasm/draco/gltf/");
 					dracoLoader.setDecoderConfig({ type: "wasm" });
 
 					let loader = new GLTFLoader();

@@ -1,9 +1,11 @@
+import { Vector2 } from "three";
 import { AnimationTimer } from "../../../core/utils/timer/AnimationTimer.js";
 import { EventManager } from "../../../core/utils/EventManager.js";
 import { Text } from "../Text.js";
 import { ImageContainer } from "../ImageContainer.js";
 import { Component } from "../Component.js";
 import { Global } from "../../Global.js";
+import { DocumentBody } from "../DocumentBody.js";
 
 /**
  * Loading box, used to force the user to wait for data from a request.
@@ -22,6 +24,7 @@ class LoadingModal extends Component {
 
 		this.element.style.backgroundColor = "var(--color-black-alpha-20)";
 		this.element.style.zIndex = "200";
+		this.element.classList.add('loading-panel');
 
 		/**
 		 * Counter keeps the amount of requests to show the loadingBox.
@@ -44,6 +47,8 @@ class LoadingModal extends Component {
 		this.text = new Text(this);
 		this.text.setText("Loading data");
 		this.text.setStyle("color", "var(--color-light)");
+		this.text.element.style.overflow = "visible";
+		this.text.span.style.overflow = "visible";
 
 		/**
 		 * Message presented in the loading box.
@@ -119,7 +124,7 @@ class LoadingModal extends Component {
 	}
 
 	updateSize() {
-		this.size.copy(this.parent.size);
+		this.size.copy(new Vector2(DocumentBody.innerWidth, DocumentBody.innerHeight));
 
 		super.updateSize();
 
