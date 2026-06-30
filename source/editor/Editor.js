@@ -547,7 +547,7 @@ Editor.isDefaultScene = function () {
 };
 
 
-Editor.finishAddingAsset = async function (object3D) {
+Editor.finishAddingAsset = async function (source, object3D) {
 
 	if(!(object3D && Editor.program && object3D instanceof Object3D)) {
 		return;
@@ -560,6 +560,7 @@ Editor.finishAddingAsset = async function (object3D) {
 
 		// Steal Material references
 		if(child.material) {
+			child.material.source = source;
 			mats = Array.isArray(child.material) ? child.material : [child.material];
 			for(i = 0; i < mats.length; i++) {
 				if(mats[i].uuid && !Editor.program.materials[mats[i].uuid]) {
@@ -572,12 +573,14 @@ Editor.finishAddingAsset = async function (object3D) {
 		if(child.geometry && child.geometry.uuid) {
 			if(!Editor.program.geometries[child.geometry.uuid]) {
 				child.geometry.insertable = true;
+				child.geometry.source = source;
 				Editor.program.geometries[child.geometry.uuid] = child.geometry;
 			}
 		}
 
 		// Steal Textures if tied to standard diffuse maps, normals, etc.
 		if(child.material) {
+			child.material.source = source;
 			mats = Array.isArray(child.material) ? child.material : [child.material];
 			var mapTypes = ["map", "bumpMap", "normalMap", "specularMap", "emissiveMap", "roughnessMap", "metalnessMap"];
 
@@ -617,8 +620,12 @@ Editor.addAsset = async function (object3D) {
 	if(object3D instanceof File) {
 		const { Loaders } = await import("./Loaders.js");
 
-		await Loaders.loadModel(object3D, null, this.finishAddingAsset);
-	}
+		await Loaders.loadModel(object3D, null, this.finishAddingAsset.bind(this, object3D.source));
+	} else
+
+		if(object3D instanceof Object3D) {
+			await this.finishAddingAsset(object3D.source, object3D);
+		}
 
 };
 

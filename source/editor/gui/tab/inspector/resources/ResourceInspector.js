@@ -54,8 +54,8 @@ class ResourceInspector extends Inspector {
 			this.type.setText(this.object.type);
 		}
 
-		if(this.type !== undefined) {
-			this.source.setText(this.object.source);
+		if(this.source !== undefined) {
+			this.source.setHtml(`<a href="${this.object.source}>${this.object.source?.split('/').slice(-2)}</a>`);
 		}
 	}
 
