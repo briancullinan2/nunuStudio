@@ -1,13 +1,13 @@
-import { DirectionalLight, AmbientLight, Mesh, MeshPhongMaterial, BufferGeometry, Vector3 } from "three";
+import { Mesh, MeshNormalMaterial, BufferGeometry, Vector3, Vector2 } from "three";
 import { OrthographicCamera } from "../../../core/objects/cameras/OrthographicCamera.js";
 import { PreviewRenderer } from "./PreviewRenderer.js";
 
 /**
  * The geometry renderer is used to generate preview thumbnails.
  *
- * A basic phong material is used to preview the geometry.
+ * A normal material is used to maximize spatial feature contrast for computer vision models.
  *
- * @class TextureRenderer
+ * @class GeometryRenderer
  * @extends {PreviewRenderer}
  */
 class GeometryRenderer extends PreviewRenderer {
@@ -16,12 +16,8 @@ class GeometryRenderer extends PreviewRenderer {
 
 		this.camera = new OrthographicCamera(3, 1);
 
-		var directional = new DirectionalLight(0x777777, 1.0);
-		directional.position.set(3000, 10000, 400);
-		this.scene.add(directional);
-		this.scene.add(new AmbientLight(0x888888));
-
-		this.mesh = new Mesh(new BufferGeometry(), new MeshPhongMaterial({ color: 0xFFFFFF }));
+		// Replaced flat Phong material with Normal Material to generate dense structural feature gradients
+		this.mesh = new Mesh(new BufferGeometry(), new MeshNormalMaterial());
 		this.scene.add(this.mesh);
 	}
 
@@ -39,14 +35,31 @@ class GeometryRenderer extends PreviewRenderer {
 		this.mesh.position.copy(center).multiplyScalar(-1);
 
 		var radius = sphere.radius;
-		this.camera.size = radius * 2 * 1.25;
+
+		// Coverage math: 1 / 0.9 = 1.1111... to target exactly 90% frame occupation
+		this.camera.size = radius * 2 * 1.111;
 
 		var angle = Math.PI / 6;
-		var distance = 50;
 
-		// Sanitize context pipeline states before execution
-		var width = this.canvas.width;
-		var height = this.canvas.height;
+		// Dynamic camera distance ensures the object fits perfectly within near/far clipping planes
+		var distance = radius * 2 + 10;
+
+		// Save original renderer state to prevent breaking the main app loop
+		var originalPixelRatio = this.renderer.getPixelRatio();
+		var originalSize = new Vector2(0, 0);
+		this.renderer.getSize(originalSize);
+		var originalAutoClear = this.renderer.autoClear;
+
+		// Upscale internal canvas backbuffer resolution for high-fidelity data extraction
+		var scaleFactor = 2; // Set higher (e.g., 2 or 3) for oversized crisp feature tracking
+		var width = this.canvas.width * scaleFactor;
+		var height = this.canvas.height * scaleFactor;
+
+		if(this.renderer.getPixelRatio() !== 1) {
+			this.renderer.setPixelRatio(1);
+		}
+		this.renderer.setSize(width, height, false);
+
 		this.renderer.setViewport(0, 0, width, height);
 		this.renderer.setScissor(0, 0, width, height);
 		this.renderer.setScissorTest(false);
@@ -62,6 +75,11 @@ class GeometryRenderer extends PreviewRenderer {
 		this.renderer.render(this.scene, this.camera);
 
 		onRender(this.canvas.toDataURL());
+
+		// Restore original renderer state
+		this.renderer.setPixelRatio(originalPixelRatio);
+		this.renderer.setSize(originalSize.width, originalSize.height, false);
+		this.renderer.autoClear = originalAutoClear;
 	}
 
 	renderQuad(geometry, onRender) {
@@ -78,18 +96,32 @@ class GeometryRenderer extends PreviewRenderer {
 		this.mesh.position.copy(center).multiplyScalar(-1);
 
 		var radius = sphere.radius;
-		var distance = 50;
+		var distance = radius * 2 + 10;
 
-		this.camera.size = radius * 2 * 1.35;
+		// Target exactly 90% viewport coverage inside individual split screens
+		this.camera.size = radius * 2 * 1.111;
 
-		var width = this.canvas.width;
-		var height = this.canvas.height;
+		// Save original renderer state
+		var originalPixelRatio = this.renderer.getPixelRatio();
+		var originalSize = new Vector2(0, 0);
+		this.renderer.getSize(originalSize);
+		var originalAutoClear = this.renderer.autoClear;
+
+		// Upscale internal canvas backbuffer resolution for high-fidelity data extraction
+		var scaleFactor = 2;
+		var width = this.canvas.width * scaleFactor;
+		var height = this.canvas.height * scaleFactor;
+
+		if(this.renderer.getPixelRatio() !== 1) {
+			this.renderer.setPixelRatio(1);
+		}
+		this.renderer.setSize(width, height, false);
+
 		var halfWidth = Math.floor(width / 2);
 		var halfHeight = Math.floor(height / 2);
 
 		this.renderer.autoClear = false;
 
-		// Ensure viewport covers full bounds for the global clear operation
 		this.renderer.setViewport(0, 0, width, height);
 		this.renderer.setScissor(0, 0, width, height);
 		this.renderer.setScissorTest(false);
@@ -135,27 +167,29 @@ class GeometryRenderer extends PreviewRenderer {
 			this.renderer.render(this.scene, this.camera);
 		}
 
-		// Clean up and restore state context boundaries completely
-		this.renderer.setViewport(0, 0, width, height);
-		this.renderer.setScissor(0, 0, width, height);
-		this.renderer.setScissorTest(false);
-		this.renderer.autoClear = true;
-
 		onRender(this.canvas.toDataURL());
+
+		// Restore original renderer state
+		this.renderer.setViewport(0, 0, originalSize.width, originalSize.height);
+		this.renderer.setScissor(0, 0, originalSize.width, originalSize.height);
+		this.renderer.setScissorTest(false);
+		this.renderer.setPixelRatio(originalPixelRatio);
+		this.renderer.setSize(originalSize.width, originalSize.height, false);
+		this.renderer.autoClear = originalAutoClear;
 	}
 
-	static renderQuad = function (material, onRender) {
+	static renderQuad = function (geometry, onRender) {
 		if(GeometryRenderer.instance === undefined) {
 			return;
 		}
-		GeometryRenderer.instance.renderQuad(material, onRender);
+		GeometryRenderer.instance.renderQuad(geometry, onRender);
 	};
 
-	static render = function (material, onRender) {
+	static render = function (geometry, onRender) {
 		if(GeometryRenderer.instance === undefined) {
 			return;
 		}
-		GeometryRenderer.instance.render(material, onRender);
+		GeometryRenderer.instance.render(geometry, onRender);
 	};
 }
 
