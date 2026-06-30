@@ -69,16 +69,23 @@ Editor.initialize = async function () {
 
 	if(Nunu.runningOnDesktop()) {
 		var gui = window.require("nw.gui");
+		var win = gui.Window.get(); // Cache the window reference
+
 		Editor.clipboard = gui.Clipboard.get();
 		Editor.args = gui.App.argv;
 
-		// Handle window close event
-		gui.Window.get().on("close", function () {
+		// Handle NW.js window close event correctly
+		win.on("close", function () {
+			// If it's a blank/default scene, bypass the prompt and force close
 			if(Editor.isDefaultScene()) {
-				return false;
+				win.close(true); // 'true' forces the close, bypassing this listener
+				return;
 			}
+
+			// Otherwise, ask the user
 			if(confirm(Locale.unsavedChangesExit)) {
-				Editor.exit();
+				Editor.exit();    // Run your internal cleanup if necessary
+				win.close(true); // Force close the native desktop window
 			}
 		});
 
@@ -110,13 +117,23 @@ Editor.initialize = async function () {
 
 		// Store settings when exiting the page
 		window.onbeforeunload = function (event) {
+			// 1. Save settings
 			Editor.settings.store();
+
+			// 2. If it's the default scene, let them leave without a prompt
 			if(Editor.isDefaultScene()) {
-				return false;
+				// To allow normal exit, DO NOT return false.
+				// Returning a truthy or falsy value here can trigger the prompt in old browsers.
+				// Simply return undefined (or nothing) to let the browser close.
+				return;
 			}
-			let message = Locale.unsavedChangesExit;
-			event.returnValue = message;
-			return message;
+
+			// 3. Trigger the browser confirmation dialog
+			const message = Locale.unsavedChangesExit || "Unsaved changes";
+
+			event.preventDefault(); // Required by some modern specifications
+			event.returnValue = message; // Required by Chrome / Webkit
+			return message; // Required by Firefox / Safari
 		};
 	}
 

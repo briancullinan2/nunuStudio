@@ -62,6 +62,34 @@ class Inspector extends Component {
 		this.form.updateInterface();
 	}
 
+
+	getSourceUrl(source) {
+		if(source || this.object.source) {
+			try {
+				const url = new URL(source || this.object.source);
+				const host = url.host; // e.g., "example.com" or "localhost:8080"
+
+				// Extract the filename from the end of the pathname
+				const segments = url.pathname.split('/').filter(Boolean);
+				const fileName = segments.length > 0 ? segments[segments.length - 1] : "";
+
+				// Assemble the pretty string: "example.com/.../file.glb"
+				const displayString = fileName ? `${host}/.../${fileName}` : host;
+
+				return `<a target="_new" href="${this.object.source}" title="${this.object.source}">${displayString}</a>`;
+			} catch(e) {
+				// Fallback if this.object.source is a relative path (not a full URL)
+				const segments = this.object.source.split('/').filter(Boolean);
+				const fileName = segments[segments.length - 1] || "";
+				const folderName = segments[segments.length - 2] || "";
+				const displayString = folderName ? `.../${folderName}/${fileName}` : fileName;
+
+				return `<a target="_new" href="${this.object.source}" title="${this.object.source}">${displayString}</a>`;
+			}
+		}
+		return '';
+	}
+
 }
 
 export { Inspector };

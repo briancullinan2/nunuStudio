@@ -178,7 +178,7 @@ class ObjectInspector extends Inspector {
 		}
 
 		if(this.source !== undefined) {
-			this.source.setHtml(`<a href="${this.object.source}>${this.object.source?.split('/').slice(-2)}</a>`);
+			this.source.setHtml(this.getSourceUrl(this.object.source));
 		}
 
 		this.position.setValue(this.object.position);

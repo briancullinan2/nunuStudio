@@ -87,9 +87,16 @@ class GeometryAsset extends Asset {
 
 			var image = this.image;
 
-			GeometryRenderer.render(this.asset, function (url) {
-				image.src = url;
-			});
+			if(this.asset.insertable) {
+				GeometryRenderer.renderQuad(this.asset, function (url) {
+					image.src = url;
+				});
+			} else {
+				GeometryRenderer.render(this.asset, function (url) {
+					image.src = url;
+				});
+			}
+
 		}
 	}
 
