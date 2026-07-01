@@ -29,6 +29,7 @@ import { Q3MapLoader } from "./loaders/Q3MapLoader.js";
 import { Q3BSPLoader } from "./loaders/Q3BSPLoader.js";
 import { IQMLoader } from "./loaders/IQMLoader.js";
 import { MD3Loader } from "./loaders/MD3Loader.js";
+import { PK3Loader } from "./loaders/PK3Loader.js";
 import { InstancedMesh } from "../core/objects/mesh/InstancedMesh.js";
 import { FileSystem } from "../core/FileSystem.js";
 import { Nunu } from "../core/Nunu.js";
@@ -517,6 +518,35 @@ Loaders.loadModel = async function (file, parent, successCallback, errorCallback
 				}
 			};
 			reader.readAsText(file);
+		}
+
+		// Quake 3 PK3 Asset Archive Pack
+		else if(extension === "pk3") {
+			let reader = new FileReader();
+			reader.onload = async function () {
+				try {
+					console.log(`nunuStudio: Processing incoming PK3 package archive drop...`);
+					let loader = new PK3Loader();
+
+					// Extract virtual contents and compute the first active BSP model group
+					let mapGroup = await loader.parse(reader.result);
+					mapGroup.name = FileSystem.getFileName(name);
+
+					// Standard runtime mesh cleanups
+					mapGroup.traverse(function (child) {
+						if(child.isMesh) {
+							child.frustumCulled = false;
+							child.matrixAutoUpdate = true;
+						}
+					});
+
+					await callback(mapGroup, parent);
+				}
+				catch(e) {
+					errorCondition(e);
+				}
+			};
+			reader.readAsArrayBuffer(file);
 		}
 
 		// Wavefront OBJ
