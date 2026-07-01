@@ -419,16 +419,23 @@ Loaders.loadModel = async function (file, parent, successCallback, errorCallback
 				try {
 					let loader = new Q3BSPLoader();
 
-					// Set runtime context paths relative to current asset source targets
 					if(file.path) {
 						let baseDir = file.path.substring(0, file.path.lastIndexOf('/'));
 						loader.setBaseFolder(baseDir);
 					}
 
-					// Parse the ArrayBuffer via synchronous main-thread or worker pipeline routing
+					// 1. Force a clean synchronous or completely awaited generation pass.
+					// Ensure parse() natively appends objects to its group and returns them completed.
 					let bspGroup = loader.parse(reader.result);
 					bspGroup.name = FileSystem.getFileName(name);
 
+					// Ensure metadata parameters match expected nunuStudio serializable structures
+					bspGroup.type = "Group";
+					bspGroup.folded = false;
+					bspGroup.locked = false;
+
+					// 2. Pass the fully populated group to the asset transaction framework.
+					// This allows the ResourceCrawler to detect both the structures and the geometries simultaneously.
 					await callback(bspGroup, parent);
 				}
 				catch(e) {

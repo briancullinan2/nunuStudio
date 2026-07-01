@@ -89,6 +89,7 @@ export class Q3GLShaderLoader {
 			const uniforms = {
 				time: { value: 0.0 },
 				map: { value: this.fallbackTexture },
+				texture: { value: this.fallbackTexture }, // Alias target to catch Toji's custom scripts
 				lightmap: { value: this.lightmapTexture || this.whiteTexture }
 			};
 
@@ -252,41 +253,60 @@ export class Q3GLShaderLoader {
 
 	getDefaultVertexShader() {
 		return `
-            attribute vec2 lightCoord;
-            varying vec2 vTexCoord;
-            varying vec2 vLightmapCoord;
-            varying vec4 vColor;
-            void main() {
-                vTexCoord = uv;
-                vLightmapCoord = lightCoord;
-                vColor = color;
-                gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0);
-            }
-        `;
+        // Explicitly map Toji's expected layout variables to internal Three.js hooks
+        attribute vec2 lightCoord;
+
+        varying vec2 vTexCoord;
+        varying vec2 vLightmapCoord;
+        varying vec4 vColor;
+
+        void main() {
+            vTexCoord = uv;
+            vLightmapCoord = lightCoord;
+            vColor = color;
+            gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0);
+        }
+    `;
 	}
 
 	getDefaultFragmentShader(stage) {
 		if(stage.isLightmap) {
 			return `
-                varying vec2 vTexCoord;
-                varying vec4 vColor;
-                uniform sampler2D map;
-                void main() {
-                    vec4 diffuseColor = texture2D(map, vTexCoord);
-                    gl_FragColor = vec4(diffuseColor.rgb * vColor.rgb, diffuseColor.a);
-                }
-            `;
-		}
-		return `
+            precision highp float;
             varying vec2 vTexCoord;
-            varying vec2 vLightmapCoord;
+            varying vec4 vColor;
+
+            // Declare both mappings so Toji's parsed code and your fallbacks resolve
             uniform sampler2D map;
-            uniform sampler2D lightmap;
+            uniform sampler2D texture;
+
             void main() {
+                // Safely alias whichever sampler uniform is populated
                 vec4 diffuseColor = texture2D(map, vTexCoord);
-                vec4 lightColor = texture2D(lightmap, vLightmapCoord);
-                gl_FragColor = vec4(diffuseColor.rgb * lightColor.rgb, diffuseColor.a);
+                if (diffuseColor.a == 0.0) {
+                    diffuseColor = texture2D(texture, vTexCoord);
+                }
+                gl_FragColor = vec4(diffuseColor.rgb * vColor.rgb, diffuseColor.a);
             }
         `;
+		}
+		return `
+        precision highp float;
+        varying vec2 vTexCoord;
+        varying vec2 vLightmapCoord;
+
+        uniform sampler2D map;
+        uniform sampler2D texture;
+        uniform sampler2D lightmap;
+
+        void main() {
+            vec4 diffuseColor = texture2D(map, vTexCoord);
+            if (diffuseColor.rgb == vec3(0.0) && diffuseColor.a == 0.0) {
+                diffuseColor = texture2D(texture, vTexCoord);
+            }
+            vec4 lightColor = texture2D(lightmap, vLightmapCoord);
+            gl_FragColor = vec4(diffuseColor.rgb * lightColor.rgb, diffuseColor.a);
+        }
+    `;
 	}
 }

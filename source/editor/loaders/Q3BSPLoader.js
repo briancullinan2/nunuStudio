@@ -411,6 +411,7 @@ function extractSurfaceGeometry(meshData, s) {
 	let subPositions = [];
 	let subNormals = [];
 	let subUvs = [];
+	let subLightCoords = []; // Add container array
 	let subColors = [];
 
 	let vertMap = {};
@@ -428,6 +429,10 @@ function extractSurfaceGeometry(meshData, s) {
 
 			subPositions.push(rawVertices[idx], rawVertices[idx + 2], -rawVertices[idx + 1]);
 			subUvs.push(rawVertices[idx + 3], 1.0 - rawVertices[idx + 4]);
+
+			// Extract lightmap coordinate slots (floats 5 and 6)
+			subLightCoords.push(rawVertices[idx + 5], rawVertices[idx + 6]);
+
 			subNormals.push(rawVertices[idx + 7], rawVertices[idx + 9], -rawVertices[idx + 8]);
 			subColors.push(rawVertices[idx + 10], rawVertices[idx + 11], rawVertices[idx + 12], rawVertices[idx + 13]);
 
@@ -445,6 +450,7 @@ function extractSurfaceGeometry(meshData, s) {
 		positions: new Float32Array(subPositions),
 		normals: new Float32Array(subNormals),
 		uvs: new Float32Array(subUvs),
+		lightCoords: new Float32Array(subLightCoords), // Include in output signature
 		colors: new Float32Array(subColors),
 		indices: subIndices
 	};
@@ -641,6 +647,10 @@ export class Q3BSPLoader extends THREE.Loader {
 		geometry.setAttribute("normal", new THREE.Float32BufferAttribute(surf.normals, 3));
 		geometry.setAttribute("uv", new THREE.Float32BufferAttribute(surf.uvs, 2));
 		geometry.setAttribute("color", new THREE.Float32BufferAttribute(surf.colors, 4));
+		if(surf.lightCoords && surf.lightCoords.length > 0) {
+			geometry.setAttribute('lightCoord', new THREE.BufferAttribute(surf.lightCoords, 2));
+		}
+
 		geometry.setIndex(surf.indices);
 
 		geometry.computeVertexNormals();
