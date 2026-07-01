@@ -2,6 +2,7 @@ import { PerspectiveCamera, Raycaster, Vector2, Scene, PlaneGeometry, RGBAFormat
 import { Texture } from "../../../../../core/texture/Texture.js";
 import { Viewport } from "../../../../../core/objects/cameras/Viewport.js";
 import { Global } from "../../../../Global.js";
+import { DocumentBody } from "../../../../components/DocumentBody.js";
 
 /**
  * Orietantion cube can be used to preview and change the rotation of an object.
@@ -122,10 +123,10 @@ class OrientationCube {
 	 */
 	raycast(mouse, canvas, isDragging) {
 		var pointer = mouse;
-
-		if(canvas !== undefined && canvas !== null && canvas.clientWidth !== 0 && canvas.clientHeight !== 0) {
-			var ratioX = canvas.width / canvas.clientWidth;
-			var ratioY = canvas.height / canvas.clientHeight;
+		const doc = DocumentBody;
+		if(canvas !== undefined && canvas !== null && doc.canvasWidth !== 0 && doc.canvasHeight !== 0) {
+			var ratioX = canvas.width / doc.canvasWidth;
+			var ratioY = canvas.height / doc.canvasHeight;
 
 			if(ratioX !== 1 || ratioY !== 1) {
 				this.rayPointer.position.set(mouse.position.x * ratioX, mouse.position.y * ratioY);

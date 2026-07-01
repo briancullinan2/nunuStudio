@@ -11,7 +11,6 @@ import {
  */
 class ShaderTokenizer {
 	constructor(src) {
-		// Strip out comments
 		src = src.replace(/\/\/.*$/mg, '');
 		src = src.replace(/\/\*[^*\/]*\*\//mg, '');
 		this.tokens = src.match(/[^\s\n\r\"]+/mg);
@@ -434,18 +433,21 @@ export class Q3ShaderLoader {
 		builder.addLines(['vec4 worldPosition = modelViewMatrix * vec4(defPosition, 1.0);']);
 		builder.addLines(['vColor = color;']);
 
+		// FIX: Create a mutable local texture coordinate space to manipulate modifications safely
+		builder.addLines(['vec2 texCoord = vec2(0.0);']);
+
 		if(stage.tcGen === 'environment') {
 			builder.addLines([
 				'vec3 viewer = normalize(-worldPosition.xyz);',
 				'float d = dot(normal, viewer);',
 				'vec3 reflected = normal * 2.0 * d - viewer;',
-				'vTexCoord = vec2(0.5, 0.5) + reflected.xy * 0.5;'
+				'texCoord = vec2(0.5, 0.5) + reflected.xy * 0.5;'
 			]);
 		} else {
 			if(stage.isLightmap) {
-				builder.addLines(['vTexCoord = lightCoord;']);
+				builder.addLines(['texCoord = lightCoord;']);
 			} else {
-				builder.addLines(['vTexCoord = uv;']);
+				builder.addLines(['texCoord = uv;']);
 			}
 		}
 
@@ -455,41 +457,44 @@ export class Q3ShaderLoader {
 				case 'rotate':
 					builder.addLines([
 						'float r = ' + tcMod.angle.toFixed(4) + ' * time;',
-						'vTexCoord -= vec2(0.5, 0.5);',
-						'vTexCoord = vec2(vTexCoord.s * cos(r) - vTexCoord.t * sin(r), vTexCoord.t * cos(r) + vTexCoord.s * sin(r));',
-						'vTexCoord += vec2(0.5, 0.5);',
+						'texCoord -= vec2(0.5, 0.5);',
+						'texCoord = vec2(texCoord.s * cos(r) - texCoord.t * sin(r), texCoord.t * cos(r) + texCoord.s * sin(r));',
+						'texCoord += vec2(0.5, 0.5);',
 					]);
 					break;
 				case 'scroll':
 					builder.addLines([
-						'vTexCoord += vec2(' + tcMod.sSpeed.toFixed(4) + ' * time, ' + tcMod.tSpeed.toFixed(4) + ' * time);'
+						'texCoord += vec2(' + tcMod.sSpeed.toFixed(4) + ' * time, ' + tcMod.tSpeed.toFixed(4) + ' * time);'
 					]);
 					break;
 				case 'scale':
 					builder.addLines([
-						'vTexCoord *= vec2(' + tcMod.scaleX.toFixed(4) + ', ' + tcMod.scaleY.toFixed(4) + ');'
+						'texCoord *= vec2(' + tcMod.scaleX.toFixed(4) + ', ' + tcMod.scaleY.toFixed(4) + ');'
 					]);
 					break;
 				case 'stretch':
 					builder.addWaveform('stretchWave', tcMod.waveform);
 					builder.addLines([
 						'stretchWave = 1.0 / stretchWave;',
-						'vTexCoord *= stretchWave;',
-						'vTexCoord += vec2(0.5 - (0.5 * stretchWave), 0.5 - (0.5 * stretchWave));',
+						'texCoord *= stretchWave;',
+						'texCoord += vec2(0.5 - (0.5 * stretchWave), 0.5 - (0.5 * stretchWave));',
 					]);
 					break;
 				case 'turb': {
 					const tName = 'turbTime' + i;
 					builder.addLines([
 						'float ' + tName + ' = ' + tcMod.turbulance.phase.toFixed(4) + ' + time * ' + tcMod.turbulance.freq.toFixed(4) + ';',
-						'vTexCoord.s += sin( ( ( position.x + position.z ) * 1.0 / 128.0 * 0.125 + ' + tName + ' ) * 6.283) * ' + tcMod.turbulance.amp.toFixed(4) + ';',
-						'vTexCoord.t += sin( ( position.y * 1.0 / 128.0 * 0.125 + ' + tName + ' ) * 6.283) * ' + tcMod.turbulance.amp.toFixed(4) + ';'
+						'texCoord.s += sin( ( ( position.x + position.z ) * 1.0 / 128.0 * 0.125 + ' + tName + ' ) * 6.283) * ' + tcMod.turbulance.amp.toFixed(4) + ';',
+						'texCoord.t += sin( ( position.y * 1.0 / 128.0 * 0.125 + ' + tName + ' ) * 6.283) * ' + tcMod.turbulance.amp.toFixed(4) + ';'
 					]);
 				} break;
 				default:
 					break;
 			}
 		}
+
+		// FIX: Assign final mutations out to the proper varying address context
+		builder.addLines(['vTexCoord = texCoord;']);
 
 		switch(stage.alphaGen) {
 			case 'lightingspecular':
@@ -581,7 +586,7 @@ export class Q3ShaderLoader {
 }
 
 /**
- * Shader Builder Utility (Updated to standard GLSL ES 300 / compatible hooks)
+ * Shader Builder Utility
  */
 class ShaderBuilder {
 	constructor() {

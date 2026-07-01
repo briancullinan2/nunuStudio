@@ -21,7 +21,15 @@ var DocumentBody =
 	_size: new Vector2(0, 0),
 	// Top-level layout cache memory object to eliminate browser style/layout thrashing reflows
 	innerWidth: window.innerWidth,
-	innerHeight: window.innerHeight
+	innerHeight: window.innerHeight,
+	setCanvas: function (canvas) {
+		DocumentBody.canvas = canvas;
+		const rect = DocumentBody.canvas.getBoundingClientRect();
+		DocumentBody.canvasTop = rect.top;
+		DocumentBody.canvasLeft = rect.left;
+		DocumentBody.canvasWidth = rect.width;
+		DocumentBody.canvasHeight = rect.height;
+	}
 };
 
 Object.defineProperties(DocumentBody,
@@ -41,6 +49,15 @@ Object.defineProperties(DocumentBody,
 var layoutObserver = new ResizeObserver(function (entries) {
 	DocumentBody.innerWidth = document.body.clientWidth || window.innerWidth;
 	DocumentBody.innerHeight = document.body.clientHeight || window.innerHeight;
+	DocumentBody.canvas ||= DocumentBody.element.querySelector('canvas');
+	if(DocumentBody.canvas) {
+		const rect = DocumentBody.canvas.getBoundingClientRect();
+		DocumentBody.canvasTop = rect.top;
+		DocumentBody.canvasLeft = rect.left;
+		DocumentBody.canvasWidth = rect.width;
+		DocumentBody.canvasHeight = rect.height;
+	}
+
 });
 layoutObserver.observe(document.body);
 

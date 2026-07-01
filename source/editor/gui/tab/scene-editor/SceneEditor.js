@@ -1,3 +1,4 @@
+import { DocumentBody } from "../../../components/DocumentBody.js";
 import { RendererCanvas } from "../../../components/RendererCanvas.js";
 import { TabComponent } from "../../../components/tabs/TabComponent.js";
 import {
@@ -71,9 +72,11 @@ class SceneEditor extends TabComponent {
 				self.scene.resize(width, height);
 			}
 		};
+		DocumentBody.canvas = this.canvas;
 		this.canvas.resetCanvas = function () {
 			RendererCanvas.prototype.resetCanvas.call(this);
 
+			DocumentBody.setCanvas(this.canvas);
 			self.transform.setCanvas(this.canvas);
 			self.mouse.setCanvas(this.canvas);
 			self.fpsGraph.setCanvas(this.canvas, Editor.settings.render.maxFpsRate);

@@ -57,14 +57,12 @@ export class Q3GLShaderLoader {
 	}
 
 	initFallbackTextures() {
-		// Create 1x1 solid white canvas data texture replacement
 		const whiteData = new Uint8Array([255, 255, 255, 255]);
 		this.whiteTexture = new DataTexture(whiteData, 1, 1, RGBAFormat, UnsignedByteType);
 		this.whiteTexture.minFilter = NearestFilter;
 		this.whiteTexture.magFilter = NearestFilter;
 		this.whiteTexture.needsUpdate = true;
 
-		// Default 'no-shader' placeholder texturing logic
 		this.fallbackTexture = this.whiteTexture;
 		const fallbackUrl = `${this.baseFolder}/webgl/no-shader.png`;
 		this.textureLoader.load(fallbackUrl, (tex) => {
@@ -80,20 +78,23 @@ export class Q3GLShaderLoader {
 	/**
 	 * Translates a parsed shader state into an array of Three.js ShaderMaterials (one per stage)
 	 */
+	/**
+	 * Translates a parsed shader state into an array of Three.js ShaderMaterials (one per stage)
+	 */
 	buildMaterials(shader) {
 		const materials = [];
 		const side = this.translateCull(shader.cull, shader.sky);
 
 		for(let i = 0; i < shader.stages.length; ++i) {
 			const stage = shader.stages[i];
+
 			const uniforms = {
 				time: { value: 0.0 },
 				map: { value: this.fallbackTexture },
-				texture: { value: this.fallbackTexture }, // Alias target to catch Toji's custom scripts
+				mapAlias: { value: this.fallbackTexture },
 				lightmap: { value: this.lightmapTexture || this.whiteTexture }
 			};
 
-			// Allocate runtime assignment tracking arrays for animMap logic
 			let animTextures = [];
 			if(stage.map === 'anim' && stage.animMaps) {
 				stage.animMaps.forEach((mapUrl, index) => {
@@ -105,21 +106,40 @@ export class Q3GLShaderLoader {
 			} else if(stage.map) {
 				this.resolveTexture(stage.map, stage.clamp, (tex) => {
 					uniforms.map.value = tex;
+					uniforms.mapAlias.value = tex;
 				});
 			} else {
 				uniforms.map.value = this.whiteTexture;
+				uniforms.mapAlias.value = this.whiteTexture;
 			}
 
-			// Map standard blends
 			const hasBlend = stage.hasBlendFunc || shader.blend;
 			const blending = hasBlend ? CustomBlending : undefined;
 			const blendSrc = this.translateBlend(stage.blendSrc, OneFactor);
 			const blendDst = this.translateBlend(stage.blendDest, ZeroFactor);
 
+			let vsSrc = stage.shaderSrc ? stage.shaderSrc.vertex : this.getDefaultVertexShader();
+			let fsSrc = stage.shaderSrc ? stage.shaderSrc.fragment : this.getDefaultFragmentShader(stage);
+
+			if(stage.shaderSrc) {
+				// FIX: Strip out automatic Three.js built-ins from the custom vertex shader to prevent re-declaration errors
+				vsSrc = vsSrc.replace(/precision\s+highp\s+float\s*;/g, '');
+				vsSrc = vsSrc.replace(/attribute\s+vec3\s+position\s*;/g, '');
+				vsSrc = vsSrc.replace(/attribute\s+vec3\s+normal\s*;/g, '');
+				vsSrc = vsSrc.replace(/attribute\s+vec4\s+color\s*;/g, '');
+				vsSrc = vsSrc.replace(/attribute\s+vec2\s+uv\s*;/g, '');
+				vsSrc = vsSrc.replace(/uniform\s+mat4\s+modelViewMatrix\s*;/g, '');
+				vsSrc = vsSrc.replace(/uniform\s+mat4\s+projectionMatrix\s*;/g, '');
+
+				// Clean the fragment shader keyword collision
+				fsSrc = fsSrc.replace(/uniform\s+sampler2D\s+texture\s*;/g, 'uniform sampler2D mapAlias;');
+				fsSrc = fsSrc.replace(/texture2D\(\s*texture\s*,/g, 'texture2D(mapAlias,');
+			}
+
 			const material = new ShaderMaterial({
 				name: `${shader.name}_stage${i}`,
-				vertexShader: stage.shaderSrc ? stage.shaderSrc.vertex : this.getDefaultVertexShader(),
-				fragmentShader: stage.shaderSrc ? stage.shaderSrc.fragment : this.getDefaultFragmentShader(stage),
+				vertexShader: vsSrc,
+				fragmentShader: fsSrc,
 				uniforms: uniforms,
 				side: side,
 				blending: blending,
@@ -127,10 +147,10 @@ export class Q3GLShaderLoader {
 				blendDst: blendDst,
 				depthFunc: this.translateDepthFunc(stage.depthFunc),
 				depthWrite: !!stage.depthWrite && !shader.sky,
-				transparent: hasBlend
+				transparent: hasBlend,
+				vertexColors: true // Ensures Three.js binds and passes the 'color' attribute buffer safely
 			});
 
-			// Expose specialized update hooks required by loop animations
 			material.userData = {
 				animFreq: stage.animFreq || 0,
 				animTextures: animTextures,
@@ -140,7 +160,6 @@ export class Q3GLShaderLoader {
 			materials.push(material);
 		}
 
-		// Generate fallback material configurations if zero valid stages parsed
 		if(materials.length === 0) {
 			materials.push(this.buildDefaultMaterial(side));
 		}
@@ -155,11 +174,13 @@ export class Q3GLShaderLoader {
 			uniforms: {
 				time: { value: 0.0 },
 				map: { value: this.fallbackTexture },
+				mapAlias: { value: this.fallbackTexture },
 				lightmap: { value: this.whiteTexture }
 			},
 			side: side,
 			depthFunc: LessEqualDepth,
-			depthWrite: true
+			depthWrite: true,
+			vertexColors: true // FIX: Ensure vertex colors attach here too
 		});
 	}
 
@@ -176,8 +197,6 @@ export class Q3GLShaderLoader {
 		let resolvedUrl = `${this.baseFolder}/${mapPath}`;
 		if(this.useBasis) {
 			resolvedUrl = resolvedUrl.replace(/\.png/, '.basis');
-			// If hooks into BasisTextureLoader or KTX2Loader exist on your system pipeline,
-			// you should substitute this execution layer with this.basisLoader.load() instead.
 		}
 
 		this.textureLoader.load(resolvedUrl, (texture) => {
@@ -193,9 +212,6 @@ export class Q3GLShaderLoader {
 		});
 	}
 
-	/**
-	 * Iterates generated materials to advance timing vectors and layout animated frames
-	 */
 	updateMaterials(materials, time) {
 		for(let i = 0; i < materials.length; ++i) {
 			const mat = materials[i];
@@ -207,6 +223,9 @@ export class Q3GLShaderLoader {
 			if(ud && ud.animFreq && ud.animTextures.length > 0) {
 				const frameIndex = Math.floor(time * ud.animFreq) % ud.animTextures.length;
 				mat.uniforms.map.value = ud.animTextures[frameIndex];
+				if(mat.uniforms.mapAlias) {
+					mat.uniforms.mapAlias.value = ud.animTextures[frameIndex];
+				}
 			}
 		}
 	}
@@ -230,7 +249,7 @@ export class Q3GLShaderLoader {
 		switch(cull.toLowerCase()) {
 			case 'disable':
 			case 'none': return DoubleSide;
-			case 'front': return BackSide; // Inverted mapping logic matching source code transform target
+			case 'front': return BackSide;
 			case 'back':
 			default: return FrontSide;
 		}
@@ -253,60 +272,57 @@ export class Q3GLShaderLoader {
 
 	getDefaultVertexShader() {
 		return `
-        // Explicitly map Toji's expected layout variables to internal Three.js hooks
-        attribute vec2 lightCoord;
+            attribute vec2 lightCoord;
 
-        varying vec2 vTexCoord;
-        varying vec2 vLightmapCoord;
-        varying vec4 vColor;
+            varying vec2 vTexCoord;
+            varying vec2 vLightmapCoord;
+            varying vec4 vColor;
 
-        void main() {
-            vTexCoord = uv;
-            vLightmapCoord = lightCoord;
-            vColor = color;
-            gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0);
-        }
-    `;
+            void main() {
+                vTexCoord = uv;
+                vLightmapCoord = lightCoord;
+                vColor = color;
+                gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0);
+            }
+        `;
 	}
 
 	getDefaultFragmentShader(stage) {
 		if(stage.isLightmap) {
 			return `
-            precision highp float;
-            varying vec2 vTexCoord;
-            varying vec4 vColor;
+                precision highp float;
+                varying vec2 vTexCoord;
+                varying vec4 vColor;
 
-            // Declare both mappings so Toji's parsed code and your fallbacks resolve
-            uniform sampler2D map;
-            uniform sampler2D texture;
+                uniform sampler2D map;
+                uniform sampler2D mapAlias;
 
-            void main() {
-                // Safely alias whichever sampler uniform is populated
-                vec4 diffuseColor = texture2D(map, vTexCoord);
-                if (diffuseColor.a == 0.0) {
-                    diffuseColor = texture2D(texture, vTexCoord);
+                void main() {
+                    vec4 diffuseColor = texture2D(map, vTexCoord);
+                    if (diffuseColor.a == 0.0) {
+                        diffuseColor = texture2D(mapAlias, vTexCoord);
+                    }
+                    gl_FragColor = vec4(diffuseColor.rgb * vColor.rgb, diffuseColor.a);
                 }
-                gl_FragColor = vec4(diffuseColor.rgb * vColor.rgb, diffuseColor.a);
-            }
-        `;
+            `;
 		}
 		return `
-        precision highp float;
-        varying vec2 vTexCoord;
-        varying vec2 vLightmapCoord;
+            precision highp float;
+            varying vec2 vTexCoord;
+            varying vec2 vLightmapCoord;
 
-        uniform sampler2D map;
-        uniform sampler2D texture;
-        uniform sampler2D lightmap;
+            uniform sampler2D map;
+            uniform sampler2D mapAlias;
+            uniform sampler2D lightmap;
 
-        void main() {
-            vec4 diffuseColor = texture2D(map, vTexCoord);
-            if (diffuseColor.rgb == vec3(0.0) && diffuseColor.a == 0.0) {
-                diffuseColor = texture2D(texture, vTexCoord);
+            void main() {
+                vec4 diffuseColor = texture2D(map, vTexCoord);
+                if (diffuseColor.rgb == vec3(0.0) && diffuseColor.a == 0.0) {
+                    diffuseColor = texture2D(mapAlias, vTexCoord);
+                }
+                vec4 lightColor = texture2D(lightmap, vLightmapCoord);
+                gl_FragColor = vec4(diffuseColor.rgb * lightColor.rgb, diffuseColor.a);
             }
-            vec4 lightColor = texture2D(lightmap, vLightmapCoord);
-            gl_FragColor = vec4(diffuseColor.rgb * lightColor.rgb, diffuseColor.a);
-        }
-    `;
+        `;
 	}
 }
