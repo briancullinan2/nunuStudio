@@ -791,3 +791,34 @@ if(typeof window !== 'undefined') {
 		};
 	}
 })();
+
+
+/* TODO: add movement script to scene program */
+
+/*
+import { Q3MovementProcessor } from './Q3MovementProcessor.js';
+
+// Inside your main execution cycle or post-bsp ingestion loop:
+function attachPlayerEntity(bspSceneGroup) {
+	// Instantiate processor directly passing the compiled bsp collision trace systems
+	const movement = new Q3MovementProcessor(bspSceneGroup);
+
+	// Position player cleanly at initial spawn metrics
+	movement.teleport(new THREE.Vector3(0, 100, 0));
+
+	// Handle map respawn loops cleanly when falling out of bounds or into kill triggers
+	movement.onPlayerKilled = () => {
+		setTimeout(() => {
+			console.log("Respawning entity back to baseline positions...");
+			movement.teleport(new THREE.Vector3(0, 200, 0));
+		}, 1000);
+	};
+
+	// Keep state references available directly via Three.js user data scopes
+	bspSceneGroup.userData.playerMovement = movement;
+
+	return movement;
+}
+
+*/
+

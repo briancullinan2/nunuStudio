@@ -39,6 +39,7 @@
 
 ---
 
+* TODO: Test Q3 format loaders, add fogs/kill zones (auto teleport) and action scripts from toji to scene program.
 * TODO: Offline mode setting.
 * TODO: Add keyboard -> racetrace -> angle -> move with arrow keys.
 * TODO: Most excitingly, I'm attaching my Objaverse-XL pipeline to the asset search bar, allowing anyone to add any object they search for out of 9 million models streamed from GitHub and Sketchfab!
