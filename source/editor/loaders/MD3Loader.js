@@ -1,4 +1,5 @@
 import * as THREE from 'three';
+import { Q3BSPLoader } from './Q3BSPLoader.js';
 import { Q3ShaderLoader } from './Q3ShaderLoader.js';
 import { Q3GLShaderLoader } from './Q3GLShaderLoader.js';
 
@@ -17,7 +18,7 @@ export class MD3Loader extends THREE.Loader {
 		this.shaderLoader.setBaseUrl(this.baseFolder);
 		this.materialBuilder.setBaseFolder(this.baseFolder);
 
-		this.shaderRegistry = THREE.q3ShaderRegistry || {};
+		this.shaderRegistry = Q3BSPLoader.q3ShaderRegistry || {};
 		this.xyzScale = 0.015625; // MD3_XYZ_SCALE (1.0 / 64.0)
 	}
 
@@ -259,10 +260,7 @@ export class MD3Loader extends THREE.Loader {
 
 			// Render passes stacked natively per surface mesh representation layer
 			materials.forEach((material, stageIndex) => {
-				const nunu = THREE.resolveNunuClasses ? THREE.resolveNunuClasses() : THREE;
-				const MeshClass = nunu.Mesh || THREE.Mesh;
-
-				const mesh = new MeshClass(geometry, material);
+				const mesh = new THREE.Mesh(geometry, material);
 				mesh.name = `${surfName}_stg${stageIndex}`;
 				mesh.frustumCulled = false;
 				mesh.castShadow = true;

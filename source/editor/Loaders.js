@@ -27,6 +27,8 @@ import { VOXLoader } from "three/examples/jsm/loaders/VOXLoader";
 import { Q3ShaderLoader } from "./loaders/Q3ShaderLoader.js";
 import { Q3MapLoader } from "./loaders/Q3MapLoader.js";
 import { Q3BSPLoader } from "./loaders/Q3BSPLoader.js";
+import { IQMLoader } from "./loaders/IQMLoader.js";
+import { MD3Loader } from "./loaders/MD3Loader.js";
 import { InstancedMesh } from "../core/objects/mesh/InstancedMesh.js";
 import { FileSystem } from "../core/FileSystem.js";
 import { Nunu } from "../core/Nunu.js";
@@ -387,7 +389,7 @@ Loaders.loadModel = async function (file, parent, successCallback, errorCallback
 					// Hydrate your global and class-level registries immediately
 					parsedShaders.forEach(shader => {
 						if(shader && shader.name) {
-							THREE.q3ShaderRegistry[shader.name.toLowerCase()] = shader;
+							Q3BSPLoader.q3ShaderRegistry[shader.name.toLowerCase()] = shader;
 						}
 					});
 
@@ -446,7 +448,7 @@ Loaders.loadModel = async function (file, parent, successCallback, errorCallback
 					}
 
 					// Share the shared pipeline shader registry map records
-					loader.shaderRegistry = THREE.q3ShaderRegistry;
+					loader.shaderRegistry = Q3BSPLoader.q3ShaderRegistry;
 
 					// Parse the model binary ArrayBuffer layout
 					let md3Group = loader.parse(reader.result);
@@ -466,7 +468,7 @@ Loaders.loadModel = async function (file, parent, successCallback, errorCallback
 			let reader = new FileReader();
 			reader.onload = async function () {
 				try {
-					let loader = new THREE.IQMLoader();
+					let loader = new IQMLoader();
 
 					// Set runtime context paths relative to current asset source targets
 					if(file.path) {
@@ -475,7 +477,7 @@ Loaders.loadModel = async function (file, parent, successCallback, errorCallback
 					}
 
 					// Share the shared pipeline shader registry map records
-					loader.shaderRegistry = THREE.q3ShaderRegistry;
+					loader.shaderRegistry = Q3BSPLoader.q3ShaderRegistry;
 
 					// Parse the model skeletal ArrayBuffer binary layout
 					let iqmGroup = loader.parse(reader.result);
@@ -503,7 +505,7 @@ Loaders.loadModel = async function (file, parent, successCallback, errorCallback
 					}
 
 					// Share the runtime structural registry map bounds directly
-					loader.shaderRegistry = THREE.q3ShaderRegistry;
+					loader.shaderRegistry = Q3BSPLoader.q3ShaderRegistry;
 
 					let mapGroup = loader.parse(reader.result);
 					mapGroup.name = FileSystem.getFileName(name);

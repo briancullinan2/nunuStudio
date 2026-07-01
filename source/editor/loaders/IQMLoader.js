@@ -1,5 +1,6 @@
 /* eslint-disable camelcase */
 import * as THREE from 'three';
+import { Q3BSPLoader } from './Q3BSPLoader.js';
 import { Q3ShaderLoader } from './Q3ShaderLoader.js';
 import { Q3GLShaderLoader } from './Q3GLShaderLoader.js';
 
@@ -33,7 +34,7 @@ export class IQMLoader extends THREE.Loader {
 		this.shaderLoader.setBaseUrl(this.baseFolder);
 		this.materialBuilder.setBaseFolder(this.baseFolder);
 
-		this.shaderRegistry = THREE.q3ShaderRegistry || {};
+		this.shaderRegistry = Q3BSPLoader.q3ShaderRegistry || {};
 	}
 
 	setBaseFolder(path) {
@@ -206,9 +207,6 @@ export class IQMLoader extends THREE.Loader {
 
 		// --- SUB-MESH SURFACE COMPILATION LOOP ---
 		let meshPtr = ofs_meshes;
-		const nunu = THREE.resolveNunuClasses ? THREE.resolveNunuClasses() : THREE;
-		const SkinnedMeshClass = nunu.SkinnedMesh || THREE.SkinnedMesh;
-		const NunuBufferGeometry = nunu.BufferGeometry || THREE.BufferGeometry;
 
 		const sharedSkeleton = num_joints > 0 ? new THREE.Skeleton(bones, inverseBindMatrices) : null;
 
@@ -223,7 +221,7 @@ export class IQMLoader extends THREE.Loader {
 			const meshName = getString(nameOffset);
 			const shaderName = getString(materialOffset);
 
-			const geometry = new NunuBufferGeometry();
+			const geometry = new THREE.BufferGeometry();
 
 			// Slice out sub-range local mesh boundaries attributes safely
 			const sliceAttribute = (arrayConfig, itemSize) => {
@@ -337,7 +335,7 @@ export class IQMLoader extends THREE.Loader {
 				// Ensure skinning uniforms are explicitly declared on custom material definitions
 				material.skinning = num_joints > 0;
 
-				const sMesh = new SkinnedMeshClass(geometry, material);
+				const sMesh = new THREE.SkinnedMesh(geometry, material);
 				sMesh.name = `${meshName || "surface"}_stg${stageIndex}`;
 				sMesh.frustumCulled = false;
 				sMesh.castShadow = true;
@@ -372,7 +370,7 @@ export function injectIQMDropper(extension, file, name, FileSystem, callback, er
 		let reader = new FileReader();
 		reader.onload = async function () {
 			try {
-				let loader = new THREE.IQMLoader();
+				let loader = new IQMLoader();
 
 				if(file.path) {
 					let baseDir = file.path.substring(0, file.path.lastIndexOf('/'));
@@ -380,7 +378,7 @@ export function injectIQMDropper(extension, file, name, FileSystem, callback, er
 				}
 
 				// Attach shared pipeline shader registry map bounds context
-				loader.shaderRegistry = THREE.q3ShaderRegistry || {};
+				loader.shaderRegistry = Q3BSPLoader.q3ShaderRegistry || {};
 
 				let iqmGroup = loader.parse(reader.result);
 				iqmGroup.name = FileSystem.getFileName(name);
