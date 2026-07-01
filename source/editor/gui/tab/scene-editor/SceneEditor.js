@@ -779,14 +779,19 @@ class SceneEditor extends TabComponent {
 		this.canvas.forceContextLoss();
 	}
 
+
 	attach(scene) {
 		this.scene = scene;
 		this.updateMetadata();
+
+		// Status marker flag: if it doesn't identify as a scene, flag studio light overrides
+		this.isObjectMode = scene && !scene.isScene;
 
 		if(this.camera !== null) {
 			this.scene.defaultCamera = this.camera;
 		}
 	}
+
 
 	/**
 	 * Check if a scene or object is attached to the editor.
@@ -1016,8 +1021,9 @@ class SceneEditor extends TabComponent {
 			return;
 		}
 
-		var width = this.canvas.resolution.x;
-		var height = this.canvas.resolution.y;
+		// Clamp to ensure dimensions never drop below 0 during canvas resizes
+		var width = Math.max(1, this.canvas.resolution.x);
+		var height = Math.max(1, this.canvas.resolution.y);
 		var canvas = this.canvas.canvas;
 		var renderer = this.canvas.renderer;
 
@@ -1025,14 +1031,59 @@ class SceneEditor extends TabComponent {
 		renderer.setViewport(0, 0, width, height);
 		renderer.setScissor(0, 0, width, height);
 
-		// Clear with scene background
-		renderer.setClearColor(this.scene.background);
-		renderer.clear(true, true, true);
+		// Safe background fallback when scene.background is missing or black
+		var clearColor = (this.scene && this.scene.background && this.scene.background.isColor)
+			? this.scene.background
+			: new THREE.Color(0x1a1a1a); // PlayCanvas dark workspace baseline
 
-		// Render scene
-		renderer.render(this.scene, this.camera);
+		renderer.setClearColor(clearColor);
+		renderer.clear(true, true, true); // Explicitly pass all targets to soothe performance graph
 
-		if(this.canvas.cssRenderer !== null) {
+		// DYNAMIC STUDIO LIGHTING RIG (Instantiated once, kept in memory)
+		if(this.isObjectMode) {
+			if(!this.studioLightsCreated) {
+				this.studioLightsGroup = new THREE.Group();
+				this.studioLightsGroup.name = "StudioLightingRig";
+
+				// Key Light: High intensity warm main light source from front-top-left
+				const keyLight = new THREE.DirectionalLight(0xfffaed, 1.2);
+				keyLight.position.set(5, 8, 5);
+				this.studioLightsGroup.add(keyLight);
+
+				// Fill Light: Soft cool light source filling in opposing shadows from the right
+				const fillLight = new THREE.DirectionalLight(0xe0f0ff, 0.6);
+				fillLight.position.set(-6, 2, 4);
+				this.studioLightsGroup.add(fillLight);
+
+				// Rim Light: High sharp background separator pointing forward from behind
+				const rimLight = new THREE.DirectionalLight(0xffffff, 1.0);
+				rimLight.position.set(0, 4, -8);
+				this.studioLightsGroup.add(rimLight);
+
+				// Constant ambient cushion layer so blind spots remain visible
+				const ambientLight = new THREE.AmbientLight(0x222222);
+				this.studioLightsGroup.add(ambientLight);
+
+				this.studioLightsCreated = true;
+			}
+
+			// CRITICAL FIX: Temporarily inject lights into the object's scene right before rendering
+			if(this.scene) {
+				this.scene.add(this.studioLightsGroup);
+			}
+		}
+
+		// Render scene (now beautifully lit by the temporary rig)
+		if(this.scene && this.camera) {
+			renderer.render(this.scene, this.camera);
+		}
+
+		// CRITICAL FIX: Immediately pull the lights back out to prevent structural file pollution
+		if(this.isObjectMode && this.scene && this.studioLightsCreated) {
+			this.scene.remove(this.studioLightsGroup);
+		}
+
+		if(this.canvas.cssRenderer !== null && this.scene && this.camera) {
 			this.canvas.cssRenderer.render(this.scene, this.camera);
 		}
 
@@ -1083,6 +1134,8 @@ class SceneEditor extends TabComponent {
 				var self = this;
 
 				function renderCamera(index, x, y, w, h) {
+					w = Math.max(1, w);
+					h = Math.max(1, h);
 					renderer.setViewport(x, y, w, h);
 					renderer.setScissor(x, y, w, h);
 					renderer.clear(true, true, true);
@@ -1107,7 +1160,7 @@ class SceneEditor extends TabComponent {
 				renderCamera(CubeTexture.BOTTOM, x + size, y + size * 2, size, size);
 			}
 			// Preview all cameras in use
-			else if(this.scene.cameras !== undefined && this.scene.cameras.length > 0) {
+			else if(this.scene && this.scene.cameras !== undefined && this.scene.cameras.length > 0) {
 				renderer.clear(true, true, true);
 
 				for(var i = 0; i < this.scene.cameras.length; i++) {
