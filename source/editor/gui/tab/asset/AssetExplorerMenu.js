@@ -22,11 +22,40 @@ class AssetExplorerMenu extends Component {
 		this.element.style.backgroundColor = "var(--bar-color)";
 		this.element.style.overflow = "visible";
 
+		// Helper function to convert hover behavior into toggle-click behavior
+		const makeClickBased = (dropdown) => {
+			if(dropdown.element) {
+				// Remove pointer events or hover triggers if the Dropdown class added them inline
+				dropdown.element.onmouseenter = null;
+				dropdown.element.onmouseleave = null;
+
+				dropdown.element.addEventListener("click", function (event) {
+					event.stopPropagation();
+					if(dropdown.show !== undefined) {
+						if(dropdown.visible) {
+							dropdown.hide();
+						} else {
+							dropdown.show();
+						}
+					}
+				});
+			}
+		};
+
+		// Close all dropdowns if clicking anywhere else on the window
+		window.addEventListener("click", () => {
+			if(menu && menu.hide) { menu.hide(); }
+			if(texture && texture.hide) { texture.hide(); }
+			if(material && material.hide) { material.hide(); }
+			if(create && create.hide) { create.hide(); }
+		});
+
 		// Import
 		var menu = new DropdownMenu(this);
 		menu.setText(Locale.import);
 		menu.size.set(100, 25);
 		menu.position.set(0, 0);
+		makeClickBased(menu);
 
 		// 3D Models Loader
 		menu.addOption(Locale.models3D, function () {
@@ -82,6 +111,7 @@ class AssetExplorerMenu extends Component {
 		texture.setText(Locale.texture);
 		texture.size.set(100, 25);
 		texture.position.set(100, 0);
+		makeClickBased(texture);
 
 		// Image texture
 		texture.addOption(Locale.texture, function () {
@@ -151,6 +181,7 @@ class AssetExplorerMenu extends Component {
 		material.setText(Locale.material);
 		material.size.set(100, 25);
 		material.position.set(200, 0);
+		makeClickBased(material);
 
 		material.addOption(Locale.standardMaterial, function () {
 			var material = new MeshStandardMaterial();
@@ -267,6 +298,7 @@ class AssetExplorerMenu extends Component {
 		create.setText(Locale.code);
 		create.size.set(100, 25);
 		create.position.set(300, 0);
+		makeClickBased(create);
 
 		create.addOption(Locale.html, function () {
 			var resource = new TextFile("<!DOCTYPE html>\n<html>\n<head>\n\t<title></title>\n</head>\n<body>\n\n</body>\n</html>", "html");

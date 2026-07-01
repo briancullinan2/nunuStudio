@@ -13,7 +13,7 @@ class Text extends Component {
 		super(parent, "div");
 
 		// Keep it transparent to pointer events by default
-		this.element.style.pointerEvents = "none";
+		//this.element.style.pointerEvents = "none";
 		this.element.style.display = "flex";
 
 		/**
@@ -93,7 +93,7 @@ class Text extends Component {
 	 */
 	setText(text) {
 		// Enforce none when standard text is used
-		this.element.style.pointerEvents = "none";
+		//this.element.style.pointerEvents = "none";
 		this.text.data = text;
 	}
 
@@ -108,9 +108,9 @@ class Text extends Component {
 	setHtml(html) {
 		// Automatically allow pointer events if the HTML content includes an anchor tag
 		if(html && /<a\s[^>]*>/i.test(html)) {
-			this.element.style.pointerEvents = "auto";
+			//this.element.style.pointerEvents = "auto";
 		} else {
-			this.element.style.pointerEvents = "none";
+			//this.element.style.pointerEvents = "none";
 		}
 
 		this.span.innerHTML = html;
