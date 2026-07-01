@@ -24,6 +24,9 @@ import { STLLoader } from "three/examples/jsm/loaders/STLLoader";
 import { PCDLoader } from "three/examples/jsm/loaders/PCDLoader";
 import { SVGLoader } from "three/examples/jsm/loaders/SVGLoader";
 import { VOXLoader } from "three/examples/jsm/loaders/VOXLoader";
+import { Q3ShaderLoader } from "./loaders/Q3ShaderLoader.js";
+import { Q3MapLoader } from "./loaders/Q3MapLoader.js";
+import { Q3BSPLoader } from "./loaders/Q3BSPLoader.js";
 import { InstancedMesh } from "../core/objects/mesh/InstancedMesh.js";
 import { FileSystem } from "../core/FileSystem.js";
 import { Nunu } from "../core/Nunu.js";
@@ -372,6 +375,148 @@ Loaders.loadModel = async function (file, parent, successCallback, errorCallback
 
 			reader.readAsText(file);
 		}
+
+		// Quake 3 Shaders
+		else if(extension === "shader") {
+			let reader = new FileReader();
+			reader.onload = async function () {
+				try {
+					let loader = new Q3ShaderLoader();
+					let parsedShaders = loader.parse(file.path || "inline://custom.shader", reader.result);
+
+					// Hydrate your global and class-level registries immediately
+					parsedShaders.forEach(shader => {
+						if(shader && shader.name) {
+							THREE.q3ShaderRegistry[shader.name.toLowerCase()] = shader;
+						}
+					});
+
+					console.log(`nunuStudio: Parsed and registered ${parsedShaders.length} Quake 3 shader targets.`);
+
+					// Since a .shader file populates material registries but contains no 3D geometry primitives,
+					// we evoke an empty pass or send a confirmation signal down the asset loop.
+					if(typeof callback === 'function') {
+						await callback(new THREE.Group(), parent);
+					}
+				}
+				catch(e) {
+					errorCondition(e);
+				}
+			};
+			reader.readAsText(file);
+		}
+
+		// Quake 3 BSP Map Binary
+		else if(extension === "bsp") {
+			let reader = new FileReader();
+			reader.onload = async function () {
+				try {
+					let loader = new Q3BSPLoader();
+
+					// Set runtime context paths relative to current asset source targets
+					if(file.path) {
+						let baseDir = file.path.substring(0, file.path.lastIndexOf('/'));
+						loader.setBaseFolder(baseDir);
+					}
+
+					// Parse the ArrayBuffer via synchronous main-thread or worker pipeline routing
+					let bspGroup = loader.parse(reader.result);
+					bspGroup.name = FileSystem.getFileName(name);
+
+					await callback(bspGroup, parent);
+				}
+				catch(e) {
+					errorCondition(e);
+				}
+			};
+			reader.readAsArrayBuffer(file);
+		}
+
+		// Quake 3 MD3 Mesh Model Binary
+		else if(extension === "md3") {
+			let reader = new FileReader();
+			reader.onload = async function () {
+				try {
+					let loader = new MD3Loader();
+
+					// Set runtime context paths relative to current asset source targets
+					if(file.path) {
+						let baseDir = file.path.substring(0, file.path.lastIndexOf('/'));
+						loader.setBaseFolder(baseDir);
+					}
+
+					// Share the shared pipeline shader registry map records
+					loader.shaderRegistry = THREE.q3ShaderRegistry;
+
+					// Parse the model binary ArrayBuffer layout
+					let md3Group = loader.parse(reader.result);
+					md3Group.name = FileSystem.getFileName(name);
+
+					await callback(md3Group, parent);
+				}
+				catch(e) {
+					errorCondition(e);
+				}
+			};
+			reader.readAsArrayBuffer(file);
+		}
+
+		// InterQuakeModel Skeleton/Mesh Binary
+		else if(extension === "iqm") {
+			let reader = new FileReader();
+			reader.onload = async function () {
+				try {
+					let loader = new THREE.IQMLoader();
+
+					// Set runtime context paths relative to current asset source targets
+					if(file.path) {
+						let baseDir = file.path.substring(0, file.path.lastIndexOf('/'));
+						loader.setBaseFolder(baseDir);
+					}
+
+					// Share the shared pipeline shader registry map records
+					loader.shaderRegistry = THREE.q3ShaderRegistry;
+
+					// Parse the model skeletal ArrayBuffer binary layout
+					let iqmGroup = loader.parse(reader.result);
+					iqmGroup.name = FileSystem.getFileName(name);
+
+					await callback(iqmGroup, parent);
+				}
+				catch(e) {
+					errorCondition(e);
+				}
+			};
+			reader.readAsArrayBuffer(file);
+		}
+
+		// Quake 3 Raw Human-Readable Map Text (and auto-checking associated groups)
+		else if(extension === "map") {
+			let reader = new FileReader();
+			reader.onload = async function () {
+				try {
+					let loader = new Q3MapLoader();
+
+					if(file.path) {
+						let baseDir = file.path.substring(0, file.path.lastIndexOf('/'));
+						loader.setBaseFolder(baseDir);
+					}
+
+					// Share the runtime structural registry map bounds directly
+					loader.shaderRegistry = THREE.q3ShaderRegistry;
+
+					let mapGroup = loader.parse(reader.result);
+					mapGroup.name = FileSystem.getFileName(name);
+
+					await callback(mapGroup, parent);
+				}
+				catch(e) {
+					errorCondition(e);
+				}
+			};
+			reader.readAsText(file);
+		}
+
 		// Wavefront OBJ
 		else if(extension === "obj") {
 			let materials = null;
