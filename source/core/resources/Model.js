@@ -1,19 +1,17 @@
-import {Resource} from "./Resource.js";
-import {Font} from "./Font.js";
+import { Resource } from "./Resource.js";
+import { Font } from "./Font.js";
 
 /**
  * Model is used to load and check file type for external 3D models, animations, scenes etc.
  *
  * It wraps other threejs loaders and loads files using them depending on file format.
- * 
+ *
  * @class Model
  * @extends {Resource}
  * @module Resources
  */
-class Model extends Resource
-{
-	constructor()
-	{
+class Model extends Resource {
+	constructor() {
 		super("model", "Model");
 	}
 }
@@ -24,7 +22,7 @@ class Model extends Resource
  * @property {Array} extensions List of extensions.
  * @type {Array}
  */
-Model.extensions = ["gcode", "drc", "assimp", "assimp.json", "blend", "amf", "babylon", "prwm", "svg", "obj", "3ds", "dae", "gltf", "glb", "3mf", "awd", "ply", "vtk", "vtp", "wrl", "vrml", "fbx", "pcd", "stl", "json", "x"];
+Model.extensions = ["gcode", "drc", "assimp", "assimp.json", "blend", "amf", "babylon", "prwm", "svg", "obj", "3ds", "dae", "gltf", "glb", "3mf", "awd", "ply", "vtk", "vtp", "wrl", "vrml", "fbx", "pcd", "stl", "json", "x", "pk3", "bsp", "map", "md3", "iqm"];
 
 /**
  * Check if a file name refers to a 3D geometry file.
@@ -34,16 +32,12 @@ Model.extensions = ["gcode", "drc", "assimp", "assimp.json", "blend", "amf", "ba
  * @param {File} file
  * @return {boolean} True if the fname refers to a supported format.
  */
-Model.fileIsModel = function(file)
-{
-	if (file !== undefined)
-	{
+Model.fileIsModel = function (file) {
+	if(file !== undefined) {
 		file = file.name.toLocaleLowerCase();
 
-		for (var i = 0; i < Model.extensions.length; i++)
-		{
-			if (file.endsWith(Model.extensions[i]))
-			{
+		for(var i = 0; i < Model.extensions.length; i++) {
+			if(file.endsWith(Model.extensions[i])) {
 				return true;
 			}
 		}
@@ -52,4 +46,4 @@ Model.fileIsModel = function(file)
 	return false;
 };
 
-export {Model};
+export { Model };

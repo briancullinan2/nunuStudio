@@ -343,8 +343,9 @@ if(typeof window !== 'undefined') {
 // RUNTIME TEXT-MAP SCENE INGESTION ENVIRONMENT HOOKS
 // =============================================================================
 export async function importMap(mapFile, content) {
+	const { Editor } = await import('../Editor.js');
 	let mapLoader = new Q3MapLoader();
-	let activeScene = window.Nunu.getScene();
+	let activeScene = Editor.getScene();
 
 	const baseFolder = mapLoader.baseFolder;
 	const mapName = baseFolder + (mapFile && mapFile.startsWith('/') ? '' : '/') + (mapFile || "maps/q3dm17.map");
@@ -381,9 +382,9 @@ export async function importMap(mapFile, content) {
 
 		if(typeof mapGroup.isEmpty !== 'function') { mapGroup.isEmpty = function () { return false; }; }
 
-		window.Nunu.addObject(mapGroup, activeScene);
-		window.Nunu.selectObject(mapGroup);
-		window.Nunu.gui.updateInterface();
+		Editor.addObject(mapGroup, activeScene);
+		Editor.selectObject(mapGroup);
+		Editor.gui.updateInterface();
 	});
 }
 

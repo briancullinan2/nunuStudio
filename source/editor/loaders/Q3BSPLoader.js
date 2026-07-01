@@ -695,8 +695,9 @@ Q3BSPLoader.q3ShaderRegistry = registry;
 
 // Incremental time-sliced loader orchestration hook
 export async function importBSP(mapFile, content) {
+	const { Editor } = await import('../Editor.js');
 	let bspLoader = new Q3BSPLoader();
-	let activeScene = window.Nunu.getScene();
+	let activeScene = Editor.getScene();
 
 	window.isLoadingBSP = true;
 	const mapShaders = [
@@ -738,27 +739,27 @@ export async function importBSP(mapFile, content) {
 		});
 
 		bspGroup.children = [];
-		window.Nunu.addObject(bspGroup, activeScene);
+		Editor.addObject(bspGroup, activeScene);
 
 		let index = 0;
 		function processBatch() {
 			while(index < surfaceChildren.length) {
 				const surfaceMesh = surfaceChildren[index];
-				window.Nunu.addObject(surfaceMesh, bspGroup);
+				Editor.addObject(surfaceMesh, bspGroup);
 				index++;
 
-				window.Nunu.gui.updateInterface();
+				Editor.gui.updateInterface();
 				requestAnimationFrame(processBatch);
 				return;
 			}
 
 			if(bspGroup.children.length > 0) {
-				window.Nunu.selectObject(bspGroup.children[0]);
+				Editor.selectObject(bspGroup.children[0]);
 			} else {
-				window.Nunu.selectObject(bspGroup);
+				Editor.selectObject(bspGroup);
 			}
 
-			window.Nunu.gui.updateInterface();
+			Editor.gui.updateInterface();
 			window.isLoadingBSP = false;
 		}
 

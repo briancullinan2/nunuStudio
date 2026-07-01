@@ -361,36 +361,3 @@ export class IQMLoader extends THREE.Loader {
 	}
 }
 
-
-// =============================================================================
-// RUNTIME IQM FILE INTERCEPT DROP HOOKS INTEGRATION
-// =============================================================================
-export function injectIQMDropper(extension, file, name, FileSystem, callback, errorCondition) {
-	if(extension === "iqm") {
-		let reader = new FileReader();
-		reader.onload = async function () {
-			try {
-				let loader = new IQMLoader();
-
-				if(file.path) {
-					let baseDir = file.path.substring(0, file.path.lastIndexOf('/'));
-					loader.setBaseFolder(baseDir);
-				}
-
-				// Attach shared pipeline shader registry map bounds context
-				loader.shaderRegistry = Q3BSPLoader.q3ShaderRegistry || {};
-
-				let iqmGroup = loader.parse(reader.result);
-				iqmGroup.name = FileSystem.getFileName(name);
-
-				await callback(iqmGroup, window.Nunu ? window.Nunu.getScene() : null);
-			}
-			catch(e) {
-				errorCondition(e);
-			}
-		};
-		reader.readAsArrayBuffer(file);
-		return true;
-	}
-	return false;
-}

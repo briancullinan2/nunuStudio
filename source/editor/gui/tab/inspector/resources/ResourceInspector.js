@@ -55,6 +55,7 @@ class ResourceInspector extends Inspector {
 		}
 
 		if(this.source !== undefined) {
+			this.source.element.style.pointerEvents = "auto";
 			this.source.setHtml(this.getSourceUrl(this.object.source));
 		}
 	}

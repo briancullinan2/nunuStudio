@@ -303,12 +303,45 @@ Loaders.loadSpineAnimation = async function (file) {
 Loaders.loadText = function (file) {
 	let reader = new FileReader();
 	let name = FileSystem.getFileNameWithExtension(file.name);
+	let extension = FileSystem.getFileExtension(name);
 
 	reader.onload = function () {
 		let resource = new TextFile(reader.result, FileSystem.getFileExtension(name));
 		resource.name = name;
 
 		Editor.addAction(new AddResourceAction(resource, Editor.program, "resources"));
+
+
+		// Quake 3 Shaders
+		if(extension === "shader") {
+			let reader = new FileReader();
+			reader.onload = async function () {
+				try {
+					let loader = new Q3ShaderLoader();
+					let parsedShaders = loader.parse(file.path || "inline://custom.shader", reader.result);
+
+					// Hydrate your global and class-level registries immediately
+					parsedShaders.forEach(shader => {
+						if(shader && shader.name) {
+							Q3BSPLoader.q3ShaderRegistry[shader.name.toLowerCase()] = shader;
+						}
+					});
+
+					console.log(`nunuStudio: Parsed and registered ${parsedShaders.length} Quake 3 shader targets.`);
+
+					// Since a .shader file populates material registries but contains no 3D geometry primitives,
+					// we evoke an empty pass or send a confirmation signal down the asset loop.
+					if(typeof callback === 'function') {
+						await callback(new THREE.Group(), parent);
+					}
+				}
+				catch(e) {
+					errorCondition(e);
+				}
+			};
+			reader.readAsText(file);
+		}
+
 	};
 
 	reader.readAsText(file);
@@ -376,36 +409,6 @@ Loaders.loadModel = async function (file, parent, successCallback, errorCallback
 				}
 			};
 
-			reader.readAsText(file);
-		}
-
-		// Quake 3 Shaders
-		else if(extension === "shader") {
-			let reader = new FileReader();
-			reader.onload = async function () {
-				try {
-					let loader = new Q3ShaderLoader();
-					let parsedShaders = loader.parse(file.path || "inline://custom.shader", reader.result);
-
-					// Hydrate your global and class-level registries immediately
-					parsedShaders.forEach(shader => {
-						if(shader && shader.name) {
-							Q3BSPLoader.q3ShaderRegistry[shader.name.toLowerCase()] = shader;
-						}
-					});
-
-					console.log(`nunuStudio: Parsed and registered ${parsedShaders.length} Quake 3 shader targets.`);
-
-					// Since a .shader file populates material registries but contains no 3D geometry primitives,
-					// we evoke an empty pass or send a confirmation signal down the asset loop.
-					if(typeof callback === 'function') {
-						await callback(new THREE.Group(), parent);
-					}
-				}
-				catch(e) {
-					errorCondition(e);
-				}
-			};
 			reader.readAsText(file);
 		}
 
@@ -687,7 +690,7 @@ Loaders.loadModel = async function (file, parent, successCallback, errorCallback
 			let reader = new FileReader();
 			reader.onload = async function () {
 				try {
-					let loader = new AssimpLoader();
+					let loader = new AssimpLoader(undefined, Global.FILE_PATH + 'wasm/assimp/assimpjs.js');
 					let assimp = loader.parse(reader.result, path);
 					await callback(assimp.object, parent);
 				}

@@ -35,7 +35,7 @@ class TextFile extends Resource
 		}
 
 		var data = super.toJSON(meta);
-		
+
 		data.encoding = this.encoding;
 		data.data = this.data;
 		data.format = this.format;
@@ -46,7 +46,7 @@ class TextFile extends Resource
 	}
 }
 
-TextFile.extensions = [".js", ".txt", ".glsl", ".json", ".xml", ".yaml", ".csv", ".css", ".html"];
+TextFile.extensions = [".js", ".txt", ".glsl", ".json", ".xml", ".yaml", ".csv", ".css", ".html", ".shader"];
 
 /**
  * Check if a file name refers to a text file.
