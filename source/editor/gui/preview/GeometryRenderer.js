@@ -51,7 +51,7 @@ class GeometryRenderer extends PreviewRenderer {
 		var originalAutoClear = this.renderer.autoClear;
 
 		// Upscale internal canvas backbuffer resolution for high-fidelity data extraction
-		var scaleFactor = 2; // Set higher (e.g., 2 or 3) for oversized crisp feature tracking
+		var scaleFactor = 3; // Set higher (e.g., 2 or 3) for oversized crisp feature tracking
 		var width = this.canvas.width * scaleFactor;
 		var height = this.canvas.height * scaleFactor;
 
@@ -108,7 +108,7 @@ class GeometryRenderer extends PreviewRenderer {
 		var originalAutoClear = this.renderer.autoClear;
 
 		// Upscale internal canvas backbuffer resolution for high-fidelity data extraction
-		var scaleFactor = 2;
+		var scaleFactor = 3;
 		var width = this.canvas.width * scaleFactor;
 		var height = this.canvas.height * scaleFactor;
 
