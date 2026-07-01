@@ -1,8 +1,8 @@
-import { SphereGeometry, Mesh, Points, Line, Sprite, AmbientLight, PointLight, Material, SpriteMaterial, LineBasicMaterial, PointsMaterial } from "three";
+import { Float32BufferAttribute, SphereGeometry, Mesh, Points, Line, Sprite, AmbientLight, PointLight, Material, SpriteMaterial, LineBasicMaterial, PointsMaterial } from "three";
 import { OrthographicCamera } from "../../../core/objects/cameras/OrthographicCamera.js";
 import { PreviewRenderer } from "./PreviewRenderer.js";
 
-/** 
+/**
  * The material renderer is used to generate preview thumbnails.
  *
  * @class MaterialRenderer
@@ -17,6 +17,28 @@ class MaterialRenderer extends PreviewRenderer {
 
 		// Geometry
 		this.geometry = new SphereGeometry(1, 16, 16);
+
+		// FIX: Inject dummy color (size 4) and lightCoord (size 2) arrays
+		// to prevent the custom vertex shader from choking on missing attributes
+		const count = this.geometry.attributes.position.count;
+
+		const colors = new Float32Array(count * 4);
+		const lightCoords = new Float32Array(count * 2);
+
+		for(let i = 0; i < count; i++) {
+			// Fill with full white vertex colors (R, G, B, A)
+			colors[i * 4] = 1.0;
+			colors[i * 4 + 1] = 1.0;
+			colors[i * 4 + 2] = 1.0;
+			colors[i * 4 + 3] = 1.0;
+
+			// Dummy UV coords for lightmaps
+			lightCoords[i * 2] = this.geometry.attributes.uv.getX(i);
+			lightCoords[i * 2 + 1] = this.geometry.attributes.uv.getY(i);
+		}
+
+		this.geometry.setAttribute('color', new Float32BufferAttribute(colors, 4));
+		this.geometry.setAttribute('lightCoord', new Float32BufferAttribute(lightCoords, 2));
 
 		// Mesh
 		this.mesh = new Mesh(this.geometry);
@@ -46,7 +68,7 @@ class MaterialRenderer extends PreviewRenderer {
 	}
 
 	render(material, onRender) {
-		if (material instanceof SpriteMaterial) {
+		if(material instanceof SpriteMaterial) {
 			this.mesh.visible = false;
 			this.sprite.visible = true;
 			this.points.visible = false;
@@ -55,7 +77,7 @@ class MaterialRenderer extends PreviewRenderer {
 			this.sprite.material = material;
 			this.camera.position.set(0, 0, 0.5);
 		}
-		else if (material instanceof LineBasicMaterial) {
+		else if(material instanceof LineBasicMaterial) {
 			this.mesh.visible = false;
 			this.sprite.visible = false;
 			this.points.visible = false;
@@ -64,7 +86,7 @@ class MaterialRenderer extends PreviewRenderer {
 			this.line.material = material;
 			this.camera.position.set(0, 0, 0.5);
 		}
-		else if (material instanceof PointsMaterial) {
+		else if(material instanceof PointsMaterial) {
 			this.mesh.visible = false;
 			this.sprite.visible = false;
 			this.points.visible = true;
@@ -109,7 +131,7 @@ class MaterialRenderer extends PreviewRenderer {
 	};
 
 	static render = function (material, onRender) {
-		if (MaterialRenderer.instance === undefined) {
+		if(MaterialRenderer.instance === undefined) {
 		}
 
 		MaterialRenderer.instance.render(material, onRender);

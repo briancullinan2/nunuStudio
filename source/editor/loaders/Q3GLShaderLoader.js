@@ -136,6 +136,13 @@ export class Q3GLShaderLoader {
 				fsSrc = fsSrc.replace(/texture2D\(\s*texture\s*,/g, 'texture2D(mapAlias,');
 			}
 
+			const isAssetExplorer = shader.name.toLowerCase().includes('preview') || shader.name === '';
+
+			if(isAssetExplorer) {
+				// If it's a 3-component preview asset, overwrite the assignment declaration to expand it safely
+				vsSrc = vsSrc.replace(/vColor\s*=\s*color\s*;/g, 'vColor = vec4(color, 1.0);');
+			}
+
 			const material = new ShaderMaterial({
 				name: `${shader.name}_stage${i}`,
 				vertexShader: vsSrc,
