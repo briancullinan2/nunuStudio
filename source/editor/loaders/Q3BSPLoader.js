@@ -636,11 +636,11 @@ export class Q3BSPLoader extends THREE.Loader {
 	 * Process batch geometric transforms and attach modular materials using the external builders.
 	 */
 	processBatch(surf, rootNode) {
-		let geometry = new nunu.BufferGeometry();
-		geometry.setAttribute("position", new nunu.Float32BufferAttribute(surf.positions, 3));
-		geometry.setAttribute("normal", new nunu.Float32BufferAttribute(surf.normals, 3));
-		geometry.setAttribute("uv", new nunu.Float32BufferAttribute(surf.uvs, 2));
-		geometry.setAttribute("color", new nunu.Float32BufferAttribute(surf.colors, 4));
+		let geometry = new THREE.BufferGeometry();
+		geometry.setAttribute("position", new THREE.Float32BufferAttribute(surf.positions, 3));
+		geometry.setAttribute("normal", new THREE.Float32BufferAttribute(surf.normals, 3));
+		geometry.setAttribute("uv", new THREE.Float32BufferAttribute(surf.uvs, 2));
+		geometry.setAttribute("color", new THREE.Float32BufferAttribute(surf.colors, 4));
 		geometry.setIndex(surf.indices);
 
 		geometry.computeVertexNormals();
