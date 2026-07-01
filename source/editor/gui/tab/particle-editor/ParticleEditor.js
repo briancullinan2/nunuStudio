@@ -26,18 +26,15 @@ import { DualContainer } from "../../../components/containers/DualContainer.js";
  *
  * Allows the user to change all the parameters of the emitter.
  */
-class ParticleEditor extends TabComponent
-{
-	constructor(parent, closeable, container, index)
-	{
+class ParticleEditor extends TabComponent {
+	constructor(parent, closeable, container, index) {
 		super(parent, closeable, container, index, Locale.particle, Global.FILE_PATH + "icons/misc/particles.png");
 
 		var self = this;
 
 		// Canvas
 		this.canvas = new RendererCanvas();
-		this.canvas.setOnResize(function (x, y)
-		{
+		this.canvas.setOnResize(function (x, y) {
 			self.camera.aspect = x / y;
 			self.camera.updateProjectionMatrix();
 		});
@@ -77,8 +74,7 @@ class ParticleEditor extends TabComponent
 		this.form.addText(Locale.name);
 		this.name = new TextBox(this.form);
 		this.name.size.set(200, 18);
-		this.name.setOnChange(function ()
-		{
+		this.name.setOnChange(function () {
 			Editor.addAction(new ChangeAction(self.particle, "name", self.name.getText()));
 			Editor.updateObjectsViewsGUI();
 		});
@@ -89,8 +85,7 @@ class ParticleEditor extends TabComponent
 		this.form.addText(Locale.texture);
 		this.texture = new TextureChooser(this.form);
 		this.texture.size.set(100, 100);
-		this.texture.setOnChange(function ()
-		{
+		this.texture.setOnChange(function () {
 			Editor.addAction(new ChangeAction(self.particle.group, "texture", self.texture.getValue()));
 			self.particle.reload();
 		});
@@ -102,8 +97,7 @@ class ParticleEditor extends TabComponent
 		this.maxParticleCount = new NumberBox(this.form);
 		this.maxParticleCount.setStep(1.0);
 		this.maxParticleCount.size.set(100, 18);
-		this.maxParticleCount.setOnChange(function ()
-		{
+		this.maxParticleCount.setOnChange(function () {
 			Editor.addAction(new ChangeAction(self.particle.group, "maxParticleCount", self.maxParticleCount.getValue()));
 			self.particle.reload();
 		});
@@ -119,8 +113,7 @@ class ParticleEditor extends TabComponent
 		this.blending.addValue(Locale.additive, AdditiveBlending);
 		this.blending.addValue(Locale.subtractive, SubtractiveBlending);
 		this.blending.addValue(Locale.multiply, MultiplyBlending);
-		this.blending.setOnChange(function ()
-		{
+		this.blending.setOnChange(function () {
 			Editor.addAction(new ChangeAction(self.particle.group, "blending", self.blending.getValue()));
 			self.particle.reload();
 		});
@@ -133,8 +126,7 @@ class ParticleEditor extends TabComponent
 		this.direction.size.set(100, 18);
 		this.direction.addValue(Locale.forward, 1);
 		this.direction.addValue(Locale.backward, -1);
-		this.direction.setOnChange(function ()
-		{
+		this.direction.setOnChange(function () {
 			Editor.addAction(new ChangeAction(self.particle.emitter, "direction", self.direction.getValue()));
 			self.particle.reload();
 		});
@@ -146,8 +138,7 @@ class ParticleEditor extends TabComponent
 		this.particleCount = new NumberBox(this.form);
 		this.particleCount.size.set(50, 18);
 		this.particleCount.setStep(1);
-		this.particleCount.setOnChange(function ()
-		{
+		this.particleCount.setOnChange(function () {
 			Editor.addAction(new ChangeAction(self.particle.emitter, "particleCount", self.particleCount.getValue()));
 			self.particle.reload();
 		});
@@ -159,11 +150,9 @@ class ParticleEditor extends TabComponent
 		this.duration = new NumberBox(this.form);
 		this.duration.size.set(50, 18);
 		this.duration.setRange(0, Number.MAX_SAFE_INTEGER);
-		this.duration.setOnChange(function ()
-		{
+		this.duration.setOnChange(function () {
 			var duration = self.duration.getValue();
-			if(duration === 0)
-			{
+			if(duration === 0) {
 				duration = null;
 			}
 
@@ -180,8 +169,7 @@ class ParticleEditor extends TabComponent
 		this.type.addValue(Locale.box, ParticleDistributions.BOX);
 		this.type.addValue(Locale.sphere, ParticleDistributions.SPHERE);
 		this.type.addValue(Locale.disc, ParticleDistributions.DISC);
-		this.type.setOnChange(function ()
-		{
+		this.type.setOnChange(function () {
 			Editor.addAction(new ChangeAction(self.particle.emitter, "type", self.type.getValue()));
 			self.particle.reload();
 		});
@@ -196,16 +184,14 @@ class ParticleEditor extends TabComponent
 
 		this.maxAgeValue = this.ageRow.addValue("F");
 		this.maxAgeValue.setRange(0, Number.MAX_SAFE_INTEGER);
-		this.maxAgeValue.setOnChange(function ()
-		{
+		this.maxAgeValue.setOnChange(function () {
 			Editor.addAction(new ChangeAction(self.particle.emitter.maxAge, "value", self.maxAgeValue.getValue()));
 			self.particle.reload();
 		});
 
 		this.maxAgeSpread = this.ageRow.addValue("+/-");
 		this.maxAgeSpread.setRange(0, Number.MAX_SAFE_INTEGER);
-		this.maxAgeSpread.setOnChange(function ()
-		{
+		this.maxAgeSpread.setOnChange(function () {
 			Editor.addAction(new ChangeAction(self.particle.emitter.maxAge, "spread", self.maxAgeSpread.getValue()));
 			self.particle.reload();
 		});
@@ -220,8 +206,7 @@ class ParticleEditor extends TabComponent
 		this.form.addText(Locale.initial);
 		this.positionValue = new VectorBox(this.form);
 		this.positionValue.size.set(0, 18);
-		this.positionValue.setOnChange(function ()
-		{
+		this.positionValue.setOnChange(function () {
 			self.particle.emitter.position.value.copy(self.positionValue.getValue());
 			self.particle.reload();
 		});
@@ -231,8 +216,7 @@ class ParticleEditor extends TabComponent
 		this.form.addText(Locale.variation);
 		this.positionSpread = new VectorBox(this.form);
 		this.positionSpread.size.set(0, 18);
-		this.positionSpread.setOnChange(function ()
-		{
+		this.positionSpread.setOnChange(function () {
 			self.particle.emitter.position.spread.copy(self.positionSpread.getValue());
 			self.particle.reload();
 		});
@@ -246,8 +230,7 @@ class ParticleEditor extends TabComponent
 		this.form.addText(Locale.initial);
 		this.velocityValue = new VectorBox(this.form);
 		this.velocityValue.size.set(0, 18);
-		this.velocityValue.setOnChange(function ()
-		{
+		this.velocityValue.setOnChange(function () {
 			self.particle.emitter.velocity.value.copy(self.velocityValue.getValue());
 			self.particle.reload();
 		});
@@ -257,8 +240,7 @@ class ParticleEditor extends TabComponent
 		this.form.addText(Locale.variation);
 		this.velocitySpread = new VectorBox(this.form);
 		this.velocitySpread.size.set(0, 18);
-		this.velocitySpread.setOnChange(function ()
-		{
+		this.velocitySpread.setOnChange(function () {
 			self.particle.emitter.velocity.spread.copy(self.velocitySpread.getValue());
 			self.particle.reload();
 		});
@@ -272,8 +254,7 @@ class ParticleEditor extends TabComponent
 		this.form.addText(Locale.initial);
 		this.accelerationValue = new VectorBox(this.form);
 		this.accelerationValue.size.set(0, 18);
-		this.accelerationValue.setOnChange(function ()
-		{
+		this.accelerationValue.setOnChange(function () {
 			self.particle.emitter.acceleration.value.copy(self.accelerationValue.getValue());
 			self.particle.reload();
 		});
@@ -283,8 +264,7 @@ class ParticleEditor extends TabComponent
 		this.form.addText(Locale.variation);
 		this.accelerationSpread = new VectorBox(this.form);
 		this.accelerationSpread.size.set(0, 18);
-		this.accelerationSpread.setOnChange(function ()
-		{
+		this.accelerationSpread.setOnChange(function () {
 			self.particle.emitter.acceleration.spread.copy(self.accelerationSpread.getValue());
 			self.particle.reload();
 		});
@@ -299,16 +279,14 @@ class ParticleEditor extends TabComponent
 
 		this.wiggleValue = this.wiggleRow.addValue("F");
 		this.wiggleValue.setRange(0, Number.MAX_SAFE_INTEGER);
-		this.wiggleValue.setOnChange(function ()
-		{
+		this.wiggleValue.setOnChange(function () {
 			Editor.addAction(new ChangeAction(self.particle.emitter.wiggle, "value", self.wiggleValue.getValue()));
 			self.particle.reload();
 		});
 
 		this.wiggleSpread = this.wiggleRow.addValue("+/-");
 		this.wiggleSpread.setRange(0, Number.MAX_SAFE_INTEGER);
-		this.wiggleSpread.setOnChange(function ()
-		{
+		this.wiggleSpread.setOnChange(function () {
 			Editor.addAction(new ChangeAction(self.particle.emitter.wiggle, "spread", self.wiggleSpread.getValue()));
 			self.particle.reload();
 		});
@@ -320,13 +298,11 @@ class ParticleEditor extends TabComponent
 		this.form.addText(Locale.opacity);
 		this.opacity = new Graph(this.form);
 		this.opacity.size.set(200, 120);
-		this.opacity.setOnChange(function (value)
-		{
+		this.opacity.setOnChange(function (value) {
 			Editor.addAction(new ChangeAction(self.particle.emitter.opacity, "value", value));
 		});
 		this.opacity.addGraph("spread", DOMUtils.getCSSVariable("--color-graph"));
-		this.opacity.setOnChange(function (value)
-		{
+		this.opacity.setOnChange(function (value) {
 			Editor.addAction(new ChangeAction(self.particle.emitter.opacity, "spread", value));
 		}, "spread");
 		this.form.add(this.opacity);
@@ -339,16 +315,14 @@ class ParticleEditor extends TabComponent
 		this.sizeRow.size.set(0, 18);
 
 		this.scaleMin = this.sizeRow.addValue(Locale.min);
-		this.scaleMin.setOnChange(function ()
-		{
+		this.scaleMin.setOnChange(function () {
 			var min = self.scaleMin.getValue();
 			var max = self.scaleMax.getValue();
 			self.scale.setRange(min, max);
 		});
 
 		this.scaleMax = this.sizeRow.addValue(Locale.max);
-		this.scaleMax.setOnChange(function ()
-		{
+		this.scaleMax.setOnChange(function () {
 			var min = self.scaleMin.getValue();
 			var max = self.scaleMax.getValue();
 			self.scale.setRange(min, max);
@@ -361,13 +335,11 @@ class ParticleEditor extends TabComponent
 		this.form.addText("");
 		this.scale = new Graph(this.form);
 		this.scale.size.set(200, 120);
-		this.scale.setOnChange(function (value)
-		{
+		this.scale.setOnChange(function (value) {
 			Editor.addAction(new ChangeAction(self.particle.emitter.size, "value", value));
 		});
 		this.scale.addGraph("spread", DOMUtils.getCSSVariable("--color-graph"));
-		this.scale.setOnChange(function (value)
-		{
+		this.scale.setOnChange(function (value) {
 			Editor.addAction(new ChangeAction(self.particle.emitter.size, "spread", value));
 		}, "spread");
 		this.form.add(this.scale);
@@ -380,16 +352,14 @@ class ParticleEditor extends TabComponent
 		this.angleRow.size.set(0, 18);
 
 		this.angleMin = this.angleRow.addValue(Locale.min);
-		this.angleMin.setOnChange(function ()
-		{
+		this.angleMin.setOnChange(function () {
 			var min = self.angleMin.getValue();
 			var max = self.angleMax.getValue();
 			self.angle.setRange(min, max);
 		});
 
 		this.angleMax = this.angleRow.addValue(Locale.max);
-		this.angleMax.setOnChange(function ()
-		{
+		this.angleMax.setOnChange(function () {
 			var min = self.angleMin.getValue();
 			var max = self.angleMax.getValue();
 			self.angle.setRange(min, max);
@@ -402,13 +372,11 @@ class ParticleEditor extends TabComponent
 		this.form.addText("");
 		this.angle = new Graph(this.form);
 		this.angle.size.set(200, 120);
-		this.angle.setOnChange(function (value)
-		{
+		this.angle.setOnChange(function (value) {
 			Editor.addAction(new ChangeAction(self.particle.emitter.angle, "value", value));
 		});
 		this.angle.addGraph("spread", DOMUtils.getCSSVariable("--color-graph"));
-		this.angle.setOnChange(function (value)
-		{
+		this.angle.setOnChange(function (value) {
 			Editor.addAction(new ChangeAction(self.particle.emitter.angle, "spread", value));
 		}, "spread");
 		this.form.add(this.angle);
@@ -421,10 +389,8 @@ class ParticleEditor extends TabComponent
 		this.form.addText(Locale.base);
 		this.colorValue = new ColorGradientChooser(this.form);
 		this.colorValue.size.set(190, 18);
-		this.colorValue.setOnChange(function (color, index)
-		{
-			Editor.addAction(new CallbackAction(new ChangeAction(self.particle.emitter.color.value, index, color.clone()), function ()
-			{
+		this.colorValue.setOnChange(function (color, index) {
+			Editor.addAction(new CallbackAction(new ChangeAction(self.particle.emitter.color.value, index, color.clone()), function () {
 				self.particle.reload();
 			}));
 		});
@@ -434,10 +400,8 @@ class ParticleEditor extends TabComponent
 		this.form.addText(Locale.spread);
 		this.colorSpread = new ColorGradientChooser(this.form);
 		this.colorSpread.size.set(190, 18);
-		this.colorSpread.setOnChange(function (color, index)
-		{
-			Editor.addAction(new CallbackAction(new ChangeAction(self.particle.emitter.color.spread, index, new Vector3(color.r, color.g, color.b)), function ()
-			{
+		this.colorSpread.setOnChange(function (color, index) {
+			Editor.addAction(new CallbackAction(new ChangeAction(self.particle.emitter.color.spread, index, new Vector3(color.r, color.g, color.b)), function () {
 				self.particle.reload();
 			}));
 		});
@@ -446,41 +410,34 @@ class ParticleEditor extends TabComponent
 	}
 
 	// Update object data
-	updateMetadata()
-	{
-		if(this.particle !== null)
-		{
+	updateMetadata() {
+		if(this.particle !== null) {
 			this.setName(this.particle.name);
 			this.name.setText(this.particle.name);
 
 			// Check if object has a parent
-			if(this.particle.parent === null)
-			{
+			if(this.particle.parent === null) {
 				this.close();
 				return;
 			}
 
 			// Check if object exists in parent
 			var children = this.particle.parent.children;
-			for(var i = 0; i < children.length; i++)
-			{
-				if(this.particle.uuid === children[i].uuid)
-				{
+			for(var i = 0; i < children.length; i++) {
+				if(this.particle.uuid === children[i].uuid) {
 					return;
 				}
 			}
 
 			// If not found close tab
-			if(i >= children.length)
-			{
+			if(i >= children.length) {
 				this.close();
 			}
 		}
 	}
 
 	// Attach particle to particle editor
-	attach(particle)
-	{
+	attach(particle) {
 		// Attach particle
 		this.particle = particle;
 		this.updateMetadata();
@@ -494,12 +451,10 @@ class ParticleEditor extends TabComponent
 
 		// Emitter attributes
 		this.particleCount.setValue(particle.emitter.particleCount);
-		if(particle.emitter.duration !== null)
-		{
+		if(particle.emitter.duration !== null) {
 			this.duration.setValue(particle.emitter.duration);
 		}
-		else
-		{
+		else {
 			this.duration.setValue(0);
 		}
 		this.type.setValue(particle.emitter.type);
@@ -530,8 +485,7 @@ class ParticleEditor extends TabComponent
 		this.colorValue.setValue(particle.emitter.color.value);
 
 		var colorSpread = [];
-		for(var i = 0; i < 4; i++)
-		{
+		for(var i = 0; i < 4; i++) {
 			var color = particle.emitter.color.spread[i];
 			colorSpread.push(new Color(color.x, color.y, color.z));
 		}
@@ -542,8 +496,7 @@ class ParticleEditor extends TabComponent
 	}
 
 	// Update camera position and rotation from variables
-	updateCamera()
-	{
+	updateCamera() {
 		// Calculate direction vector
 		var cosAngleY = Math.cos(this.cameraRotation.y);
 		var position = new Vector3(this.cameraDistance * Math.cos(this.cameraRotation.x) * cosAngleY, this.cameraDistance * Math.sin(this.cameraRotation.y), this.cameraDistance * Math.sin(this.cameraRotation.x) * cosAngleY);
@@ -551,27 +504,23 @@ class ParticleEditor extends TabComponent
 		this.camera.lookAt(new Vector3(0, 0, 0));
 	}
 
-	isAttached(particle)
-	{
+	isAttached(particle) {
 		return this.particle === particle;
 	}
 
-	activate()
-	{
+	activate() {
 		super.activate();
 
 		this.mouse.create();
 	}
 
-	deactivate()
-	{
+	deactivate() {
 		super.deactivate();
 
 		this.mouse.dispose();
 	}
 
-	destroy()
-	{
+	destroy() {
 		super.destroy();
 
 		this.mouse.dispose();
@@ -579,40 +528,34 @@ class ParticleEditor extends TabComponent
 	}
 
 	// Update material editor
-	update()
-	{
+	update() {
 		this.mouse.update();
 
-		if(this.mouse.insideCanvas())
-		{
+		if(this.mouse.insideCanvas()) {
 			// Move camera
-			if(this.mouse.buttonPressed(Mouse.LEFT))
-			{
+			if(this.mouse.buttonPressed(Mouse.LEFT)) {
 				this.cameraRotation.x -= 0.003 * this.mouse.delta.x;
 				this.cameraRotation.y -= 0.003 * this.mouse.delta.y;
 
 				// Limit Vertical Rotation to 90 degrees
-				if(this.cameraRotation.y < -1.57)
-				{
+				if(this.cameraRotation.y < -1.57) {
 					this.cameraRotation.y = -1.57;
 				}
-				else if(this.cameraRotation.y > 1.57)
-				{
+				else if(this.cameraRotation.y > 1.57) {
 					this.cameraRotation.y = 1.57;
 				}
 			}
 
 			// Camera zoom
 			this.cameraDistance += this.mouse.wheel * 0.005;
-			if(this.cameraDistance < 0.1)
-			{
+			if(this.cameraDistance < 0.1) {
 				this.cameraDistance = 0.1;
 			}
 
 			this.updateCamera();
 		}
 
-		this.particle.matrixWorld.getInverse(this.scene.matrixWorld);
+		this.particle.matrixWorld.copy(this.scene.matrixWorld).invert();
 
 		// Render grid and axis
 		this.canvas.renderer.clear(true, true, true);
@@ -620,8 +563,7 @@ class ParticleEditor extends TabComponent
 		this.canvas.renderer.render(this.particle, this.camera);
 	}
 
-	updateSize()
-	{
+	updateSize() {
 		super.updateSize();
 
 		this.main.size.copy(this.size);

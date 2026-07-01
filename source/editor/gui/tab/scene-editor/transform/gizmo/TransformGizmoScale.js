@@ -14,16 +14,16 @@ import { TransformGizmo } from "./TransformGizmo.js";
  * @class TransformGizmoScale
  * @extends {TransformGizmo}
  */
-class TransformGizmoScale extends TransformGizmo
-{
-	constructor()
-	{
-		var arrowGeometry = new BufferGeometry();
-		var mesh = new Mesh(new BoxGeometry(0.125, 0.125, 0.125));
-		mesh.position.y = 0.5;
-		mesh.updateMatrix();
+class TransformGizmoScale extends TransformGizmo {
+	constructor() {
+		// Define the base handle geometry directly
+		var arrowGeometry = new BoxGeometry(0.125, 0.125, 0.125);
 
-		arrowGeometry.merge(mesh.geometry, mesh.matrix);
+		// Construct a spatial matrix shifted up by 0.5 on the Y axis
+		var matrix = new Matrix4().makeTranslation(0, 0.5, 0);
+
+		// Bake the translation directly into the vertex attributes stream
+		arrowGeometry.applyMatrix4(matrix);
 
 		var x = new BufferGeometry();
 		x.setAttribute("position", new Float32BufferAttribute([0, 0, 0, 1, 0, 0], 3));
@@ -53,53 +53,42 @@ class TransformGizmoScale extends TransformGizmo
 		super(handleGizmos, pickerGizmos);
 	}
 
-	setActivePlane(axis, eye)
-	{
+	setActivePlane(axis, eye) {
 		var tempMatrix = new Matrix4();
-		eye.applyMatrix4(tempMatrix.getInverse(tempMatrix.extractRotation(this.planes["XY"].matrixWorld)));
+		eye.applyMatrix4(tempMatrix.extractRotation(this.planes["XY"].matrixWorld).invert());
 
-		if(axis === "X")
-		{
+		if(axis === "X") {
 			this.activePlane = this.planes["XY"];
-			if(Math.abs(eye.y) > Math.abs(eye.z))
-			{
+			if(Math.abs(eye.y) > Math.abs(eye.z)) {
 				this.activePlane = this.planes["XZ"];
 			}
 		}
-		else if(axis === "Y")
-		{
+		else if(axis === "Y") {
 			this.activePlane = this.planes["XY"];
-			if(Math.abs(eye.x) > Math.abs(eye.z))
-			{
+			if(Math.abs(eye.x) > Math.abs(eye.z)) {
 				this.activePlane = this.planes["YZ"];
 			}
 		}
-		else if(axis === "Z")
-		{
+		else if(axis === "Z") {
 			this.activePlane = this.planes["XZ"];
-			if(Math.abs(eye.x) > Math.abs(eye.y))
-			{
+			if(Math.abs(eye.x) > Math.abs(eye.y)) {
 				this.activePlane = this.planes["YZ"];
 			}
 		}
-		else if(axis === "XYZ")
-		{
+		else if(axis === "XYZ") {
 			this.activePlane = this.planes["XYZE"];
 		}
 	}
 
-	updatePose(controls)
-	{
+	updatePose(controls) {
 		controls.gizmo.update(controls.attributes[0].worldRotation, controls.eye);
 		controls.gizmo.highlight(controls.axis);
 	}
 
-	applyChanges(controls)
-	{
+	applyChanges(controls) {
 		var actions = [];
 
-		for(var i = 0; i < controls.objects.length; i++)
-		{
+		for(var i = 0; i < controls.objects.length; i++) {
 			var object = controls.objects[i].scale;
 			actions.push(new ChangeAction(object, "x", object.x, controls.attributes[i].oldScale.x));
 			actions.push(new ChangeAction(object, "y", object.y, controls.attributes[i].oldScale.y));
@@ -109,63 +98,51 @@ class TransformGizmoScale extends TransformGizmo
 		Editor.addAction(new ActionBundle(actions));
 	}
 
-	transformObject(controls)
-	{
+	transformObject(controls) {
 		var planeIntersect = controls.intersectObjects([controls.gizmo.activePlane]);
-		if(planeIntersect === false)
-		{
+		if(planeIntersect === false) {
 			return;
 		}
 
-		for(var i = 0; i < controls.objects.length; i++)
-		{
+		for(var i = 0; i < controls.objects.length; i++) {
 			controls.point.copy(planeIntersect.point);
 			controls.point.sub(controls.offset);
 			controls.point.multiply(controls.attributes[i].parentScale);
 
-			if(controls.axis === "XYZ")
-			{
+			if(controls.axis === "XYZ") {
 				controls.toolScale = 1 + controls.point.y;
 
 				controls.objects[i].scale.copy(controls.attributes[i].oldScale);
 				controls.objects[i].scale.multiplyScalar(controls.toolScale);
 			}
-			else
-			{
-				controls.point.applyMatrix4(controls.tempMatrix.getInverse(controls.attributes[i].worldRotationMatrix));
+			else {
+				controls.point.applyMatrix4(controls.tempMatrix.copy(controls.attributes[i].worldRotationMatrix).invert());
 
-				if(controls.axis === "X")
-				{
+				if(controls.axis === "X") {
 					controls.objects[i].scale.x = controls.attributes[i].oldScale.x * (1 + controls.point.x);
 				}
-				else if(controls.axis === "Y")
-				{
+				else if(controls.axis === "Y") {
 					controls.objects[i].scale.y = controls.attributes[i].oldScale.y * (1 + controls.point.y);
 				}
-				else if(controls.axis === "Z")
-				{
+				else if(controls.axis === "Z") {
 					controls.objects[i].scale.z = controls.attributes[i].oldScale.z * (1 + controls.point.z);
 				}
 			}
 
 			// Update physics objects
-			if(controls.objects[i] instanceof PhysicsObject)
-			{
+			if(controls.objects[i] instanceof PhysicsObject) {
 				var shapes = controls.objects[i].body.shapes;
 				var scale = controls.objects[i].scale;
 
-				for(var i = 0; i < shapes.length; i++)
-				{
+				for(var i = 0; i < shapes.length; i++) {
 					var shape = shapes[i];
 
-					if(shape.type === Shape.types.BOX)
-					{
+					if(shape.type === Shape.types.BOX) {
 						shape.halfExtents.x = scale.x / 2.0;
 						shape.halfExtents.y = scale.y / 2.0;
 						shape.halfExtents.z = scale.z / 2.0;
 					}
-					else if(shape.type === Shape.types.SPHERE)
-					{
+					else if(shape.type === Shape.types.SPHERE) {
 						shape.radius = scale.x;
 					}
 				}

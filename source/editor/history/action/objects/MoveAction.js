@@ -15,10 +15,8 @@ import { Editor } from "../../../Editor.js";
  * @param {Object3D} newParent New parent of the object.
  * @param {number} newIndex Index to insert the object.
  */
-class MoveAction extends Action
-{
-	constructor(object, newParent, newIndex, keepGlobalPose)
-	{
+class MoveAction extends Action {
+	constructor(object, newParent, newIndex, keepGlobalPose) {
 		super();
 
 		this.object = object;
@@ -32,22 +30,18 @@ class MoveAction extends Action
 		this.keepGlobalPose = keepGlobalPose !== undefined ? keepGlobalPose : Editor.settings.editor.keepTransformMove;
 	}
 
-	apply()
-	{
+	apply() {
 		this.oldParent.remove(this.object);
 
-		if(this.keepGlobalPose)
-		{
+		if(this.keepGlobalPose) {
 			this.inverseTransform(this.oldParent, this.newParent);
 		}
 
-		if(this.newIndex === undefined)
-		{
+		if(this.newIndex === undefined) {
 			this.newParent.add(this.object);
 			this.newIndex = this.newParent.children.indexOf(this.object);
 		}
-		else
-		{
+		else {
 			var children = this.newParent.children;
 			children.splice(this.newIndex, 0, this.object);
 			this.object.parent = this.newParent;
@@ -56,12 +50,10 @@ class MoveAction extends Action
 		MoveAction.updateGUI(this.object, this.oldParent, this.newParent, this.newIndex);
 	}
 
-	revert()
-	{
+	revert() {
 		this.newParent.remove(this.object);
 
-		if(this.keepGlobalPose)
-		{
+		if(this.keepGlobalPose) {
 			this.inverseTransform(this.newParent, this.oldParent);
 		}
 
@@ -72,8 +64,7 @@ class MoveAction extends Action
 		MoveAction.updateGUI(this.object, this.newParent, this.oldParent, this.oldIndex);
 	}
 
-	inverseTransform(oldParent, newParent)
-	{
+	inverseTransform(oldParent, newParent) {
 		var matrix = this.object.matrix;
 
 		// Apply world matrix to object (calculate transform as if it was on the root)
@@ -81,7 +72,7 @@ class MoveAction extends Action
 
 		// Get inverse of the world matrix of the new parent
 		var inverse = new Matrix4();
-		inverse.getInverse(newParent.matrixWorld);
+		inverse.copy(newParent.matrixWorld).invert();
 
 		// Apply inverse transform to the object matrix
 		matrix.multiplyMatrices(inverse, matrix);
@@ -92,10 +83,8 @@ class MoveAction extends Action
 
 }
 
-MoveAction.updateGUI = function (object, oldParent, newParent, newIndex)
-{
-	if(this.keepGlobalPose)
-	{
+MoveAction.updateGUI = function (object, oldParent, newParent, newIndex) {
+	if(this.keepGlobalPose) {
 		Editor.gui.inspector.updateValues();
 	}
 

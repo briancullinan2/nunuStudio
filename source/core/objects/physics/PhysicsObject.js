@@ -13,10 +13,8 @@ import { Scene } from "../Scene.js";
  * @extends {Group}
  * @module Physics
  */
-class PhysicsObject extends Group
-{
-	constructor()
-	{
+class PhysicsObject extends Group {
+	constructor() {
 		super();
 
 		this.name = "physics";
@@ -72,15 +70,12 @@ class PhysicsObject extends Group
 	 *
 	 * @method initialize
 	 */
-	initialize()
-	{
-		if(this.mode === PhysicsObject.LOCAL)
-		{
+	initialize() {
+		if(this.mode === PhysicsObject.LOCAL) {
 			this.body.position.copy(this.position);
 			this.body.quaternion.copy(this.quaternion);
 		}
-		else if(this.mode === PhysicsObject.WORLD)
-		{
+		else if(this.mode === PhysicsObject.WORLD) {
 			var position = new Vector3();
 			this.getWorldPosition(position);
 			this.body.position.copy(position);
@@ -92,11 +87,9 @@ class PhysicsObject extends Group
 
 		// Physics world
 		var node = this;
-		while(node.parent !== null)
-		{
+		while(node.parent !== null) {
 			node = node.parent;
-			if(node instanceof Scene)
-			{
+			if(node instanceof Scene) {
 				this.world = node.world;
 				this.world.addBody(this.body);
 			}
@@ -110,27 +103,21 @@ class PhysicsObject extends Group
 	 *
 	 * @method update
 	 */
-	update(delta)
-	{
-		if(this.mode === PhysicsObject.LOCAL)
-		{
+	update(delta) {
+		if(this.mode === PhysicsObject.LOCAL) {
 			this.position.copy(this.body.position);
-			if(!this.body.fixedRotation)
-			{
+			if(!this.body.fixedRotation) {
 				this.quaternion.copy(this.body.quaternion);
 			}
 		}
-		else if(this.mode === PhysicsObject.WORLD)
-		{
+		else if(this.mode === PhysicsObject.WORLD) {
 
 			// Physics transform matrix
 			var transform = new Matrix4();
-			if(this.body.fixedRotation)
-			{
+			if(this.body.fixedRotation) {
 				transform.setPosition(this.body.position.x, this.body.position.y, this.body.position.z);
 			}
-			else
-			{
+			else {
 				var quaternion = new Quaternion();
 				quaternion.copy(this.body.quaternion);
 				transform.makeRotationFromQuaternion(quaternion);
@@ -139,8 +126,7 @@ class PhysicsObject extends Group
 
 
 			// Get inverse of the world matrix
-			var inverse = new Matrix4();
-			inverse.getInverse(this.parent.matrixWorld);
+			var inverse = new Matrix4().copy(this.parent.matrixWorld).invert();
 
 			// Get position, scale and quaternion
 			var scale = new Vector3();
@@ -157,16 +143,13 @@ class PhysicsObject extends Group
 	 * @param {Shape} shape
 	 * @method addShape
 	 */
-	addShape(shape)
-	{
-		if(shape instanceof Shape)
-		{
+	addShape(shape) {
+		if(shape instanceof Shape) {
 			this.body.addShape(shape);
 		}
 	}
 
-	toJSON(meta)
-	{
+	toJSON(meta) {
 		var data = Object3D.prototype.toJSON.call(this, meta);
 
 		data.object.mode = this.mode;
@@ -187,39 +170,33 @@ class PhysicsObject extends Group
 
 		// Shapes array
 		var shapes = this.body.shapes;
-		for(var i = 0; i < shapes.length; i++)
-		{
+		for(var i = 0; i < shapes.length; i++) {
 			var shape = shapes[i];
 			var values = {};
 
 			// Shape type
 			values.type = shape.type;
 
-			if(shape.type === Shape.types.SPHERE)
-			{
+			if(shape.type === Shape.types.SPHERE) {
 				values.radius = shape.radius;
 			}
-			else if(shape.type === Shape.types.BOX)
-			{
+			else if(shape.type === Shape.types.BOX) {
 				values.halfExtents = {};
 				values.halfExtents.x = shape.halfExtents.x;
 				values.halfExtents.y = shape.halfExtents.y;
 				values.halfExtents.z = shape.halfExtents.z;
 			}
-			else if(shape.type === Shape.types.CONVEXPOLYHEDRON)
-			{
+			else if(shape.type === Shape.types.CONVEXPOLYHEDRON) {
 				values.vertices = shape.vertices;
 				values.faces = shape.faces;
 			}
-			else if(shape.type === Shape.types.HEIGHTFIELD)
-			{
+			else if(shape.type === Shape.types.HEIGHTFIELD) {
 				values.data = shape.data;
 				values.maxValue = shape.maxValue;
 				values.minValue = shape.minValue;
 				values.elementSize = shape.elementSize;
 			}
-			else if(shape.type === Shape.types.TRIMESH)
-			{
+			else if(shape.type === Shape.types.TRIMESH) {
 				values.vertices = shape.vertices;
 				values.normals = shape.normals;
 				values.edges = shape.edges;
@@ -258,12 +235,10 @@ PhysicsObject.LOCAL = 100;
  */
 PhysicsObject.WORLD = 101;
 
-PhysicsObject.fromJSON = function (data)
-{
+PhysicsObject.fromJSON = function (data) {
 	var object = new PhysicsObject();
 
-	if(data.mode !== undefined)
-	{
+	if(data.mode !== undefined) {
 		object.mode = data.mode;
 	}
 
@@ -281,28 +256,22 @@ PhysicsObject.fromJSON = function (data)
 
 	// Shapes
 	var shapes = data.body.shapes;
-	for(var i = 0; i < shapes.length; i++)
-	{
+	for(var i = 0; i < shapes.length; i++) {
 		var shape = shapes[i];
 
-		if(shape.type === Shape.types.SPHERE)
-		{
+		if(shape.type === Shape.types.SPHERE) {
 			object.body.addShape(new Sphere(shape.radius));
 		}
-		else if(shape.type === Shape.types.BOX)
-		{
+		else if(shape.type === Shape.types.BOX) {
 			object.body.addShape(new Box(new Vec3(shape.halfExtents.x, shape.halfExtents.y, shape.halfExtents.z)));
 		}
-		else if(shape.type === Shape.types.PARTICLE)
-		{
+		else if(shape.type === Shape.types.PARTICLE) {
 			object.body.addShape(new Particle());
 		}
-		else if(shape.type === Shape.types.PLANE)
-		{
+		else if(shape.type === Shape.types.PLANE) {
 			object.body.addShape(new Plane());
 		}
-		else if(shape.type === Shape.types.HEIGHTFIELD)
-		{
+		else if(shape.type === Shape.types.HEIGHTFIELD) {
 			object.body.addShape(new Heightfield(shape.data,
 				{
 					maxValue: shape.maxValue,
@@ -310,10 +279,8 @@ PhysicsObject.fromJSON = function (data)
 					elementSize: shape.elementSize
 				}));
 		}
-		else if(shape.type === Shape.types.CONVEXPOLYHEDRON)
-		{
-			for(var k = 0; k < shape.vertices.length; k++)
-			{
+		else if(shape.type === Shape.types.CONVEXPOLYHEDRON) {
+			for(var k = 0; k < shape.vertices.length; k++) {
 				shape.vertices[k] = new Vec3(shape.vertices[k].x, shape.vertices[k].y, shape.vertices[k].z);
 			}
 

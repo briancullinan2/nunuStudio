@@ -1,8 +1,8 @@
-import {DepthTexture, UnsignedShortType, NearestFilter, MeshNormalMaterial, NoBlending, WebGLRenderTarget, LinearFilter, RGBAFormat, ShaderMaterial, UniformsUtils, DstColorFactor, ZeroFactor, AddEquation, DstAlphaFactor, Vector3, MathUtils as TMath, DataTexture, LuminanceFormat, FloatType, RepeatWrapping, CustomBlending} from "three";
-import {SSAOShader, SSAOBlurShader} from "three/examples/jsm/shaders/SSAOShader";
-import {CopyShader} from "three/examples/jsm/shaders/CopyShader";
-import {Pass} from "../Pass.js";
-import {SimplexNoise} from "../../utils/SimplexNoise.js";
+import { DepthTexture, UnsignedShortType, NearestFilter, MeshNormalMaterial, NoBlending, WebGLRenderTarget, LinearFilter, RGBAFormat, ShaderMaterial, UniformsUtils, DstColorFactor, ZeroFactor, AddEquation, DstAlphaFactor, Vector3, MathUtils as TMath, DataTexture, LuminanceFormat, FloatType, RepeatWrapping, CustomBlending } from "three";
+import { SSAOShader, SSAOBlurShader } from "three/examples/jsm/shaders/SSAOShader";
+import { CopyShader } from "three/examples/jsm/shaders/CopyShader";
+import { Pass } from "../Pass.js";
+import { SimplexNoise } from "../../utils/SimplexNoise.js";
 
 /**
  * Screen space ambient occlusion (SSAO) pass is used to simulate ambient occlusion shadowing effect.
@@ -17,12 +17,11 @@ import {SimplexNoise} from "../../utils/SimplexNoise.js";
  * @class SSAONOHPass
  * @module Postprocessing
  */
-function SSAONOHPass()
-{
+function SSAONOHPass() {
 	Pass.call(this);
 
 	this.type = "SSAONOH";
-	
+
 	this.kernel = [];
 	this.noiseTexture = null;
 	this.createQuadScene();
@@ -93,7 +92,7 @@ function SSAONOHPass()
 			blending: NoBlending
 		});
 	this.ssaoMaterial.uniforms["tNormal"].value = this.normalRenderTarget.texture;
-	
+
 	/**
 	 * Material used to copy data between buffers.
 	 *
@@ -117,22 +116,22 @@ function SSAONOHPass()
 		});
 
 	this._kernelSize = 0;
-	
+
 	var self = this;
 
 	Object.defineProperties(this,
 		{
-		/**
-		 * Kernel radius used for the SSAO effect.
-		 *
-		 * @property kernelRadius
-		 * @type {boolean}
-		 */
+			/**
+			 * Kernel radius used for the SSAO effect.
+			 *
+			 * @property kernelRadius
+			 * @type {boolean}
+			 */
 			kernelRadius:
-		{
-			get: function() {return self.ssaoMaterial.uniforms["kernelRadius"].value;},
-			set: function(value) {self.ssaoMaterial.uniforms["kernelRadius"].value = value;}
-		},
+			{
+				get: function () { return self.ssaoMaterial.uniforms["kernelRadius"].value; },
+				set: function (value) { self.ssaoMaterial.uniforms["kernelRadius"].value = value; }
+			},
 
 			/**
 			 * Minimum camera distance considered for the SSAO effect.
@@ -141,10 +140,10 @@ function SSAONOHPass()
 			 * @type {number}
 			 */
 			minDistance:
-		{
-			get: function() {return self.ssaoMaterial.uniforms["minDistance"].value;},
-			set: function(value) {self.ssaoMaterial.uniforms["minDistance"].value = value;}
-		},
+			{
+				get: function () { return self.ssaoMaterial.uniforms["minDistance"].value; },
+				set: function (value) { self.ssaoMaterial.uniforms["minDistance"].value = value; }
+			},
 
 			/**
 			 * Maximum camera distance considered for the SSAO effect.
@@ -153,10 +152,10 @@ function SSAONOHPass()
 			 * @type {number}
 			 */
 			maxDistance:
-		{
-			get: function() {return self.ssaoMaterial.uniforms["maxDistance"].value;},
-			set: function(value) {self.ssaoMaterial.uniforms["maxDistance"].value = value;}
-		},
+			{
+				get: function () { return self.ssaoMaterial.uniforms["maxDistance"].value; },
+				set: function (value) { self.ssaoMaterial.uniforms["maxDistance"].value = value; }
+			},
 
 			/**
 			 * SSAO effect kernel size.
@@ -165,17 +164,16 @@ function SSAONOHPass()
 			 * @type {number}
 			 */
 			kernelSize:
-		{
-			get: function() {return self._kernelSize;},
-			set: function(value)
 			{
-				self._kernelSize = value;
-				self.generateSampleKernel();
-				self.generateRandomKernelRotations();
-				self.ssaoMaterial.uniforms["tNoise"].value = self.noiseTexture;
-				self.ssaoMaterial.uniforms["kernel"].value = self.kernel;
+				get: function () { return self._kernelSize; },
+				set: function (value) {
+					self._kernelSize = value;
+					self.generateSampleKernel();
+					self.generateRandomKernelRotations();
+					self.ssaoMaterial.uniforms["tNoise"].value = self.noiseTexture;
+					self.ssaoMaterial.uniforms["kernel"].value = self.kernel;
+				}
 			}
-		}
 		});
 
 	this.kernelSize = 64;
@@ -186,15 +184,13 @@ function SSAONOHPass()
 
 SSAONOHPass.prototype = Object.create(Pass.prototype);
 
-/** 
+/**
  * Generate a sample kernel based on the kernelSize value.
- * 
+ *
  * @method generateSampleKernel
  */
-SSAONOHPass.prototype.generateSampleKernel = function()
-{
-	for (var i = 0; i < this._kernelSize; i++)
-	{
+SSAONOHPass.prototype.generateSampleKernel = function () {
+	for(var i = 0; i < this._kernelSize; i++) {
 		var sample = new Vector3();
 		sample.x = Math.random() * 2 - 1;
 		sample.y = Math.random() * 2 - 1;
@@ -213,15 +209,13 @@ SSAONOHPass.prototype.generateSampleKernel = function()
  *
  * @method generateRandomKernelRotations
  */
-SSAONOHPass.prototype.generateRandomKernelRotations = function()
-{
+SSAONOHPass.prototype.generateRandomKernelRotations = function () {
 	var width = 4, height = 4;
 	var simplex = new SimplexNoise();
 	var size = width * height;
 	var data = new Float32Array(size);
 
-	for (var i = 0; i < size; i++)
-	{
+	for(var i = 0; i < size; i++) {
 		var x = Math.random() * 2 - 1;
 		var y = Math.random() * 2 - 1;
 		var z = 0;
@@ -236,7 +230,7 @@ SSAONOHPass.prototype.generateRandomKernelRotations = function()
 
 /**
  * Render using this pass.
- * 
+ *
  * @method render
  * @param {WebGLRenderer} renderer
  * @param {WebGLRenderTarget} writeBuffer Buffer to write output.
@@ -244,8 +238,7 @@ SSAONOHPass.prototype.generateRandomKernelRotations = function()
  * @param {number} delta Delta time in milliseconds.
  * @param {boolean} maskActive Not used in this pass.
  */
-SSAONOHPass.prototype.render = function(renderer, writeBuffer, readBuffer, delta, maskActive, scene, camera)
-{
+SSAONOHPass.prototype.render = function (renderer, writeBuffer, readBuffer, delta, maskActive, scene, camera) {
 	// Render configuration
 	renderer.autoClear = false;
 	renderer.setClearColor(0x7777ff);
@@ -265,15 +258,14 @@ SSAONOHPass.prototype.render = function(renderer, writeBuffer, readBuffer, delta
 	this.ssaoMaterial.uniforms["cameraNear"].value = camera.near;
 	this.ssaoMaterial.uniforms["cameraFar"].value = camera.far;
 	this.ssaoMaterial.uniforms["cameraProjectionMatrix"].value.copy(camera.projectionMatrix);
-	this.ssaoMaterial.uniforms["cameraInverseProjectionMatrix"].value.getInverse(camera.projectionMatrix); 
+	this.ssaoMaterial.uniforms["cameraInverseProjectionMatrix"].value.copy(camera.projectionMatrix).invert();
 	this.renderPass(renderer, this.ssaoMaterial, this.ssaoRenderTarget);
 
 	// Render blur
 	this.renderPass(renderer, this.blurMaterial, this.blurRenderTarget);
 
 	// Output to screen
-	if (this.renderToScreen)
-	{
+	if(this.renderToScreen) {
 		// Copy SSAO result
 		this.copyMaterial.uniforms["tDiffuse"].value = readBuffer.texture;
 		this.copyMaterial.blending = NoBlending;
@@ -285,8 +277,7 @@ SSAONOHPass.prototype.render = function(renderer, writeBuffer, readBuffer, delta
 		this.renderPass(renderer, this.copyMaterial, null, false);
 	}
 	// Output to writeBuffer
-	else
-	{
+	else {
 		// Copy SSAO result
 		this.copyMaterial.uniforms["tDiffuse"].value = readBuffer.texture;
 		this.copyMaterial.blending = NoBlending;
@@ -296,7 +287,7 @@ SSAONOHPass.prototype.render = function(renderer, writeBuffer, readBuffer, delta
 		this.copyMaterial.uniforms["tDiffuse"].value = this.blurRenderTarget.texture;
 		this.copyMaterial.blending = CustomBlending;
 		this.renderPass(renderer, this.copyMaterial, writeBuffer, false);
-	}	
+	}
 };
 
 /**
@@ -304,23 +295,20 @@ SSAONOHPass.prototype.render = function(renderer, writeBuffer, readBuffer, delta
  *
  * @method renderPass
  */
-SSAONOHPass.prototype.renderPass = function(renderer, passMaterial, renderTarget, clear)
-{
+SSAONOHPass.prototype.renderPass = function (renderer, passMaterial, renderTarget, clear) {
 	this.quad.material = passMaterial;
 
 	renderer.autoClear = false;
 	renderer.setRenderTarget(renderTarget);
 
-	if (clear)
-	{
+	if(clear) {
 		renderer.clear(true, true, true);
 	}
 
 	renderer.render(this.scene, this.camera);
 };
 
-SSAONOHPass.prototype.dispose = function()
-{
+SSAONOHPass.prototype.dispose = function () {
 	// Render targets
 	this.normalRenderTarget.dispose();
 	this.ssaoRenderTarget.dispose();
@@ -337,13 +325,12 @@ SSAONOHPass.prototype.dispose = function()
 
 /**
  * Set resolution of this render pass.
- * 
+ *
  * @method setSize
  * @param {number} width
  * @param {number} height
  */
-SSAONOHPass.prototype.setSize = function(width, height)
-{
+SSAONOHPass.prototype.setSize = function (width, height) {
 	this.ssaoMaterial.uniforms["resolution"].value.set(width, height);
 	this.blurMaterial.uniforms["resolution"].value.set(width, height);
 
@@ -358,10 +345,9 @@ SSAONOHPass.prototype.setSize = function(width, height)
  * @method toJSON
  * @param {Object} meta Metadata object.
  */
-SSAONOHPass.prototype.toJSON = function(meta)
-{
+SSAONOHPass.prototype.toJSON = function (meta) {
 	var data = Pass.prototype.toJSON.call(this, meta);
-	
+
 	data.kernelSize = this.kernelSize;
 	data.kernelRadius = this.kernelRadius;
 	data.minDistance = this.minDistance;
@@ -370,4 +356,4 @@ SSAONOHPass.prototype.toJSON = function(meta)
 	return data;
 };
 
-export {SSAONOHPass};
+export { SSAONOHPass };
