@@ -252,7 +252,7 @@ export class MD3Loader extends THREE.Loader {
 			}
 
 			if(materials.length === 0) {
-				materials.push(this.materialBuilder.buildDefaultMaterial(THREE.DoubleSide));
+				materials.push(this.materialBuilder.buildDefaultMaterial(shaderName, THREE.DoubleSide));
 				this.materialBuilder.resolveTexture(shaderName || (surfName + ".jpg"), false, (tex) => {
 					materials[0].uniforms.map.value = tex;
 				});

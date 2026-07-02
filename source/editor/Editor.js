@@ -4,6 +4,7 @@ import {
 	MathUtils, Material, BufferGeometry, Shape,
 	Object3D
 } from "three";
+import { FrameRater } from "./gui/tab/scene-editor/FrameRater.js";
 
 /**
  * Main editor entry point.
@@ -298,24 +299,29 @@ Editor.runProject = async function () {
  * @param {Object3D} object Object to select.
  */
 Editor.selectObject = function (object) {
+	// Step 1: Batch strip active selection indicators
 	for(var i = 0; i < Editor.selection.length; i++) {
-		if(Editor.selection[i].gui !== undefined && Editor.selection[i].gui.node !== undefined) {
+		if(Editor.selection[i].gui?.node) {
 			Editor.selection[i].gui.node.setSelected(false);
 		}
 	}
 
 	Editor.selection = [object];
 
-	if(object.gui !== undefined && object.gui.node !== undefined) {
+	// Step 2: Batch commit incoming selection states and structural updates
+	if(object.gui?.node) {
 		if(object.gui.node.setSelected !== undefined) {
 			object.gui.node.setSelected(true);
 		}
 		if(object.gui.node.expandToRoot !== undefined) {
-			object.gui.node.expandToRoot();
+			object.gui.node.expandToRoot(); // Will now safely schedule its own scroll
 		}
 	}
 
-	Editor.updateSelectionGUI();
+	// Step 3: Defer selection interface redraws to allow layout engine to rest
+	FrameRater.requestFrameUpdate(() => {
+		Editor.updateSelectionGUI();
+	});
 };
 
 /**

@@ -305,7 +305,7 @@ export class Q3MapLoader extends THREE.Loader {
 			}
 
 			if(finalMaterials.length === 0) {
-				finalMaterials.push(this.materialBuilder.buildDefaultMaterial(THREE.DoubleSide));
+				finalMaterials.push(this.materialBuilder.buildDefaultMaterial(textureShaderPath, THREE.DoubleSide));
 				this.materialBuilder.resolveTexture(textureShaderPath + ".jpg", false, (tex) => {
 					finalMaterials[0].uniforms.map.value = tex;
 				});

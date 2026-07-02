@@ -1187,7 +1187,13 @@ class SceneEditor extends TabComponent {
 	 * @method updateRaycasterFromMouse
 	 */
 	updateRaycasterFromMouse() {
-		this.normalized.set(this.mouse.position.x / this.canvas.size.x * 2 - 1, -(this.mouse.position.y / this.canvas.size.y) * 2 + 1);
+		const doc = DocumentBody;
+		var mouseX = this.mouse.position.x; // - rect.left;
+		var mouseY = this.mouse.position.y; // - rect.top;
+		this.normalized.set(
+			(mouseX / doc.canvasWidth) * 2 - 1,
+			-(mouseY / doc.canvasHeight) * 2 + 1
+		);
 		this.raycaster.setFromCamera(this.normalized, this.camera);
 	}
 

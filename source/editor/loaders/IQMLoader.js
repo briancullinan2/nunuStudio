@@ -325,7 +325,7 @@ export class IQMLoader extends THREE.Loader {
 			}
 
 			if(materials.length === 0) {
-				materials.push(this.materialBuilder.buildDefaultMaterial(THREE.DoubleSide));
+				materials.push(this.materialBuilder.buildDefaultMaterial(shaderName, THREE.DoubleSide));
 				this.materialBuilder.resolveTexture(shaderName || (meshName + ".jpg"), false, (tex) => {
 					materials[0].uniforms.map.value = tex;
 				});

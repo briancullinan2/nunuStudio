@@ -672,7 +672,7 @@ export class Q3BSPLoader extends THREE.Loader {
 
 		// Fallback material construction if zero matching custom shader stages are found
 		if(finalMaterials.length === 0) {
-			finalMaterials.push(this.materialBuilder.buildDefaultMaterial(THREE.DoubleSide));
+			finalMaterials.push(this.materialBuilder.buildDefaultMaterial(textureShaderPath, THREE.DoubleSide));
 			this.materialBuilder.resolveTexture(textureShaderPath + ".jpg", false, (tex) => {
 				finalMaterials[0].uniforms.map.value = tex;
 			});

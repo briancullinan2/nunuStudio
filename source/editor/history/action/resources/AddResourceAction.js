@@ -61,26 +61,20 @@ class AddResourceAction extends Action {
 	 * @method throttledUpdateGUI
 	 */
 	static throttledUpdateGUI() {
-		const now = performance.now();
-		const remaining = 1000 - (now - AddResourceAction._lastGuiCallTime);
+		if(window.isLoadingBSP) {
+			return;
+		}
 
-		// Scenario A: First call or enough time has passed -> Update immediately!
-		if(remaining <= 0 && !window.isLoadingBSP) {
-			if(AddResourceAction._guiThrottleTimeout) {
-				clearTimeout(AddResourceAction._guiThrottleTimeout);
-				AddResourceAction._guiThrottleTimeout = null;
-			}
-			AddResourceAction._lastGuiCallTime = now;
+		// Cancel the existing timer if it's already running
+		if(AddResourceAction._guiThrottleTimeout) {
+			clearTimeout(AddResourceAction._guiThrottleTimeout);
+		}
+
+		// Set a new timer to execute 300ms from this call
+		AddResourceAction._guiThrottleTimeout = setTimeout(function () {
+			AddResourceAction._guiThrottleTimeout = null;
 			AddResourceAction.updateGUI();
-		}
-		// Scenario B: Called too quickly -> Queue up a guaranteed trailing edge update
-		else if(!AddResourceAction._guiThrottleTimeout && !window.isLoadingBSP) {
-			AddResourceAction._guiThrottleTimeout = setTimeout(function () {
-				AddResourceAction._lastGuiCallTime = performance.now();
-				AddResourceAction._guiThrottleTimeout = null;
-				AddResourceAction.updateGUI();
-			}, remaining);
-		}
+		}, 300);
 	}
 }
 

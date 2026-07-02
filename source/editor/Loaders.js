@@ -415,6 +415,8 @@ Loaders.loadModel = async function (file, parent, successCallback, errorCallback
 		// Quake 3 BSP Map Binary
 		else if(extension === "bsp") {
 			let reader = new FileReader();
+			window.isLoadingBSP = true;
+
 			reader.onload = async function () {
 				try {
 					let loader = new Q3BSPLoader();
@@ -437,6 +439,8 @@ Loaders.loadModel = async function (file, parent, successCallback, errorCallback
 					// 2. Pass the fully populated group to the asset transaction framework.
 					// This allows the ResourceCrawler to detect both the structures and the geometries simultaneously.
 					await callback(bspGroup, parent);
+					window.isLoadingBSP = false;
+
 				}
 				catch(e) {
 					errorCondition(e);

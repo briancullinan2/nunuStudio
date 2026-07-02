@@ -10,7 +10,7 @@ import { Component } from "./Component.js";
  * @static
  * @class DocumentBody
  */
-var DocumentBody =
+let DocumentBody =
 {
 	parent: null,
 	element: document.getElementById('nunu'),
@@ -24,11 +24,20 @@ var DocumentBody =
 	innerHeight: window.innerHeight,
 	setCanvas: function (canvas) {
 		DocumentBody.canvas = canvas;
-		const rect = DocumentBody.canvas.getBoundingClientRect();
-		DocumentBody.canvasTop = rect.top;
-		DocumentBody.canvasLeft = rect.left;
-		DocumentBody.canvasWidth = rect.width;
-		DocumentBody.canvasHeight = rect.height;
+		setTimeout(DocumentBody.updateLayout, 300);
+	},
+	updateLayout: function (entries) {
+		DocumentBody.innerWidth = document.body.clientWidth || window.innerWidth;
+		DocumentBody.innerHeight = document.body.clientHeight || window.innerHeight;
+		DocumentBody.canvas ||= DocumentBody.element.querySelector('canvas');
+		if(DocumentBody.canvas) {
+			const rect = DocumentBody.canvas.getBoundingClientRect();
+			DocumentBody.canvasTop = rect.top;
+			DocumentBody.canvasLeft = rect.left;
+			DocumentBody.canvasWidth = rect.width;
+			DocumentBody.canvasHeight = rect.height;
+		}
+
 	}
 };
 
@@ -45,20 +54,7 @@ Object.defineProperties(DocumentBody,
 		}
 	});
 
-// Top-level independent layout observer running natively in both web and desktop environments
-var layoutObserver = new ResizeObserver(function (entries) {
-	DocumentBody.innerWidth = document.body.clientWidth || window.innerWidth;
-	DocumentBody.innerHeight = document.body.clientHeight || window.innerHeight;
-	DocumentBody.canvas ||= DocumentBody.element.querySelector('canvas');
-	if(DocumentBody.canvas) {
-		const rect = DocumentBody.canvas.getBoundingClientRect();
-		DocumentBody.canvasTop = rect.top;
-		DocumentBody.canvasLeft = rect.left;
-		DocumentBody.canvasWidth = rect.width;
-		DocumentBody.canvasHeight = rect.height;
-	}
-
-});
+let layoutObserver = new ResizeObserver(DocumentBody.updateLayout);
 layoutObserver.observe(document.body);
 
 export { DocumentBody };

@@ -168,14 +168,15 @@ export class Q3GLShaderLoader {
 		}
 
 		if(materials.length === 0) {
-			materials.push(this.buildDefaultMaterial(side));
+			materials.push(this.buildDefaultMaterial(shader.name, side));
 		}
 
 		return materials;
 	}
 
-	buildDefaultMaterial(side) {
+	buildDefaultMaterial(shaderName, side) {
 		return new ShaderMaterial({
+			name: shaderName,
 			vertexShader: this.getDefaultVertexShader(),
 			fragmentShader: this.getDefaultFragmentShader({ isLightmap: false }),
 			uniforms: {

@@ -36,6 +36,7 @@ import { Component } from "../../../components/Component.js";
 import { NodeScript } from "../../../../core/Main.js";
 import { NodeEditor } from "../node-editor/NodeEditor.js";
 import { Global } from "../../../Global.js";
+import { FrameRater } from "../scene-editor/FrameRater.js";
 
 /**
  * Represents a tree node element.
@@ -823,13 +824,38 @@ class TreeNode extends Component {
 	expandToRoot() {
 		var parent = this.parent;
 
+		// Step 1: Execute all style and visibility shifts sequentially in one pass
 		while(parent !== null) {
 			parent.updateFoldedState(false);
 			parent.setVisibility(true);
 			parent = parent.parent;
 		}
 
-		this.element.scrollIntoView({ behavior: "smooth", block: "center", inline: "center" });
+		// Step 2: Defer geometric measurement routines out of the structural execution block
+		FrameRater.requestFrameUpdate(() => {
+			if(this.element && this.element.style.top) {
+				// 1. Instantly parse the inline string value (e.g., "450px" -> 450)
+				const inlineTop = parseFloat(this.element.style.top);
+
+				// 2. Fall back to your parent container or document layout host
+				const scrollContainer = this.element.parentElement;
+
+				if(scrollContainer && !isNaN(inlineTop)) {
+					// Read your inline height style if set, or fall back to a safe default node guess
+					const inlineHeight = this.element.style.height ? parseFloat(this.element.style.height) : 24;
+					const containerHeight = parseFloat(scrollContainer.style.height);
+
+					// 3. Compute target center offset entirely in JavaScript memory
+					const targetScrollTop = inlineTop; - (containerHeight / 2) + (inlineHeight / 2);
+
+					// 4. Update the container scroll track smoothly
+					scrollContainer.scrollTo({
+						top: targetScrollTop,
+						behavior: "smooth"
+					});
+				}
+			}
+		});
 	}
 
 	destroy() {
